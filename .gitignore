@@ -1,3 +1,5 @@
+# Created by .ignore support plugin (hsz.mobi)
+### Python template
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -23,6 +25,7 @@ wheels/
 pip-wheel-metadata/
 share/python-wheels/
 *.egg-info/
+template/
 .installed.cfg
 *.egg
 MANIFEST
@@ -102,7 +105,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+*.env
 .venv
 env/
 venv/
@@ -127,3 +130,18 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+.idea
+/redis
+
+# log
+./logs
+
+media/
+/static/
+
+~$*.xlsx
+
+local_*
+
+.DS_Store

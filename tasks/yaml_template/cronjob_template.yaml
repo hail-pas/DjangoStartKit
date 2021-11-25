@@ -1,0 +1,35 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  namespace: {{ namespace }}
+  name: {{ name }}
+spec:
+  schedule: {{ schedule }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          namespace: {{ namespace }}
+        spec:
+          # volumes:
+          # - name: {{ pvc_name }}
+          #   persistentVolumeClaim:
+          #     claimName: {{ pvc_name }}
+          imagePullSecrets:
+          - name: registrykey
+          containers:
+          - name: cronjob
+            image: {{ image }}
+            imagePullPolicy: Always
+            env:
+              - name: PYTHONPATH
+                value: "/code"
+              - name: aliyun_logs_cronjob-{{ name }}
+            command: {{ command }}
+            # volumeMounts:
+            # - name: {{ pvc_name }}
+            #   mountPath: /code/static-file/media
+          restartPolicy: OnFailure

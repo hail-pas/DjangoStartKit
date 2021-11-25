@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  namespace: {{ namespace }}
+  name: {{ name }}
+spec:
+  template:
+    metadata:
+      namespace: {{ namespace }}
+    spec:
+      # volumes:
+      # - name: {{ pvc_name }}
+      #   persistentVolumeClaim:
+      #     claimName: {{ pvc_name }}
+      imagePullSecrets:
+      - name: registrykey
+      containers:
+      - name: job
+        image: {{ image }}
+        imagePullPolicy: Always
+        env:
+          - name: PYTHONPATH
+            value: "/code"
+          - name: aliyun_logs_job-{{ name }}
+            value: "stdout"
+        command: {{ command }}
+        # volumeMounts:
+        # - name: {{ pvc_name }}
+        #   mountPath: /code/static-file/media
+      restartPolicy: Never

@@ -1,0 +1,39 @@
+version: '3'
+services:
+  backend-main:
+    env_file:
+      - ../../.env
+    ports:
+      - '8000:8000'
+    depends_on:
+      - redis
+      - mysql
+    links:
+      - mysql
+      - redis
+    environment:
+      - DB_HOST=mysql
+      - REDIS_HOST=redis
+    volumes:
+      # 本地时间同步
+      - /etc/localtime:/etc/localtime
+      # 日志文件
+      - /path/to/logs/:/usr/share/nginx/fastpost/logs/
+    image: docker.io/hypofiasco/fastpost:latest
+    command: gunicorn --config ./deploy/gunicorn/conf.py --log-config ./deploy/gunicorn/logging.conf main:app
+  redis:
+    hostname: redis
+    image: redis:latest
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    volumes:
+      - /path/to/redis/data:/data
+      - /etc/localtime:/etc/localtime
+  mysql:
+    hostname: mysql
+    image: mysql:latest
+    volumes:
+      - /path/to/mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_DATABASE: "fastpost"
