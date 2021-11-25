@@ -16,14 +16,15 @@ class RedisUtil:
 
     @classmethod
     def init(
-            cls, host=local_configs.REDIS_HOST, port=local_configs.REDIS_PORT, password=local_configs.REDIS_PASSWORD, db=0, **kwargs,
+            cls, host=local_configs.REDIS_HOST, port=local_configs.REDIS_PORT, password=local_configs.REDIS_PASSWORD,
+            db=0, **kwargs,
     ):
         cls._host = host
         cls._port = port
         cls._password = password
         cls._extra_kwargs = kwargs
         cls._pool = s_redis.ConnectionPool(host=host, port=port, password=password, db=db, **kwargs)
-        cls.r = s_redis.Redis(connection_pool=cls._pool)  # type:sync_redis.Redis
+        cls.r = s_redis.Redis(connection_pool=cls._pool)  # type:s_redis.Redis
 
     @classmethod
     def get_pool(cls, db: int = 0) -> s_redis.ConnectionPool:

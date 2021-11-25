@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "fastpost"
+name = "DjangoStartKit"
 version = "0.1.0"
-description = "FastAPI-start-kit with MySQL and Tortoise-ORM"
+description = "Django Start Kit"
 authors = ["phoenix <hypofiasco@gmail.com>"]
 
 [tool.poetry.dependencies]
@@ -26,7 +26,7 @@ django-cors-headers = "3.10.0"
 pydantic = "1.8.2"
 djangorestframework-jwt = "1.11.0"
 django-simple-captcha = "0.5.14"
-aioredis = "1.3.1"
+typer = "0.3.2"
 
 [tool.poetry.dev-dependencies]
 taskipy = "1.8.1"
