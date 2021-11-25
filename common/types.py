@@ -72,7 +72,7 @@ class Map(dict):
         del self.__dict__[key]
 
 
-class RequestSchema(Serializer):
+class PlainSchema(Serializer):
     def create(self, validated_data):
         raise RuntimeError("Just for request schema")
 

@@ -1,4 +1,5 @@
 import logging
+from functools import lru_cache
 from math import ceil
 from typing import Optional, Any
 from datetime import datetime
@@ -8,8 +9,11 @@ from django.http import JsonResponse
 from django.utils import timezone
 from drf_yasg.utils import filter_none
 from pydantic import BaseModel
+from rest_framework import serializers
 
 from apps.enums import ResponseCodeEnum
+from common.types import PlainSchema
+from common.utils import generate_random_string
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +26,18 @@ class _PageInfo(BaseModel):
     page_size: int
     page_num: int
 
+    @classmethod
+    @lru_cache
+    def to_serializer(cls):
+        class PageInfo(PlainSchema):
+            total_page = serializers.IntegerField(default=1, help_text="总页数")
+            page_size = serializers.IntegerField(default=10, help_text="每页条数")
+            page_num = serializers.IntegerField(default=1, help_text="当前页码")
 
+        return PageInfo
+
+
+# class _Resp(GenericModel, Generic[DataT]):
 class _Resp(BaseModel):
     """"
     响应体格式
@@ -41,6 +56,32 @@ class _Resp(BaseModel):
     message: Optional[str] = "success"
     data: Optional[Any] = None
     page_info: Optional[_PageInfo] = None
+
+    @classmethod
+    @lru_cache
+    def to_serializer(cls, resp_serializer, page_info: bool = False):
+        # TODO: 生成的类重名解决
+        attrs = {
+            "code": serializers.ChoiceField(default=ResponseCodeEnum.success.value,
+                                            choices=ResponseCodeEnum.choices(),
+                                            help_text=f"响应状态码: {ResponseCodeEnum.choices()}"),
+            "success": serializers.BooleanField(default=True, help_text="是否成功"),
+            "response_time": serializers.DateTimeField(default=timezone.now(), help_text="响应时间"),
+            "message": serializers.CharField(default="", help_text="响应信息"),
+            "data": resp_serializer,
+        }
+
+        if isinstance(resp_serializer, serializers.ListSerializer):
+            if page_info:
+                name = f"PageResp{resp_serializer.child.__class__.__name__}{generate_random_string(4)}"
+                attrs["page_info"] = _PageInfo.to_serializer()()
+            else:
+                name = f"ListResp{resp_serializer.child.__class__.__name__}"
+        elif isinstance(resp_serializer, serializers.Serializer):
+            name = f"Resp{resp_serializer.__class__.__name__}{generate_random_string(4)}"
+        else:
+            raise RuntimeError("Should Use Serializer class or ListSerializer instance as Response Schema")
+        return type(name, (PlainSchema,), attrs)
 
 
 class RestResponse(JsonResponse):
