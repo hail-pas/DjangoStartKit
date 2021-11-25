@@ -1,7 +1,7 @@
 import os
 
 if __name__ == "__main__":
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'DjangoStartKit.settings')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
     try:
         from django.core.management import execute_from_command_line
         from django.conf import settings

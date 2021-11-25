@@ -14,7 +14,7 @@ class LocalConfig(BaseSettings):
     全部的配置信息
     """
     # ProjectInfo
-    PROJECT_NAME: str = "DjangoStartKit"
+    PROJECT_NAME: str = "core"
     DESCRIPTION: str = "Django-start-kit"
     ENVIRONMENT: str = Environment.development.value
     DEBUG: bool = False

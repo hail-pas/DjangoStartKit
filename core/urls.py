@@ -1,4 +1,4 @@
-"""DjangoStartKit URL Configuration
+"""core URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/3.2/topics/http/urls/
@@ -23,7 +23,7 @@ from django.views import static as static_view
 from rest_framework import permissions
 from rest_framework.documentation import include_docs_urls
 
-from DjangoStartKit.onstart import ready
+from core.onstart import ready
 
 # 启动时触发
 ready()
@@ -64,9 +64,9 @@ if settings.DEBUG:
 
     schema_view = get_schema_view(
         openapi.Info(
-            title="DjangoStartKit API",
+            title="core API",
             default_version='1.0',
-            description="API Doc of DjangoStartKit",
+            description="API Doc of core",
         ),
         public=True,
         permission_classes=(permissions.AllowAny,),

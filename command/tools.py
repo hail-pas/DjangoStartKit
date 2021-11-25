@@ -8,7 +8,7 @@ tool_typer = typer.Typer(short_help="工具")
 
 src = pathlib.Path(__file__).parent.parent
 
-DIRS = ["apps", "command", "common", "core", "conf", "deploy", "tasks", "storages", "DjangoStartKit"]
+DIRS = ["apps", "command", "common", "core", "conf", "deploy", "tasks", "storages"]
 FILES = [".env.template", ".dockerignore", ".gitignore", "manage.py", "command.py", "pyproject.toml", "main.py"]
 
 
@@ -44,7 +44,7 @@ def copy_project(name: str = typer.Option(default=None, help="项目名称"),
             if not is_sub and need not in FILES + DIRS:
                 continue
             current_src_path = src_path.joinpath(need)
-            src_path_finds = re.findall(".*?DjangoStartKit/(?P<appendix>.*)", str(current_src_path))
+            src_path_finds = re.findall(".*?core/(?P<appendix>.*)", str(current_src_path))
             src_appendix = src_path_finds[0] if src_path_finds else ""
             dest_path = dest.joinpath(src_appendix)
 
@@ -53,7 +53,7 @@ def copy_project(name: str = typer.Option(default=None, help="项目名称"),
                     dest_file = dest_path.open(mode="w", encoding="utf-8")
                     with open(current_src_path, mode="r") as src_file:
                         for line in src_file:
-                            dest_file.write(line.replace("DjangoStartKit", "core"))
+                            dest_file.write(line.replace("core", "core"))
 
                     dest_file.close()
                     print("copied to ", dest_path, end="\n")
