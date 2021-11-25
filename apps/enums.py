@@ -3,8 +3,25 @@
 """
 import inspect
 import sys
+from enum import unique
 
 from common.types import StrEnumMore, IntEnumMore
+
+
+@unique
+class ResponseCodeEnum(IntEnumMore):
+    """
+    业务响应代码，除了500之外都在200的前提下返回对用code
+    """
+
+    # 唯一成功响应
+    success = (100200, "成功")
+
+    # HTTP 状态码  2xx - 5xx
+    # 100{[2-5]]xx}, http status code 拼接
+
+    # 失败响应，999倒序取
+    failed = (100999, "失败")
 
 
 class ChoiceResponseFormats(StrEnumMore):

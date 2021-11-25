@@ -3,6 +3,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action, api_view
 
 from apps.info import schemas
+from apps.responses import RestResponse
 from common.swagger import swagger_add_request_serializer
 
 
@@ -55,4 +56,4 @@ class EnumViewSet(viewsets.ViewSet):
 )
 @api_view(['POST', 'PUT'])
 def example(request):
-    return
+    return RestResponse(message="message")

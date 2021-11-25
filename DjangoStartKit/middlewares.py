@@ -37,14 +37,17 @@ class RequestProcessMiddleware:
         if request.method.lower() in [RequestMethodEnum.OPTIONS.value, RequestMethodEnum.HEAD.value,
                                       RequestMethodEnum.CONNECT.value, RequestMethodEnum.TRACE.value]:
             return
+        cls = getattr(view_processor, "cls", None)
+        if not cls:
+            return
         actions = getattr(view_processor, "actions", None)
-        if issubclass(view_processor.cls, APIView):
+        if issubclass(cls, APIView):
             # APIView
             query_serializer = getattr(view_processor, "query_serializer", None)
             body_serializer = getattr(view_processor, "body_serializer", None)
         elif actions:
             # ViewSet
-            view_func = getattr(view_processor.cls, actions.get(request.method.lower(), ""), "")
+            view_func = getattr(cls, actions.get(request.method.lower(), ""), "")
             if not view_func:
                 return
             query_serializer = getattr(view_func, "query_serializer", None)
