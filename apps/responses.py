@@ -1,3 +1,4 @@
+import json
 import logging
 from functools import lru_cache
 from math import ceil
@@ -13,7 +14,6 @@ from rest_framework import serializers
 
 from apps.enums import ResponseCodeEnum
 from common.types import PlainSchema
-from common.utils import generate_random_string
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,6 @@ class _Resp(BaseModel):
     res = {
         "code": 200,  # http状态码为 200 前提下自定义code
         "success": True
-        "response_time": "datetime",
         "message": "message",
         "data": "data"
         }
@@ -52,36 +51,49 @@ class _Resp(BaseModel):
 
     code: int = ResponseCodeEnum.success.value
     success: bool = True
-    response_time: datetime = timezone.now()
     message: Optional[str] = "success"
     data: Optional[Any] = None
     page_info: Optional[_PageInfo] = None
 
     @classmethod
-    @lru_cache
     def to_serializer(cls, resp_serializer, page_info: bool = False):
-        # TODO: 生成的类重名解决
-        attrs = {
-            "code": serializers.ChoiceField(default=ResponseCodeEnum.success.value,
-                                            choices=ResponseCodeEnum.choices(),
-                                            help_text=f"响应状态码: {ResponseCodeEnum.choices()}"),
-            "success": serializers.BooleanField(default=True, help_text="是否成功"),
-            "response_time": serializers.DateTimeField(default=timezone.now(), help_text="响应时间"),
-            "message": serializers.CharField(default="", help_text="响应信息"),
-            "data": resp_serializer,
-        }
+
+        def generate_serializer(_name: str):
+
+            attrs = {
+                "code": serializers.ChoiceField(default=ResponseCodeEnum.success.value,
+                                                choices=ResponseCodeEnum.choices(),
+                                                help_text=f"响应状态码: {ResponseCodeEnum.choices()}"),
+                "success": serializers.BooleanField(default=True, help_text="是否成功"),
+                "message": serializers.CharField(default="", help_text="响应信息"),
+                "data": resp_serializer,
+            }
+
+            class Meta:
+                ref_name = _name
+
+            attrs["Meta"] = Meta
+
+            if "Page" in _name:
+                attrs["page_info"] = _PageInfo.to_serializer()()
+            return type(_name, (PlainSchema,), attrs)
+
+        _cache = {}
 
         if isinstance(resp_serializer, serializers.ListSerializer):
             if page_info:
-                name = f"PageResp{resp_serializer.child.__class__.__name__}{generate_random_string(4)}"
-                attrs["page_info"] = _PageInfo.to_serializer()()
+                name = f"PageResp{resp_serializer.child.__class__.__name__}"
             else:
                 name = f"ListResp{resp_serializer.child.__class__.__name__}"
         elif isinstance(resp_serializer, serializers.Serializer):
-            name = f"Resp{resp_serializer.__class__.__name__}{generate_random_string(4)}"
+            name = f"Resp{resp_serializer.__class__.__name__}"
         else:
             raise RuntimeError("Should Use Serializer class or ListSerializer instance as Response Schema")
-        return type(name, (PlainSchema,), attrs)
+
+        if not _cache.get(name, None):
+            _cache[name] = generate_serializer(name)
+
+        return _cache[name]
 
 
 class RestResponse(JsonResponse):
@@ -89,17 +101,27 @@ class RestResponse(JsonResponse):
     真实响应
     """
 
+    result: Any = None
+
     def __init__(self, code: int = ResponseCodeEnum.success.value, success: bool = True,
-                 response_time: datetime = timezone.now(),
                  message: Optional[str] = None, data: Optional[Any] = None, encoder=DjangoJSONEncoder,
                  page_size: int = None, page_num: int = None, total_count: int = None, **kwargs):
         page_info = None
         if all([page_size, page_num, total_count]):
             page_info = _PageInfo(page_size=page_size, page_num=page_num, total_page=ceil(total_count / page_size))
-        super().__init__(
-            filter_none(_Resp(code=code, success=success, response_time=response_time, message=message, data=data,
-                              page_info=page_info).dict()), encoder, safe=True, json_dumps_params=None, **kwargs)
+        self.result = filter_none(
+            _Resp(code=code, success=success, message=message, data=data,
+                  page_info=page_info).dict())
+        super().__init__(self.result
+                         , encoder, safe=True, json_dumps_params=None, **kwargs)
 
     @classmethod
     def ok(cls, message: Optional[str] = "", data: Optional[Any] = None):
         return RestResponse(message=message, data=data)
+
+    @classmethod
+    def fail(cls, message: str = ""):
+        return RestResponse(code=ResponseCodeEnum.failed.value, success=False, message=message)
+
+    def dict(self):
+        return self.result

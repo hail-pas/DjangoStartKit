@@ -32,7 +32,7 @@ class RequestProcessMiddleware:
         :return:
         """
         request.param_data = None
-        request.body_data = None
+        request.json_data = None
 
         if request.method.lower() in [RequestMethodEnum.OPTIONS.value, RequestMethodEnum.HEAD.value,
                                       RequestMethodEnum.CONNECT.value, RequestMethodEnum.TRACE.value]:
@@ -60,13 +60,13 @@ class RequestProcessMiddleware:
             if query_serializer:
                 q_ser = query_serializer(data=request.GET)
                 q_ser.is_valid(raise_exception=True)
-                request.GET = q_ser.validated_data
+                request.param_data = q_ser.validated_data
             if body_serializer and request.content_type == ContentTypeEnum.APPlICATION_JSON.value:
                 # 只校验json传输
                 data = ujson.loads(request.body.decode('utf8'))
                 b_ser = body_serializer(data=data)
                 b_ser.is_valid(raise_exception=True)
-                request.POST = q_ser.validated_data
+                request.json_data = q_ser.validated_data
         except ValidationError as valid_error:
             raise valid_error
 
