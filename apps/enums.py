@@ -32,10 +32,27 @@ class ResponseCodeEnum(IntEnumMore):
 #     json_ = ("json", "Json")
 #     list_ = ("list", "数组")
 
-
-class RoleCodes(StrEnumMore):
+class GroupTypeEnum(StrEnumMore):
     """
-    角色码表
+    分组码表
+    function = ('function', '功能')
+    interface = ('interface', '接口')
+    """
+    menu_level1 = ('level1menu', '一级菜单')
+    menu_level2 = ('level2menu', '二级菜单')
+    permissions = ('permissions', '权限聚合组')
+
+
+class PermissionEnum(StrEnumMore):
+    """
+    全部的自定义权限码表
+    """
+    export_truck_static_data = ('export_truck_static_data', '导出车辆静态数据')
+
+
+class RoleCodeEnum(StrEnumMore):
+    """
+    预置角色码表
     """
     super_admin = ("super_admin", "超管")
 

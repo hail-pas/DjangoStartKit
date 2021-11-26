@@ -36,7 +36,7 @@ urlpatterns = [
     path('captcha/', include('captcha.urls')),
     # api
     path('info/', include('apps.info.urls')),
-    # path('account/', include('apps.account.urls')),
+    path('account/', include('apps.account.urls')),
 
 ]
 

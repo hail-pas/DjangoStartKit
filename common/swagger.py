@@ -1,7 +1,6 @@
 import inspect
-from http import HTTPStatus
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import serializers
+from rest_framework import serializers, status
 
 from apps.responses import _Resp  # noqa
 
@@ -14,7 +13,7 @@ def custom_swagger_auto_schema(**kwargs):
     def decorator(func):
         responses = kwargs.get("responses")
         if responses:
-            responses_200_ser = responses.get(str(HTTPStatus.OK.value))  # noqa
+            responses_200_ser = responses.get(str(status.HTTP_200_OK))  # noqa
             if responses_200_ser:
                 page_info = kwargs.get("page_info", False)
 
@@ -34,7 +33,7 @@ def custom_swagger_auto_schema(**kwargs):
                         responses_200_ser = responses_200_ser()
                 if _is_serializer_instance and page_info:
                     raise RuntimeError("Single Response Item Cannot with PageInfo")
-                kwargs['responses'][str(HTTPStatus.OK.value)] = _Resp.to_serializer(  # noqa
+                kwargs['responses'][str(status.HTTP_200_OK)] = _Resp.to_serializer(  # noqa
                     resp_serializer=responses_200_ser,
                     page_info=page_info)
         view_method = swagger_auto_schema(**kwargs)(func)

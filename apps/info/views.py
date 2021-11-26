@@ -1,9 +1,6 @@
-# Create your views here.
-from http import HTTPStatus
-
 from drf_yasg import openapi
-from rest_framework import viewsets
-from rest_framework.decorators import action, api_view
+from rest_framework import status
+from rest_framework.decorators import api_view
 
 from apps.enums import get_enum_content
 from apps.info import schemas
@@ -16,7 +13,7 @@ from common.swagger import custom_swagger_auto_schema
     method="GET",
     query_serializer=schemas.EnumQueryIn,
     responses={
-        HTTPStatus.OK.value: openapi.Response(  # noqa
+        status.HTTP_200_OK: openapi.Response(  # noqa
             description="返回Json或数组格式的Enum码表",
             examples={
                 "application/json": RestResponse.ok(
