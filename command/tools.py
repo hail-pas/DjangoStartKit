@@ -15,6 +15,7 @@ FILES = [".env.template", ".dockerignore", ".gitignore", "manage.py", "command.p
 @tool_typer.command("copy-project", short_help="复制脚手架项目并指明项目名称目标文件夹路径")
 def copy_project(name: str = typer.Option(default=None, help="项目名称"),
                  dest: str = typer.Option(default=None, help="目标路径")):
+
     if not (name and dest):
         print("必须指定项目名称name和目标路径dest")
         return

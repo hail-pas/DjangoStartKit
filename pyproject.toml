@@ -28,20 +28,13 @@ djangorestframework-jwt = "1.11.0"
 django-simple-captcha = "0.5.14"
 typer = "0.3.2"
 
-[tool.poetry.dev-dependencies]
-taskipy = "1.8.1"
-bandit = "1.7.0"
-black = "19.10b0"
-flake8 = "3.9.1"
-isort = "5.1.4"
-pytest = "6.2.4"
-
 [[tool.poetry.source]]
 name = "aliyun"
 default = true
 url = "https://mirrors.aliyun.com/pypi/simple/"
 
-[build-system]
-requires = ["poetry>=1.1.6"]
-build-backend = "poetry.masonry.api"
-
+# If poetry install failed, excute follow shell command
+# shell
+# >>> poetry cache clear . --all
+# >>> rm poetry.lock
+# >>> poetry install
