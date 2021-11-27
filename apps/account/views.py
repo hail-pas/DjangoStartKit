@@ -15,7 +15,7 @@ class ProfileViewSet(
     serializer_class = serializers.ProfileSerializer
     queryset = models.Profile.objects.all()
     search_fields = ('phone', 'name')
-    filter_fields = ('role', 'manufacturer')
+    filter_fields = ('role', )
     parser_classes = (JSONParser,)
     permission_classes = (AllowAny,)
 

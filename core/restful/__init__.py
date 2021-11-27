@@ -1,8 +1,11 @@
 import logging
+
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg import openapi
-from drf_yasg.inspectors import SwaggerAutoSchema
+from drf_yasg.inspectors import SwaggerAutoSchema, CoreAPICompatInspector, NotHandled
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.pagination import PageNumberPagination
 
 from apps.responses import _Resp, RestResponse  # noqa
@@ -89,9 +92,28 @@ class CustomSwaggerAutoSchema(SwaggerAutoSchema):
             _schema = _response.get("schema")
             ret_schema = _Resp.to_schema(_schema)
             if action == "list":
+                _schema = _schema.properties.get("results")
                 ret_schema = _Resp.to_schema(_schema, page_info=True)
             responses.update(
                 {status_code: openapi.Response(_response.get("description", ""),
                                                ret_schema,
                                                _response.get("examples", None))})
         return responses
+
+
+class NoPagingAutoSchema(CustomSwaggerAutoSchema):
+    """No page and page_size parameters in swagger
+    """
+
+    def should_page(self):
+        return False
+
+
+class HideInspector(CoreAPICompatInspector):
+    """No unused parameters in swagger
+    """
+
+    def get_filter_parameters(self, filter_backend):
+        if type(filter_backend) in (OrderingFilter, SearchFilter, DjangoFilterBackend):
+            return
+        return NotHandled
