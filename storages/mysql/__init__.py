@@ -33,3 +33,4 @@ class BaseModel(models.Model):
 
     class Meta:
         abstract = True
+        ordering = ['-id']  # 默认倒序

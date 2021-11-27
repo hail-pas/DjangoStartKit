@@ -13,10 +13,14 @@ shell = partial(subprocess.run, shell=True)
 @db_typer.command("createdb", short_help="创建数据库")
 def create_db():
     shell(
-        'mysql -h {HOST} --port={PORT} -u{USER} -p{PASSWORD} -e '
-        '"CREATE DATABASE IF NOT EXISTS \\`{database}\\` '
+        'mysql -h {host} --port={port} -u{user} -p{password} -e '
+        '"CREATE DATABASE IF NOT EXISTS \\`{name}\\` '
         'default character set utf8mb4 collate utf8mb4_general_ci;"'.format(
-            **settings.DATABASES.get("default")
+            host=settings.DB_HOST,
+            port=settings.DB_PORT,
+            user=settings.DB_USER,
+            password=settings.DB_PASSWORD,
+            name=settings.DB_NAME
         )
     )
 
@@ -26,15 +30,19 @@ def drop_db():
     if settings.ENVIRONMENT == Environment.production.value:
         return "Forbidden operation in Production Environment"
     shell(
-        'mysql -h {HOST} --port={PORT} -u{USER} -p{PASSWORD} -e '
-        '"DROP DATABASE \\`{database}\\`;"'.format(
-            **settings.DATABASES.get("default")
+        'mysql -h {host} --port={port} -u{user} -p{password} -e '
+        '"DROP DATABASE \\`{name}\\`;"'.format(
+            host=settings.DB_HOST,
+            port=settings.DB_PORT,
+            user=settings.DB_USER,
+            password=settings.DB_PASSWORD,
+            name=settings.DB_NAME
         )
     )
 
 
 @db_typer.command("shell", short_help="Mysql命令行")
-def _shell(db: int = typer.Option(default=0, help="指定数据库")):
+def _shell():
     cmd = "mysql -u {user} -p{password}".format(
         user=settings.DB_USER,
         password=settings.DB_PASSWORD,

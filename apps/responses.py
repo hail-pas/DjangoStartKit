@@ -126,6 +126,13 @@ class _Resp(BaseModel):
         )
         return rest_schema
 
+    def dict(self, *args, **kwargs):  # real signature unknown
+        result = super(_Resp, self).dict(*args, **kwargs)
+        if "page_info" in result.keys():
+            if not result.get("page_info"):
+                result.pop("page_info")
+        return result
+
 
 class RestResponse(JsonResponse):
     """
@@ -138,13 +145,11 @@ class RestResponse(JsonResponse):
                  message: Optional[str] = None, data: Optional[Any] = None, encoder=DjangoJSONEncoder,
                  page_size: int = None, page_num: int = None, total_count: int = None, **kwargs):
         page_info = None
-        if all([page_size, page_num, total_count]):
+        if all([page_size is not None, page_num is not None, total_count is not None]):
             page_info = _PageInfo(page_size=page_size, page_num=page_num, total_page=ceil(total_count / page_size))
-        self.result = filter_none(
-            _Resp(code=code, success=success, message=message, data=data,
-                  page_info=page_info).dict())
-        super().__init__(self.result
-                         , encoder, safe=True, json_dumps_params=None, **kwargs)
+        self.result = _Resp(code=code, success=success, message=message, page_info=page_info).dict()
+        self.result["data"] = data  # pydantic初始化赋值时是懒获取，会导致 drf_serializer.data() 多次触发
+        super().__init__(self.result, encoder, safe=True, json_dumps_params=None, **kwargs)
 
     @classmethod
     def ok(cls, message: Optional[str] = "", data: Optional[Any] = None):

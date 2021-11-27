@@ -162,7 +162,7 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter',
         'rest_framework.filters.SearchFilter',
     ),
-    'DEFAULT_PAGINATION_CLASS': 'core.restful.CustomPagination',
+    # 'DEFAULT_PAGINATION_CLASS': 'core.restful.CustomPagination',
     'DATETIME_FORMAT': "%Y-%m-%d %H:%M:%S",
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.FormParser',

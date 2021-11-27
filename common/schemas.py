@@ -1,11 +1,18 @@
+"""
+翻页通用schema
+"""
+
 from rest_framework import serializers
-from common.types import PlainSchema
+from common.types import PlainSchema, StrEnumMore
 
 
 class PageParam(PlainSchema):
     page_size = serializers.IntegerField(help_text="页大小")
     page_num = serializers.IntegerField(help_text="页码")
-    total_page = serializers.IntegerField(help_text="总页数")
+
+    class Enum(StrEnumMore):
+        page_size = ("page_size", "每页条数")
+        page_num = ("page_num", "页码")
 
 
 class HbasePageParam(PlainSchema):

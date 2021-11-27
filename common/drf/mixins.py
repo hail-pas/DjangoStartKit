@@ -1,7 +1,9 @@
 from rest_framework import status
 from rest_framework.settings import api_settings
+from rest_framework.viewsets import GenericViewSet
 
 from apps.responses import RestResponse
+from core.restful import CustomPagination
 
 
 class RestCreateModelMixin:
@@ -30,6 +32,8 @@ class RestListModelMixin:
     """
     List a queryset.
     """
+    pagination_class = CustomPagination
+    paginate_by_param = 'limit'
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())  # noqa
@@ -93,3 +97,18 @@ class RestDestroyModelMixin:
 
     def perform_destroy(self, instance):
         instance.delete()
+
+
+class RestModelViewSet(RestCreateModelMixin,
+                       RestRetrieveModelMixin,
+                       RestUpdateModelMixin,
+                       RestDestroyModelMixin,
+                       RestListModelMixin,
+                       GenericViewSet):
+    """
+    返回 RestResponse
+    """
+    pass
+
+
+# TODO: Django filter/serach mixins

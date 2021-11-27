@@ -1,14 +1,12 @@
 import logging
-import math
-
 from drf_yasg import openapi
 from drf_yasg.inspectors import SwaggerAutoSchema
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.response import Response
 
-from apps.responses import _Resp  # noqa
+from apps.responses import _Resp, RestResponse  # noqa
+from common.schemas import PageParam
 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -23,26 +21,21 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
 class CustomPagination(PageNumberPagination):
     """分页
     """
-    page_size_query_param = 'page_size'
+
+    page_query_param = PageParam.Enum.page_num.value
+    page_query_description = PageParam.Enum.dict().get(PageParam.Enum.page_num.value)
+
+    # Client can control the page size using this query parameter.
+    # Default is 'None'. Set to eg 'page_size' to enable usage.
+    page_size_query_param = PageParam.Enum.page_size.value
+    page_size_query_description = PageParam.Enum.dict().get(PageParam.Enum.page_size.value)
+
     page_size = 10
 
     def get_paginated_response(self, data):
-        page_size = self.get_page_size(self.request)
-        total_page = math.ceil(self.page.paginator.count / page_size)
-        response = dict([
-            ('page_size', page_size),
-            ('count', self.page.paginator.count),
-            ('current_page', self.page.number),
-            ('total_page', total_page),
-            ('next', self.get_next_link()),
-            ('previous', self.get_previous_link()),
-            ('data', data['data'] if isinstance(data, dict) else data),
-        ])
-        if not isinstance(data, list):
-            for key in [i for i in data.keys() if i != 'data']:
-                response[key] = data[key]
-
-        return Response(response)
+        return RestResponse(data=data['data'] if isinstance(data, dict) else data,
+                            page_size=self.get_page_size(self.request), page_num=self.page.number,
+                            total_count=self.page.paginator.count)
 
 
 class CustomLogFormatter(logging.Formatter):
@@ -101,12 +94,4 @@ class CustomSwaggerAutoSchema(SwaggerAutoSchema):
                 {status_code: openapi.Response(_response.get("description", ""),
                                                ret_schema,
                                                _response.get("examples", None))})
-        elif action == "destroy":
-            status_code = str(status.HTTP_204_NO_CONTENT)
-            destroy_response = responses.get(status_code)  # type: openapi.Response
-            destroy_schema = destroy_response.get("schema")
-            responses.update(
-                {status_code: openapi.Response(destroy_response.get("description", ""),
-                                               destroy_schema,
-                                               destroy_response.get("examples", None))})
         return responses

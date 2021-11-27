@@ -1,12 +1,15 @@
-from rest_framework import viewsets
 from rest_framework.parsers import JSONParser
+from rest_framework.permissions import AllowAny
 
 from apps.account import models, serializers
 from apps.permissions import SuperAdminPermission
-from common.drf import RestModelViewSet
+from apps.responses import RestResponse
+from common.drf.mixins import RestModelViewSet
 
 
-class ProfileViewSet(RestModelViewSet):
+class ProfileViewSet(
+    RestModelViewSet
+):
     """账号接口
     """
     serializer_class = serializers.ProfileSerializer
@@ -14,7 +17,7 @@ class ProfileViewSet(RestModelViewSet):
     search_fields = ('phone', 'name')
     filter_fields = ('role', 'manufacturer')
     parser_classes = (JSONParser,)
-    permission_classes = (SuperAdminPermission,)
+    permission_classes = (AllowAny,)
 
     def get_serializer_class(self):
         if self.action == 'list':
