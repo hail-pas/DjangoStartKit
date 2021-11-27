@@ -25,8 +25,6 @@ class BaseModel(models.Model):
 
     def save(self, *args, **kwargs):
         """ On save, update timestamps """
-        if not self.id:
-            self.create_time = timezone.now()
         self.update_time = timezone.now()
         update_fields = kwargs.get("update_fields", None)  # type: List
         if update_fields:

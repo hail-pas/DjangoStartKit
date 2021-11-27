@@ -63,6 +63,7 @@ class Role(BaseModel):
     )
     groups = models.ManyToManyField(
         CustomizeGroup,
+        related_name="roles",
         verbose_name='角色分组',
         help_text='角色分组',
     )
@@ -85,6 +86,7 @@ class Role(BaseModel):
 class Profile(BaseModel):
     roles = models.ManyToManyField(
         Role,
+        related_name="profiles",
         verbose_name='所属角色',
         help_text=u'所属角色(int)',
     )

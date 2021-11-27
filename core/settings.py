@@ -229,23 +229,8 @@ SWAGGER_SETTINGS = {
             'in': 'header'
         }
     },
-    # TODO: drf_yasg 配置
-    # 'DEFAULT_GENERATOR_CLASS': 'drf_yasg.generators.OpenAPISchemaGenerator',
-    # 'DEFAULT_AUTO_SCHEMA_CLASS': 'drf_yasg.inspectors.SwaggerAutoSchema',
-    #
-    # 'DEFAULT_FIELD_INSPECTORS': [
-    #     'drf_yasg.inspectors.CamelCaseJSONFilter',
-    #     'drf_yasg.inspectors.RecursiveFieldInspector',
-    #     'drf_yasg.inspectors.ReferencingSerializerInspector',
-    #     'drf_yasg.inspectors.ChoiceFieldInspector',
-    #     'drf_yasg.inspectors.FileFieldInspector',
-    #     'drf_yasg.inspectors.DictFieldInspector',
-    #     'drf_yasg.inspectors.JSONFieldInspector',
-    #     'drf_yasg.inspectors.HiddenFieldInspector',
-    #     'drf_yasg.inspectors.RelatedFieldInspector',
-    #     'drf_yasg.inspectors.SerializerMethodFieldInspector',
-    #     'drf_yasg.inspectors.SimpleFieldInspector',
-    #     'drf_yasg.inspectors.StringDefaultFieldInspector',
+    'DEFAULT_AUTO_SCHEMA_CLASS': 'core.restful.CustomSwaggerAutoSchema',
+
     # ],
     # 'DEFAULT_FILTER_INSPECTORS': [
     #     'drf_yasg.inspectors.CoreAPICompatInspector',
@@ -255,40 +240,4 @@ SWAGGER_SETTINGS = {
     #     'drf_yasg.inspectors.CoreAPICompatInspector',
     # ],
     #
-    # 'EXCLUDED_MEDIA_TYPES': ['html'],
-    #
-    # 'DEFAULT_INFO': None,
-    # 'DEFAULT_API_URL': None,
-    #
-    # 'USE_SESSION_AUTH': True,
-    # 'SECURITY_DEFINITIONS': {
-    #     'Basic': {
-    #         'type': 'basic'
-    #     }
-    # },
-    # 'REFETCH_SCHEMA_WITH_AUTH': False,
-    # 'REFETCH_SCHEMA_ON_LOGOUT': False,
-    # 'FETCH_SCHEMA_WITH_QUERY': True,
-    #
-    # 'OPERATIONS_SORTER': None,
-    # 'TAGS_SORTER': None,
-    # 'DOC_EXPANSION': 'list',
-    # 'DEEP_LINKING': False,
-    # 'SHOW_EXTENSIONS': True,
-    # 'DEFAULT_MODEL_RENDERING': 'model',
-    # 'DEFAULT_MODEL_DEPTH': 3,
-    # 'SHOW_COMMON_EXTENSIONS': True,
-    # 'OAUTH2_REDIRECT_URL': None,
-    # 'OAUTH2_CONFIG': {},
-    # 'SUPPORTED_SUBMIT_METHODS': [
-    #     'get',
-    #     'put',
-    #     'post',
-    #     'delete',
-    #     'options',
-    #     'head',
-    #     'patch',
-    #     'trace'
-    # ],
-    # 'DISPLAY_OPERATION_ID': True,
 }

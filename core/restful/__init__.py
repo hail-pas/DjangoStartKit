@@ -1,9 +1,14 @@
 import logging
 import math
 
+from drf_yasg import openapi
+from drf_yasg.inspectors import SwaggerAutoSchema
+from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
+
+from apps.responses import _Resp  # noqa
 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -65,3 +70,43 @@ class CustomLogFormatter(logging.Formatter):
         log_fmt = self.FORMATS.get(record.levelno)
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
+
+
+class CustomSwaggerAutoSchema(SwaggerAutoSchema):
+
+    def get_responses(self):
+        responses = super().get_responses()
+
+        # rest_schema = openapi.Schema(description="状态吗", )
+        # openapi.Response('response description', UserSerializer)
+        action = getattr(self.view, "action", None)
+        if not action:
+            return responses
+        if action == "create":
+            status_code = str(status.HTTP_201_CREATED)
+            create_response = responses.get(status_code)  # type: openapi.Response
+            create_schema = create_response.get("schema")
+            responses.update(
+                {status_code: openapi.Response(create_response.get("description", ""),
+                                               _Resp.to_schema(create_schema),
+                                               create_response.get("examples", None))})
+        elif action in ["list", "retrieve", "update", "partial_update"]:
+            status_code = str(status.HTTP_200_OK)
+            _response = responses.get(status_code)  # type: openapi.Response
+            _schema = _response.get("schema")
+            ret_schema = _Resp.to_schema(_schema)
+            if action == "list":
+                ret_schema = _Resp.to_schema(_schema, page_info=True)
+            responses.update(
+                {status_code: openapi.Response(_response.get("description", ""),
+                                               ret_schema,
+                                               _response.get("examples", None))})
+        elif action == "destroy":
+            status_code = str(status.HTTP_204_NO_CONTENT)
+            destroy_response = responses.get(status_code)  # type: openapi.Response
+            destroy_schema = destroy_response.get("schema")
+            responses.update(
+                {status_code: openapi.Response(destroy_response.get("description", ""),
+                                               destroy_schema,
+                                               destroy_response.get("examples", None))})
+        return responses

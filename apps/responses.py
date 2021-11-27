@@ -1,13 +1,11 @@
-import json
 import logging
 from functools import lru_cache
 from math import ceil
 from typing import Optional, Any
-from datetime import datetime
 
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import JsonResponse
-from django.utils import timezone
+from drf_yasg import openapi
 from drf_yasg.utils import filter_none
 from pydantic import BaseModel
 from rest_framework import serializers
@@ -36,6 +34,20 @@ class _PageInfo(BaseModel):
 
         return PageInfo
 
+    @classmethod
+    @lru_cache
+    def to_schema(cls):
+        _schema = openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "total_page": openapi.Schema(type=openapi.TYPE_INTEGER, default=1, description="总页数"),
+                "page_size": openapi.Schema(type=openapi.TYPE_INTEGER, default=10, description="每页数据条数"),
+                "page_num": openapi.Schema(type=openapi.TYPE_INTEGER, default=1, description="页码")
+            },
+            description="响应体结构"
+        )
+        return _schema
+
 
 # class _Resp(GenericModel, Generic[DataT]):
 class _Resp(BaseModel):
@@ -45,7 +57,8 @@ class _Resp(BaseModel):
         "code": 200,  # http状态码为 200 前提下自定义code
         "success": True
         "message": "message",
-        "data": "data"
+        "data": "data",
+        "page_info": "page_info"  # 可选
         }
     """
 
@@ -74,9 +87,10 @@ class _Resp(BaseModel):
 
             attrs["Meta"] = Meta
 
-            if "Page" in _name:
+            if _name.startswith("Page"):
                 attrs["page_info"] = _PageInfo.to_serializer()()
-            return type(_name, (PlainSchema,), attrs)
+            bases = (PlainSchema,)
+            return type(_name, bases, attrs)
 
         _cache = {}
 
@@ -88,12 +102,29 @@ class _Resp(BaseModel):
         elif isinstance(resp_serializer, serializers.Serializer):
             name = f"Resp{resp_serializer.__class__.__name__}"
         else:
-            raise RuntimeError("Should Use Serializer class or ListSerializer instance as Response Schema")
+            raise AssertionError(f"Serializer class or instance required, not {type(resp_serializer)}")
 
         if not _cache.get(name, None):
             _cache[name] = generate_serializer(name)
 
         return _cache[name]
+
+    @classmethod
+    def to_schema(cls, data_schema, page_info: bool = False):
+        properties = {
+            "code": openapi.Schema(type=openapi.TYPE_INTEGER, default=100200, description="业务状态码"),
+            "success": openapi.Schema(type=openapi.TYPE_BOOLEAN, default=True, description="是否成功"),
+            "message": openapi.Schema(type=openapi.TYPE_STRING, default="", description="提示信息"),
+            "data": data_schema,
+        }
+        if page_info:
+            properties["page_info"] = _PageInfo.to_schema()
+        rest_schema = openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties=properties,
+            description="响应体结构"
+        )
+        return rest_schema
 
 
 class RestResponse(JsonResponse):

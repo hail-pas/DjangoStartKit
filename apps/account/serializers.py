@@ -63,5 +63,5 @@ class ProfileListSerializer(serializers.ModelSerializer):
         fields = read_only_fields + (
             'phone',
             'name',
-            'roles',
+            # 'roles',
         )
