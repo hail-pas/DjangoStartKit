@@ -2,9 +2,12 @@ from typing import List
 
 from django.db import models
 from django.utils import timezone
+from django.db.models.manager import Manager
 
 
 class BaseModel(models.Model):
+    objects = Manager()
+
     create_time = models.DateTimeField(
         "创建时间",
         auto_now_add=True,

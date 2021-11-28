@@ -25,7 +25,14 @@ class CustomizeGroupListSerializer(serializers.ModelSerializer):
         )
 
 
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Role
+        fields = ["id", "code"]
+
+
 class ProfileSerializer(serializers.ModelSerializer):
+    roles = RoleSerializer(many=True, read_only=True)
 
     def validate_phone(self, value):
         if not check_mobile_phone(value):

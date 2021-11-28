@@ -1,3 +1,4 @@
+import collections
 import os
 import sys
 import random
@@ -256,3 +257,23 @@ def make_redis_lock(get_redis: Callable[[], Redis], timeout: int = 60):
 
 
 redis_lock = make_redis_lock(get_sync_redis)
+
+
+def mapper(func, ob):
+    """
+    map func for list or dict
+    :param func:
+    :param ob:
+    :return:
+    """
+    if isinstance(ob, list):
+        for i in ob:
+            mapper(func, i)
+    elif isinstance(ob, dict):
+        for k, v in ob.items():
+            if isinstance(v, dict):
+                mapper(func, v)
+            else:
+                ob[k] = func(v)
+    else:
+        return

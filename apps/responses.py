@@ -4,14 +4,15 @@ from math import ceil
 from typing import Optional, Any
 
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db.models.query import QuerySet
 from django.http import JsonResponse
 from drf_yasg import openapi
-from drf_yasg.utils import filter_none
 from pydantic import BaseModel
 from rest_framework import serializers
 
 from apps.enums import ResponseCodeEnum
 from common.types import PlainSchema
+from common.utils import mapper
 
 logger = logging.getLogger(__name__)
 
@@ -148,7 +149,8 @@ class RestResponse(JsonResponse):
         if all([page_size is not None, page_num is not None, total_count is not None]):
             page_info = _PageInfo(page_size=page_size, page_num=page_num, total_page=ceil(total_count / page_size))
         self.result = _Resp(code=code, success=success, message=message, page_info=page_info).dict()
-        self.result["data"] = data  # pydantic初始化赋值时是懒获取，会导致 drf_serializer.data() 多次触发
+        mapper(lambda v: list(v) if isinstance(v, QuerySet) else v, data)
+        self.result["data"] = data
         super().__init__(self.result, encoder, safe=True, json_dumps_params=None, **kwargs)
 
     @classmethod

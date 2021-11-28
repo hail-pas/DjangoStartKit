@@ -3,6 +3,7 @@ import logging
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg import openapi
 from drf_yasg.inspectors import SwaggerAutoSchema, CoreAPICompatInspector, NotHandled
+from drf_yasg.openapi import Parameter, IN_QUERY, TYPE_STRING
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.filters import OrderingFilter, SearchFilter
@@ -99,6 +100,23 @@ class CustomSwaggerAutoSchema(SwaggerAutoSchema):
                                                ret_schema,
                                                _response.get("examples", None))})
         return responses
+
+    def get_query_parameters(self):
+        params = super(CustomSwaggerAutoSchema, self).get_query_parameters()
+        action = getattr(self.view, "action", None)
+        if action and action == "list":
+            for param in params:
+                if param.name == "search":
+                    param.description = f"搜索字段: {', '.join(self.view.search_fields)}"  # noqa
+            simple_list_param = Parameter(
+                name="simple_list", in_=IN_QUERY,
+                description=f"英文逗号分隔, 指定返回字段: "
+                            f"{', '.join([i.name for i in self.view.get_serializer_class().Meta.model._meta.fields])}",
+                # noqa
+                required=False,
+                type=TYPE_STRING)
+            return [simple_list_param] + params
+        return params
 
 
 class NoPagingAutoSchema(CustomSwaggerAutoSchema):

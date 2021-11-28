@@ -1,4 +1,6 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.settings import api_settings
 from rest_framework.viewsets import GenericViewSet
 
@@ -33,15 +35,28 @@ class RestListModelMixin:
     List a queryset.
     """
     pagination_class = CustomPagination
-    paginate_by_param = 'limit'
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
 
     def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())  # noqa
+        simple_list = None
+        simple_list_param = request.GET.get("simple_list")
+        if simple_list_param:
+            simple_list = simple_list_param.split(",")
+
+        queryset = self.filter_queryset(self.get_queryset())  # type: QuerySet
+
+        if simple_list:
+            queryset = queryset.values(*simple_list)  # 指定字段值
 
         page = self.paginate_queryset(queryset)  # noqa
         if page is not None:
+            if simple_list:
+                return self.get_paginated_response(page)
             serializer = self.get_serializer(page, many=True)  # noqa
             return self.get_paginated_response(serializer.data)  # noqa
+
+        if simple_list:
+            return RestResponse(data=queryset)
 
         serializer = self.get_serializer(queryset, many=True)  # noqa
         return RestResponse(data=serializer.data)
@@ -110,5 +125,9 @@ class RestModelViewSet(RestCreateModelMixin,
     """
     pass
 
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            # queryset just for schema generation metadata
+            return self.queryset.none()
 
-# TODO: Django filter/serach mixins
+        return super(RestModelViewSet, self).get_queryset()
