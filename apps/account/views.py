@@ -4,7 +4,6 @@ from rest_framework.permissions import AllowAny
 from apps.account import models, serializers
 from apps.responses import RestResponse
 from common.drf.mixins import RestModelViewSet
-from core.restful import CustomPagination
 
 
 class ProfileViewSet(
