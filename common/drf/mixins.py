@@ -1,3 +1,4 @@
+from django.core.exceptions import FieldError
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -42,21 +43,34 @@ class RestListModelMixin:
         simple_list_param = request.GET.get("simple_list")
         if simple_list_param:
             simple_list = simple_list_param.split(",")
+            simple_list = [i.strip() for i in simple_list]
+            simple_list = list(set(self.serializer_class().fields.keys()).intersection(set(simple_list)))
 
         queryset = self.filter_queryset(self.get_queryset())  # type: QuerySet
 
+        profile = request.user
+
+        if not simple_list and not profile.is_anonymous:
+            simple_list = profile.display_fields_config.get(
+                self.serializer_class().Meta.model._meta.label_lower)  # noqa
+
         if simple_list:
-            queryset = queryset.values(*simple_list)  # 指定字段值
+            if "id" not in simple_list:
+                simple_list.append("id")
+            try:
+                queryset = queryset.values(*simple_list)  # 指定字段值
+            except FieldError as e:
+                return RestResponse.fail(message="字段不存在", data=repr(e))
 
         page = self.paginate_queryset(queryset)  # noqa
         if page is not None:
             if simple_list:
-                return self.get_paginated_response(page)
+                return self.get_paginated_response(self.get_serializer(page, simple_list=simple_list, many=True).data)
             serializer = self.get_serializer(page, many=True)  # noqa
             return self.get_paginated_response(serializer.data)  # noqa
 
         if simple_list:
-            return RestResponse(data=queryset)
+            return RestResponse(data=self.get_serializer(queryset, simple_list=simple_list, many=True).data)
 
         serializer = self.get_serializer(queryset, many=True)  # noqa
         return RestResponse(data=serializer.data)
@@ -111,7 +125,12 @@ class RestDestroyModelMixin:
         return RestResponse(status=status.HTTP_204_NO_CONTENT)
 
     def perform_destroy(self, instance):
+        """
+        直接删除, 需要保留的情况再处理。软删除唯一性校验麻烦
+        """
         instance.delete()
+        # instance.deleted = True
+        # instance.save()
 
 
 class RestModelViewSet(RestCreateModelMixin,
@@ -123,7 +142,6 @@ class RestModelViewSet(RestCreateModelMixin,
     """
     返回 RestResponse
     """
-    pass
 
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False):

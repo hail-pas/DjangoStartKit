@@ -128,6 +128,16 @@ class RedisUtil:
             return default
         return v
 
+    @classmethod
+    def hgetall(cls, name, default=None):
+        v = cls.r.hgetall(name)
+        if v is None:
+            return default
+        return {k.decode('utf-8'): v.decode('utf-8') for k, v in v.items()}
+
+
+RedisUtil.init()
+
 
 def get_sync_redis():
     return RedisUtil.r

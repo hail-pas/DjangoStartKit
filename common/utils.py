@@ -1,9 +1,9 @@
-import collections
 import os
 import sys
 import random
 import string
 import threading
+from itertools import chain
 from typing import List, Union, Optional, Callable
 from asyncio import sleep
 from datetime import datetime
@@ -11,10 +11,13 @@ from functools import wraps
 from contextlib import contextmanager
 from collections import namedtuple
 import pytz
+import requests
+from django.db.models import QuerySet
 from django.http import HttpRequest
 from redis import Redis
-
+from conf.config import local_configs
 from storages.redis import get_sync_redis, keys
+import time
 
 COMMON_TIME_STRING = "%Y-%m-%d %H:%M:%S"
 COMMON_DATE_STRING = "%Y-%m-%d"
@@ -276,4 +279,79 @@ def mapper(func, ob):
             else:
                 ob[k] = func(v)
     else:
-        return
+        func(ob)
+
+
+def resp_serialize(v):
+    if isinstance(v, QuerySet):
+        return list(v)
+
+    if isinstance(v, datetime):
+        return v.strftime(COMMON_TIME_STRING)
+
+    return v
+
+
+def model_to_dict(instance, fields=None, exclude=None):
+    """
+    Return a dict containing the data in ``instance`` suitable for passing as
+    a Form's ``initial`` keyword argument.
+
+    ``fields`` is an optional list of field names. If provided, return only the
+    named.
+
+    ``exclude`` is an optional list of field names. If provided, exclude the
+    named from the returned dict, even if they are listed in the ``fields``
+    argument.
+    """
+    opts = instance._meta
+    data = {}
+    for f in chain(opts.concrete_fields, opts.private_fields, opts.many_to_many):
+        # if not getattr(f, 'editable', False):
+        #     continue
+        if fields is not None and f.name not in fields:
+            continue
+        if exclude and f.name in exclude:
+            continue
+        data[f.name] = f.value_from_object(instance)
+    return data
+
+
+def merge_dict(dict1: dict, dict2: dict = None, reverse: bool = False):
+    try:
+        if not dict2:
+            merged = dict1
+        else:
+            merged = {**dict1, **dict2}
+    except (AttributeError, ValueError) as e:
+        raise TypeError('original and updates must be a dictionary: %s' % e)
+
+    if not reverse:
+        return merged
+    else:
+        return {v: k for k, v in merged.items()}
+
+
+def hash_collision_reverse(_dict: dict):
+    """
+    反转 键值 对，冲突时使用列表解决, 只针对单层字典
+    """
+    ret = {}
+    for k, v in _dict.items():
+        if v not in ret:
+            ret[v] = k
+        else:
+            exist = ret[v]
+            if isinstance(exist, list):
+                exist.append(k)
+                ret[v] = exist
+            else:
+                ret[v] = [exist, k]
+    return ret
+
+
+def datetime_to_timestamp(value):
+    """格式化时间转换为时间戳"""
+    value = datetime.strftime(value, "%Y-%m-%d %H:%M:%S")
+    value = time.strptime(value, "%Y-%m-%d %H:%M:%S")
+    return int(time.mktime(value) * 1000)

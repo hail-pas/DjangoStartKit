@@ -5,6 +5,15 @@ from django.utils import timezone
 from django.db.models.manager import Manager
 
 
+class DeletedFieldManager(Manager):
+    """
+    deleted 软删除
+    """
+
+    def get_queryset(self):
+        return super().get_queryset().filter(deleted=False)
+
+
 class BaseModel(models.Model):
     objects = Manager()
 
@@ -37,3 +46,13 @@ class BaseModel(models.Model):
     class Meta:
         abstract = True
         ordering = ['-id']  # 默认倒序
+
+
+class LabelFieldMixin(models.Model):
+    label = models.CharField(verbose_name="名称", max_length=50, help_text="名称")
+
+    def __str__(self):
+        return self.label
+
+    class Meta:
+        abstract = True

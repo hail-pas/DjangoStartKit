@@ -7,8 +7,8 @@ from common.types import PlainSchema, StrEnumMore
 
 
 class PageParam(PlainSchema):
-    page_size = serializers.IntegerField(help_text="页大小")
-    page_num = serializers.IntegerField(help_text="页码")
+    page_size = serializers.IntegerField(help_text="页大小", default=10, min_value=1)
+    page_num = serializers.IntegerField(help_text="页码", default=1, min_value=1)
 
     class Enum(StrEnumMore):
         page_size = ("page_size", "每页条数")

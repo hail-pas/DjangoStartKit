@@ -12,7 +12,7 @@ from rest_framework import serializers
 
 from apps.enums import ResponseCodeEnum
 from common.types import PlainSchema
-from common.utils import mapper
+from common.utils import mapper, resp_serialize
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +22,7 @@ class _PageInfo(BaseModel):
     翻页相关信息
     """
     total_page: int
+    total_count: int
     page_size: int
     page_num: int
 
@@ -30,6 +31,7 @@ class _PageInfo(BaseModel):
     def to_serializer(cls):
         class PageInfo(PlainSchema):
             total_page = serializers.IntegerField(default=1, help_text="总页数")
+            total_count = serializers.IntegerField(default=1, help_text="总条数")
             page_size = serializers.IntegerField(default=10, help_text="每页条数")
             page_num = serializers.IntegerField(default=1, help_text="当前页码")
 
@@ -42,6 +44,7 @@ class _PageInfo(BaseModel):
             type=openapi.TYPE_OBJECT,
             properties={
                 "total_page": openapi.Schema(type=openapi.TYPE_INTEGER, default=1, description="总页数"),
+                "total_count": openapi.Schema(type=openapi.TYPE_INTEGER, default=1, description="总页数"),
                 "page_size": openapi.Schema(type=openapi.TYPE_INTEGER, default=10, description="每页数据条数"),
                 "page_num": openapi.Schema(type=openapi.TYPE_INTEGER, default=1, description="页码")
             },
@@ -147,19 +150,24 @@ class RestResponse(JsonResponse):
                  page_size: int = None, page_num: int = None, total_count: int = None, **kwargs):
         page_info = None
         if all([page_size is not None, page_num is not None, total_count is not None]):
-            page_info = _PageInfo(page_size=page_size, page_num=page_num, total_page=ceil(total_count / page_size))
+            page_info = _PageInfo(page_size=page_size, page_num=page_num, total_page=ceil(total_count / page_size),
+                                  total_count=total_count)
         self.result = _Resp(code=code, success=success, message=message, page_info=page_info).dict()
-        mapper(lambda v: list(v) if isinstance(v, QuerySet) else v, data)
+        mapper(resp_serialize, data)
         self.result["data"] = data
         super().__init__(self.result, encoder, safe=True, json_dumps_params=None, **kwargs)
 
     @classmethod
-    def ok(cls, message: Optional[str] = "", data: Optional[Any] = None):
+    def ok(cls, message: Optional[str] = "Success", data: Optional[Any] = None):
         return RestResponse(message=message, data=data)
 
     @classmethod
-    def fail(cls, message: str = ""):
-        return RestResponse(code=ResponseCodeEnum.failed.value, success=False, message=message)
+    def fail(cls, message: str = "", data: Optional[Any] = None):
+        return RestResponse(code=ResponseCodeEnum.failed.value, success=False, message=message, data=data)
 
     def dict(self):
         return self.result
+
+    @classmethod
+    def success_schema(cls):
+        return _Resp.to_schema(None)

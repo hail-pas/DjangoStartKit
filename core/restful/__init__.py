@@ -1,7 +1,9 @@
 import logging
 
+from django.db import models
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg import openapi
+from drf_yasg.generators import OpenAPISchemaGenerator
 from drf_yasg.inspectors import SwaggerAutoSchema, CoreAPICompatInspector, NotHandled
 from drf_yasg.openapi import Parameter, IN_QUERY, TYPE_STRING
 from rest_framework import status
@@ -11,6 +13,7 @@ from rest_framework.pagination import PageNumberPagination
 
 from apps.responses import _Resp, RestResponse  # noqa
 from common.schemas import PageParam
+from common.utils import model_to_dict
 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -37,6 +40,9 @@ class CustomPagination(PageNumberPagination):
     page_size = 10
 
     def get_paginated_response(self, data):
+        simple_list = getattr(self.request, "raw_simple_list", [])
+        if simple_list:
+            data = [model_to_dict(d, simple_list) if isinstance(d, models.Model) else d for d in data]
         return RestResponse(data=data['data'] if isinstance(data, dict) else data,
                             page_size=self.get_page_size(self.request), page_num=self.page.number,
                             total_count=self.page.paginator.count)
@@ -117,6 +123,41 @@ class CustomSwaggerAutoSchema(SwaggerAutoSchema):
                 type=TYPE_STRING)
             return [simple_list_param] + params
         return params
+
+
+class CustomOpenAPISchemaGenerator(OpenAPISchemaGenerator):
+    def get_schema(self, request=None, public=False):
+        """Generate a :class:`.Swagger` object with custom tags"""
+        swagger = super().get_schema(request, public)
+        tags = [
+            {
+                "name": "account",
+                "description": "",
+            }, {
+                "name": "auth",
+                "description": "",
+            }, {
+                "name": "info",
+                "description": "",
+            }, {
+                "name": "information",
+                "description": "",
+            }, {
+                "name": "config",
+                "description": "",
+            }, {
+                "name": "export",
+                "description": "",
+            }, {
+                "name": "monitor",
+                "description": "",
+            }, {
+                "name": "analysis",
+                "description": "",
+            }
+        ]
+        swagger.tags = tags
+        return swagger
 
 
 class NoPagingAutoSchema(CustomSwaggerAutoSchema):

@@ -1,6 +1,7 @@
 import inspect
 from functools import partial
 
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
 
@@ -17,7 +18,7 @@ def custom_swagger_auto_schema(**kwargs):
         responses = kwargs.get("responses")
         if responses:
             responses_200_ser = responses.get(str(status.HTTP_200_OK))  # noqa
-            if responses_200_ser:
+            if responses_200_ser and not isinstance(responses_200_ser, openapi.Schema):
                 page_info = kwargs.get("page_info", False)
 
                 _is_serializer_class = inspect.isclass(responses_200_ser) and issubclass(responses_200_ser,
@@ -27,7 +28,7 @@ def custom_swagger_auto_schema(**kwargs):
 
                 assert (
                         _is_serializer_class or _is_serializer_instance or _is_list_serializer_instance
-                ), f"AssertionError: Serializer class or instance required, not {type(responses_200_ser)}"
+                ), f"AssertionError: Serializer class or instance or openapi.Schema required, not {type(responses_200_ser)}"
 
                 if _is_serializer_class:
                     if page_info:

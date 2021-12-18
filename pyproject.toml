@@ -27,6 +27,9 @@ pydantic = "1.8.2"
 djangorestframework-jwt = "1.11.0"
 django-simple-captcha = "0.5.14"
 typer = "0.3.2"
+pypinyin = "0.40.0"
+redisearch = "2.1.1"
+cachetools = "4.2.4"
 
 [[tool.poetry.source]]
 name = "aliyun"

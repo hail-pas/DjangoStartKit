@@ -23,11 +23,6 @@ from django.views import static as static_view
 from rest_framework import permissions
 from rest_framework.documentation import include_docs_urls
 
-from core.onstart import ready
-
-# 启动时触发
-ready()
-
 urlpatterns = [
     path('', lambda request: HttpResponse("OK")),
     path('admin/', admin.site.urls),
@@ -64,7 +59,7 @@ if settings.DEBUG:
 
     schema_view = get_schema_view(
         openapi.Info(
-            title="core API",
+            title="DjangoStartKit API",
             default_version='1.0',
             description="API Doc of core",
         ),

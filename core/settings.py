@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'captcha',
     # apps
     'apps.account',
+    'apps.info',
 ]
 
 MIDDLEWARE = [
@@ -65,11 +66,14 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # ===================================================
+    'core.middlewares.AuthenticationMiddlewareJWT',
     'core.middlewares.ResponseProcessMiddleware',
     'core.middlewares.RequestProcessMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
+AUTH_USER_MODEL = "account.Profile"
+AUTHENTICATION_BACKENDS = ["core.authenticate.CustomModelBackend"]
 
 TEMPLATES = [
     {
@@ -162,7 +166,7 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter',
         'rest_framework.filters.SearchFilter',
     ),
-    # 'DEFAULT_PAGINATION_CLASS': 'core.restful.CustomPagination',
+    'DEFAULT_PAGINATION_CLASS': 'core.restful.CustomPagination',
     'DATETIME_FORMAT': "%Y-%m-%d %H:%M:%S",
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.FormParser',
@@ -231,13 +235,5 @@ SWAGGER_SETTINGS = {
     },
     'DEFAULT_AUTO_SCHEMA_CLASS': 'core.restful.CustomSwaggerAutoSchema',
 
-    # ],
-    # 'DEFAULT_FILTER_INSPECTORS': [
-    #     'drf_yasg.inspectors.CoreAPICompatInspector',
-    # ],
-    # 'DEFAULT_PAGINATOR_INSPECTORS': [
-    #     'drf_yasg.inspectors.DjangoRestResponsePagination',
-    #     'drf_yasg.inspectors.CoreAPICompatInspector',
-    # ],
-    #
+    'DEFAULT_GENERATOR_CLASS': 'core.restful.CustomOpenAPISchemaGenerator',
 }

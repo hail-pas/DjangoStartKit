@@ -18,8 +18,8 @@ services:
       # 本地时间同步
       - /etc/localtime:/etc/localtime
       # 日志文件
-      - /path/to/logs/:/usr/share/nginx/fastpost/logs/
-    image: docker.io/hypofiasco/fastpost:latest
+      - /path/to/logs/:/usr/share/nginx/djangoStartKit/logs/
+    image: docker.io/hypofiasco/djangoStartKit:latest
     command: gunicorn --config ./deploy/gunicorn/conf.py --log-config ./deploy/gunicorn/logging.conf main:app
   redis:
     hostname: redis
@@ -36,4 +36,4 @@ services:
       - /path/to/mysql:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: "root"
-      MYSQL_DATABASE: "fastpost"
+      MYSQL_DATABASE: "djangoStartKit"

@@ -43,7 +43,9 @@ def drop_db():
 
 @db_typer.command("shell", short_help="Mysql命令行")
 def _shell():
-    cmd = "mysql -u {user} -p{password}".format(
+    cmd = "mysql -h {host} --port={port} -u {user} -p{password}".format(
+        host=settings.DB_HOST,
+        port=settings.DB_PORT,
         user=settings.DB_USER,
         password=settings.DB_PASSWORD,
     )
