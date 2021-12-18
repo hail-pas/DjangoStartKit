@@ -214,7 +214,7 @@ class ProfileSelectSerializer(serializers.Serializer):
                                                   queryset=models.Profile.objects.all())
 
 
-def get_profile_menu(profile):
+def get_profile_group(profile):
     def get_subordinates(obj):
         ids = set(profile.groups.all().values_list("id", flat=True)).intersection(
             set(models.GroupRelation.objects.filter(parent=obj).values_list("child_id", flat=True)))
