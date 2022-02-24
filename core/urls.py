@@ -30,6 +30,7 @@ urlpatterns = [
     # captcha
     path('captcha/', include('captcha.urls')),
     # api
+    path("auth/", include("apps.auth.urls")),
     path('info/', include('apps.info.urls')),
     path('account/', include('apps.account.urls')),
 

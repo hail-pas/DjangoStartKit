@@ -17,7 +17,7 @@ class RedisUtil:
     @classmethod
     def init(
             cls, host=local_configs.REDIS_HOST, port=local_configs.REDIS_PORT, password=local_configs.REDIS_PASSWORD,
-            db=0, **kwargs,
+            db=local_configs.REDIS_DB, **kwargs,
     ):
         cls._host = host
         cls._port = port
@@ -29,7 +29,7 @@ class RedisUtil:
     @classmethod
     def get_pool(cls, db: int = 0) -> s_redis.ConnectionPool:
         assert cls._pool, "must call init first"
-        if db == 0:
+        if db == local_configs.REDIS_DB:
             return cls._pool
         else:
             return s_redis.ConnectionPool(host=cls._host, port=cls._port, password=cls._password, db=db,

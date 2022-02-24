@@ -46,7 +46,7 @@ class RestListModelMixin:
             simple_list = [i.strip() for i in simple_list]
             simple_list = list(set(self.serializer_class().fields.keys()).intersection(set(simple_list)))
 
-        queryset = self.filter_queryset(self.get_queryset())  # type: QuerySet
+        queryset = self.filter_queryset(self.get_queryset())
 
         profile = request.user
 

@@ -1,6 +1,7 @@
 # Create your models here.
 from django.db import models
 from django.contrib.auth.models import Permission, GroupManager
+from django.db.models import Manager
 from django.utils.crypto import get_random_string
 from storages.mysql import BaseModel, DeletedFieldManager
 from apps import enums
@@ -16,8 +17,10 @@ from django.core.mail import send_mail
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+allowed_chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ123456789'
 
-class BaseUserManager(DeletedFieldManager):
+
+class BaseUserManager(Manager):
 
     @classmethod
     def normalize_email(cls, email):
@@ -33,10 +36,7 @@ class BaseUserManager(DeletedFieldManager):
             email = email_name + '@' + domain_part.lower()
         return email
 
-    def make_random_password(self, length=10,
-                             allowed_chars='abcdefghjkmnpqrstuvwxyz'
-                                           'ABCDEFGHJKLMNPQRSTUVWXYZ'
-                                           '23456789'):
+    def make_random_password(self, length=10, allowed_chars=allowed_chars):
         """
         Generate a random password with the given length and given
         allowed_chars. The default value of allowed_chars does not have "I" or
@@ -276,9 +276,9 @@ class CustomizeGroup(BaseModel):
 
     @classmethod
     def _get_permission_ids(cls):
-        permission_ids = CustomizeGroup.objects.filter(
-            group_type=enums.GroupTypeEnum.permission.value).values_list("id", flat=True)
-        return permission_ids
+        return CustomizeGroup.objects.filter(
+            group_type=enums.GroupTypeEnum.permission.value
+        ).values_list("id", flat=True)
 
     @classmethod
     def permission_groups(cls):
@@ -290,7 +290,7 @@ class CustomizeGroup(BaseModel):
 
     @classmethod
     def top_groups(cls):
-        return cls.objects.filter(id__in=cls._get_top_ids())
+        return cls.objects.filter(id__in=cls._get_top_ids(), enabled=True)
 
     @classmethod
     def _get_menu_level1_ids(cls):
@@ -298,13 +298,13 @@ class CustomizeGroup(BaseModel):
 
     @classmethod
     def menu_level1_groups(cls):
-        return cls.objects.filter(id__in=cls._get_menu_level1_ids())
+        return cls.objects.filter(id__in=cls._get_menu_level1_ids(), enabled=True)
 
     @classmethod
     def menu_level2_groups(cls):
         return cls.objects.filter(
-            id__in=GroupRelation.objects.filter(parent__in=cls._get_menu_level1_ids()).values_list("child_id",
-                                                                                                   flat=True))
+            id__in=GroupRelation.objects.filter(parent__in=cls._get_menu_level1_ids(), enabled=True).values_list(
+                "child_id", flat=True))
 
     class Meta:
         verbose_name = u'自定义分组'
@@ -342,9 +342,8 @@ class Role(BaseModel):
         verbose_name='角色分组',
         help_text='角色分组',
     )
-    province_ids = models.JSONField(verbose_name="可查看省份ID", help_text="可查看省份ID", default=list)
-    city_ids = models.JSONField(verbose_name="可查看城市ID", help_text="可查看城市ID", default=list)
-    fleet_ids = models.JSONField(verbose_name="可查看车队ID", help_text="可查看车队ID", default=list)
+    operate_groups = models.JSONField(default=list, verbose_name="操作权限", help_text="操作权限")
+    view_groups = models.JSONField(default=list, verbose_name="查看权限", help_text="查看权限")
     remark = models.CharField(
         '备注',
         max_length=128,
@@ -371,14 +370,6 @@ class Profile(BaseModel, AbstractUser):
         verbose_name='所属角色',
         help_text=u'所属角色(int)',
     )
-    department = models.CharField(
-        "部门",
-        max_length=32,
-        choices=enums.DepartmentEnum.choices(),
-        null=True,
-        default=None,
-        help_text="部门"
-    )
     gender = models.CharField(
         "性别",
         max_length=24,
@@ -393,6 +384,11 @@ class Profile(BaseModel, AbstractUser):
         null=True,
         default=None,
         help_text='操作人'
+    )
+    display_fields_config = models.JSONField(
+        "自定义字段配置JSON",
+        default=dict,
+        help_text="自定义字段配置JSON"
     )
 
     @property

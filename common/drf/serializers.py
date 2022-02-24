@@ -12,8 +12,8 @@ from rest_framework.relations import PKOnlyObject
 from rest_framework.serializers import ModelSerializer, ALL_FIELDS
 from rest_framework.utils import humanize_datetime
 from rest_framework_jwt.serializers import JSONWebTokenSerializer, jwt_payload_handler, jwt_encode_handler
-
-from common.utils import COMMON_TIME_STRING, datetime_to_timestamp
+from common.utils import COMMON_TIME_STRING, format_str_to_millseconds
+from rest_framework.exceptions import ValidationError
 
 
 class CustomModelSerializer(ModelSerializer):
@@ -202,7 +202,10 @@ class CustomModelSerializer(ModelSerializer):
                 if self.simple_list and isinstance(field, ChoiceField):
                     ret[field.field_name] = field.choices.get(field.to_representation(attribute))
                 else:
-                    if isinstance(field, DateTimeField):
+                    if isinstance(field, ChoiceField):
+                        ret[f"{field.field_name}_display"] = field.choices.get(field.to_representation(attribute))
+                        ret[f"enum_{field.field_name}"] = field.choices.get(field.to_representation(attribute))
+                    elif isinstance(field, DateTimeField):
                         field.format = COMMON_TIME_STRING
                     ret[field.field_name] = field.to_representation(attribute)
 
@@ -259,9 +262,9 @@ class DateTimeToTimeStampField(DateTimeField):
                     pass
             else:
                 try:
-                    parsed = self.datetime_parser(value, input_format)
+                    parsed = self.datetime_parser(value, input_formats)
                     datetime_str = self.enforce_timezone(parsed)
-                    return datetime_to_timestamp(datetime_str)
+                    return format_str_to_millseconds(datetime_str)
                 except (ValueError, TypeError):
                     pass
 

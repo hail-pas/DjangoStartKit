@@ -9,7 +9,7 @@ from rest_framework_jwt.views import ObtainJSONWebToken
 
 from apps import enums
 from apps.account.models import Profile, CustomizeGroup
-from apps.account.serializers import ProfileSerializer, CustomizeGroupListSerializer, get_profile_group
+from apps.account.serializers import ProfileSerializer, CustomizeGroupListSerializer, get_profile_menu
 from apps.auth import serializers, schemas
 from apps.responses import RestResponse
 from common.swagger import custom_swagger_auto_schema
@@ -58,7 +58,7 @@ class LoginView(ObtainJSONWebToken):
         if profile.roles.filter(code=enums.RoleCodeEnum.super_admin.value).first():
             menu = CustomizeGroupListSerializer(instance=all_menu, many=True).data
         else:
-            menu = get_profile_group(profile)
+            menu = get_profile_menu(profile)
 
         return RestResponse.ok(
             data={

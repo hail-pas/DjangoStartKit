@@ -14,7 +14,7 @@ from common.types import Map
 from conf.enums import Environment
 
 
-def hbase_connection_pool(size: int = 10, **kwargs) -> ConnectionPool:
+def hbase_connection_pool(size: int = 50, **kwargs) -> ConnectionPool:
     host, port = get_random_host_and_port(local_configs.THRIFT_SERVERS)
     pool = ConnectionPool(size=size, host=host, port=int(port), **kwargs)
     return pool
@@ -84,10 +84,12 @@ class BaseModelMeta(type):
                 _parent_hex_fields = getattr(base, "_hex_fields", None)
                 _parent_json_fields = getattr(base, "_json_fields", None)
                 _parent_json_fields_mapper = getattr(base, "_json_fields_mapper", None)
+                _parent_fields_map = getattr(base, "_fields_map")
                 if _parent_bytes_to_str_map:
                     bytes_to_str_map.update(_parent_bytes_to_str_map)
+                    fields_map.update(_parent_fields_map)
                 if _parent_hex_fields:
-                    hex_fields.extend(_parent_json_fields)
+                    hex_fields.extend(_parent_hex_fields)
                 if _parent_json_fields:
                     json_fields.extend(_parent_json_fields)
                 if _parent_json_fields_mapper:
@@ -101,7 +103,7 @@ class BaseModelMeta(type):
                 raise RuntimeError(f"Must define one column at least of HBase Model - {name}")
             attrs["_bytes_to_str_map"] = bytes_to_str_map
             attrs["_str_to_bytes_map"] = {v: k for k, v in bytes_to_str_map.items()}
-            attrs["_fields_map"] =  fields_map
+            attrs["_fields_map"] = fields_map
         return super().__new__(mcs, name, bases, attrs)
 
     @property
@@ -192,7 +194,15 @@ class BaseModel(metaclass=BaseModelMeta):
             for k, v in cls._bytes_to_str_map.items():
                 value = retrieved_data.get(k)
                 if isinstance(value, bytes):
-                    value = value.decode()
+                    try:
+                        if v in cls._hex_fields:
+                            value = binascii.hexlify(value).decode()
+                        elif v in cls._json_fields:
+                            value = loads(value.decode())
+                        else:
+                            value = value.decode()
+                    except UnicodeDecodeError:
+                        value = str(value)
                 item[v] = value
             return item
         result = []
@@ -228,7 +238,7 @@ class BaseModel(metaclass=BaseModelMeta):
             include_timestamp: bool = False,
             batch_size: int = 1000,
             scan_batching: bool = None,
-            limit: int = 10,
+            limit=None,
             sorted_columns: bool = False,
             reverse: bool = False,
             specify_table_name: str = None,
@@ -321,11 +331,6 @@ class BaseModel(metaclass=BaseModelMeta):
             wal: bool = True,
             specify_table_name: str = None,
     ):
-        # parsed_data = {}
-        # print(cls._bytes_to_str_map)
-        # for k, v in data.items():
-            # print(k, v)
-            # parsed_data[cls._str_to_bytes_map.get(k)] = v.encode("utf-8")
         if cls._pool is None:
             cls._pool = hbase_connection_pool()
         with cls._pool.connection() as conn:
@@ -333,5 +338,4 @@ class BaseModel(metaclass=BaseModelMeta):
                 table = conn.table(specify_table_name)  # type: Table
             else:
                 table = conn.table(cls._table_name)  # type: Table
-            # print("gg", parsed_data)
             table.put(row, data, timestamp=timestamp, wal=wal)

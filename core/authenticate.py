@@ -97,6 +97,7 @@ class CustomModelBackend(BaseBackend):
         Return users that have permission "perm". By default, filter out
         inactive users and include superusers.
         """
+        codename = app_label = None
         if isinstance(perm, str):
             try:
                 app_label, codename = perm.split('.')

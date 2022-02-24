@@ -1,12 +1,13 @@
-import ipaddress
 import multiprocessing
 import os
 from functools import lru_cache
 from typing import Optional, List, Dict, Any
 
-from pydantic import BaseSettings, EmailStr, validator
+from pydantic import BaseSettings, validator
 
 from conf.enums import Environment
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class LocalConfig(BaseSettings):
@@ -58,23 +59,15 @@ class LocalConfig(BaseSettings):
     REDIS_HOST: str = "127.0.0.1"
     REDIS_PORT: int = 6379
     REDIS_PASSWORD: str = None
+    REDIS_DB: int = 0
+    REDIS_SEARCH_DB: int = 1
+
 
     # =========HBase
     THRIFT_SERVERS: Optional[List[str]] = ["192.168.3.75:9090"]
 
     # Kafka
     KAFKA_BOOTSTRAP_SERVERS: Optional[List[str]] = ["localhost:9091"]
-
-    @validator("THRIFT_SERVERS", "KAFKA_BOOTSTRAP_SERVERS", allow_reuse=True, each_item=True)
-    def check_host_and_port(cls, v: str):
-        if v:
-            host, port = v.split(":")
-            try:
-                ipaddress.IPv4Address(host)
-                int(port)
-            except Exception as e:
-                raise e
-        return v
 
     # Template
     # TEMPLATE_PATH: str = f"{ROOT}/templates"
@@ -90,21 +83,6 @@ class LocalConfig(BaseSettings):
     JWT_REFRESH_EXPIRATION_DELTA_DELTA_MINUTES: int = 60 * 24 * 5  # 刷新token过期时间
     AES_SECRET: Optional[str]
     # SIGN_SECRET: Optional[str]
-
-    # Email
-    SMTP_TLS: bool = True
-    SMTP_PORT: Optional[int]
-    SMTP_HOST: Optional[str]
-    SMTP_USER: Optional[str]
-    SMTP_PASSWORD: Optional[str]
-    EMAILS_FROM_EMAIL_ADDR: Optional[EmailStr]
-    EMAILS_FROM_USER_NAME: Optional[str]
-
-    @validator("EMAILS_FROM_USER_NAME", allow_reuse=True)
-    def check_emails_from_user_name(cls, v: Optional[str], values: Dict[str, Any]) -> str:
-        if not v:
-            return values["PROJECT_NAME"]
-        return v
 
     # IP WhiteList
     HOST_WHITELIST: Optional[List[str]] = []
@@ -131,9 +109,9 @@ class LocalConfig(BaseSettings):
         }
 
     class Config:
-        # env_prefix = ""
         case_sensitive = True
-        env_file = ".env"
+        env_file = str(
+            BASE_DIR.absolute()) + f'/conf/envs/{os.environ.get("environment", Environment.development.value.lower())}.env'
         env_file_encoding = "utf-8"
 
 
@@ -142,4 +120,4 @@ def get_local_configs() -> LocalConfig:
     return LocalConfig()
 
 
-local_configs = get_local_configs()
+local_configs: LocalConfig = get_local_configs()

@@ -236,4 +236,14 @@ SWAGGER_SETTINGS = {
     'DEFAULT_AUTO_SCHEMA_CLASS': 'core.restful.CustomSwaggerAutoSchema',
 
     'DEFAULT_GENERATOR_CLASS': 'core.restful.CustomOpenAPISchemaGenerator',
+
+    # ],
+    # 'DEFAULT_FILTER_INSPECTORS': [
+    #     'drf_yasg.inspectors.CoreAPICompatInspector',
+    # ],
+    # 'DEFAULT_PAGINATOR_INSPECTORS': [
+    #     'drf_yasg.inspectors.DjangoRestResponsePagination',
+    #     'drf_yasg.inspectors.CoreAPICompatInspector',
+    # ],
+    #
 }

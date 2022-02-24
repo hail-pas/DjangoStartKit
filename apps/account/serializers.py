@@ -71,20 +71,16 @@ class CustomizeGroupListSerializer(CustomizeGroupSerializer):
 
 
 class RoleSerializer(CustomModelSerializer):
-    fleet_labels = serializers.SerializerMethodField("get_fleet_labels")
-
-    def get_fleet_labels(self, obj):
-        return Fleet.objects.filter(id__in=obj.fleet_ids).values_list("id", "label")
 
     def create(self, validated_data):
         self.is_valid(raise_exception=True)
         if not validated_data.get('code'):
             codes = lazy_pinyin(validated_data['name'])
             validated_data['code'] = ''.join(codes)
-        # 默认添加查看和操作元权限
-        # if validated_data.get("groups"):
-        #     validated_data["groups"].extend(models.CustomizeGroup.objects.filter(
-        #         code__in=[enums.PermissionTypeEnum.view.value, enums.PermissionTypeEnum.operate.value]))
+        if validated_data.get("operate_groups"):
+            validated_data["operate_groups"] = list(set(validated_data["operate_groups"]))
+        if validated_data.get("view_groups"):
+            validated_data["view_groups"] = list(set(validated_data["view_groups"]))
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
@@ -100,46 +96,22 @@ class RoleSerializer(CustomModelSerializer):
             validated_data.pop("code")
             if validated_data.get("name", None):
                 validated_data.pop("name")
-        # 默认添加查看和操作元权限
-        # if validated_data.get("groups"):
-        #     validated_data["groups"].extend(models.CustomizeGroup.objects.filter(
-        #         code__in=[enums.PermissionTypeEnum.view.value, enums.PermissionTypeEnum.operate.value]))
+
+        if validated_data.get("operate_groups"):
+            validated_data["operate_groups"] = list(set(validated_data["operate_groups"]))
+        if validated_data.get("view_groups"):
+            validated_data["view_groups"] = list(set(validated_data["view_groups"]))
         return super().update(instance, validated_data)
-
-    def validate_province_ids(self, province_ids):
-        if not isinstance(province_ids, list):
-            raise ValidationError("参数格式错误, 需为ID数组")
-        for province_id in province_ids:
-            if not isinstance(province_id, int):
-                raise ValidationError("参数格式错误, 需为ID数组")
-        return province_ids
-
-    def validate_city_ids(self, city_ids):
-        if not isinstance(city_ids, list):
-            raise ValidationError("参数格式错误, 需为ID数组")
-        for city_id in city_ids:
-            if not isinstance(city_id, int):
-                raise ValidationError("参数格式错误, 需为ID数组")
-        return city_ids
-
-    def validate_fleet_ids(self, fleet_ids):
-        if not isinstance(fleet_ids, list):
-            raise ValidationError("参数格式错误, 需为ID数组")
-        for fleet_id in fleet_ids:
-            if not isinstance(fleet_id, int):
-                raise ValidationError("参数格式错误, 需为ID数组")
-        return fleet_ids
 
     class Meta:
         model = models.Role
-        read_only_fields = {'id', "code", "fleet_labels"}
+        read_only_fields = {'id', "code"}
         fields = read_only_fields.union({
             'name',
             'groups',
+            'operate_groups',
+            'view_groups',
             'remark',
-            'province_ids',
-            'city_ids',
-            'fleet_ids',
         })
 
 
@@ -172,7 +144,6 @@ class ProfileSerializer(CustomModelSerializer):
             'phone',
             'roles',
             'gender',
-            'department',
         })
 
 
@@ -190,7 +161,6 @@ class ProfileCreateUpdateSerializer(CustomModelSerializer):
                                       UniqueValidator(queryset=models.Profile._base_manager.all(),  # noqa
                                                       message="使用该手机号的用户已存在")])
     gender = serializers.ChoiceField(required=True, help_text="性别", choices=enums.GenderEnum.choices())
-    department = serializers.ChoiceField(required=True, help_text="部门", choices=enums.DepartmentEnum.choices())
     roles = serializers.PrimaryKeyRelatedField(required=True, allow_empty=True, help_text='所属角色(int)', label='所属角色',
                                                many=True, queryset=models.Role.objects.all())
 
@@ -206,7 +176,7 @@ class ProfileCreateUpdateSerializer(CustomModelSerializer):
             'is_active',
             'last_login',
         }
-        fields = read_only_fields.union({"username", "phone", "gender", "department", "roles"})
+        fields = read_only_fields.union({"username", "phone", "gender", "roles"})
 
 
 class ProfileSelectSerializer(serializers.Serializer):
@@ -214,7 +184,7 @@ class ProfileSelectSerializer(serializers.Serializer):
                                                   queryset=models.Profile.objects.all())
 
 
-def get_profile_group(profile):
+def get_profile_menu(profile):
     def get_subordinates(obj):
         ids = set(profile.groups.all().values_list("id", flat=True)).intersection(
             set(models.GroupRelation.objects.filter(parent=obj).values_list("child_id", flat=True)))

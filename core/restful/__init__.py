@@ -88,17 +88,18 @@ class CustomSwaggerAutoSchema(SwaggerAutoSchema):
         if action == "create":
             status_code = str(status.HTTP_201_CREATED)
             create_response = responses.get(status_code)  # type: openapi.Response
-            create_schema = create_response.get("schema")
-            responses.update(
-                {status_code: openapi.Response(create_response.get("description", ""),
-                                               _Resp.to_schema(create_schema),
-                                               create_response.get("examples", None))})
+            if create_response:
+                create_schema = create_response.get("schema")
+                responses.update(
+                    {status_code: openapi.Response(create_response.get("description", ""),
+                                                   _Resp.to_schema(create_schema),
+                                                   create_response.get("examples", None))})
         elif action in ["list", "retrieve", "update", "partial_update"]:
             status_code = str(status.HTTP_200_OK)
             _response = responses.get(status_code)  # type: openapi.Response
             _schema = _response.get("schema")
             ret_schema = _Resp.to_schema(_schema)
-            if action == "list":
+            if action == "list" and getattr(_schema, "properties", None):
                 _schema = _schema.properties.get("results")
                 ret_schema = _Resp.to_schema(_schema, page_info=True)
             responses.update(

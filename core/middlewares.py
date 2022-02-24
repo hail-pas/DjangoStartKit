@@ -70,7 +70,7 @@ class RequestProcessMiddleware:
                 request.param_data = q_ser.validated_data
             if body_serializer and request.content_type == ContentTypeEnum.APPlICATION_JSON.value:
                 # 只校验json传输
-                data = ujson.loads(request.body.decode('utf8'))
+                data = ujson.loads((request.body or b'{}').decode('utf8'))
                 b_ser = body_serializer(data=data)
                 b_ser.is_valid(raise_exception=True)
                 request.json_data = b_ser.validated_data
@@ -126,8 +126,8 @@ class ResponseProcessMiddleware:
                     error_value = error_value[0]
                 msg = error_value
                 if error_field not in ["non_field_errors", "detail"]:
-                    # msg = f"错误字段: {error_field}-{error_value}"
-                    msg = f"{error_value}"
+                    msg = f"错误字段: {error_field}-{error_value}"
+                    # msg = f"{error_value}"
                 response.data = RestResponse.fail(message=msg, data=data).dict()
 
             elif isinstance(data, str):

@@ -22,7 +22,7 @@ class ProfileViewSet(
     """账号接口
     """
     serializer_class = serializers.ProfileSerializer
-    queryset = models.Profile.objects.all()
+    queryset = models.Profile.objects.filter(deleted=False, is_superuser=False)
     search_fields = ('phone', 'username')
     filter_fields = ('roles', "department")
     parser_classes = (JSONParser,)
@@ -40,6 +40,13 @@ class ProfileViewSet(
         roles = serializer.validated_data.get('roles')
         if models.Role.objects.filter(code=enums.RoleCodeEnum.super_admin.value).first() in roles:
             raise APIException("不能新增超级管理员")
+        existed = models.Profile.objects.filter(
+            phone=serializer.validated_data.get('phone')).first()  # type: models.Profile
+        if existed:
+            if existed.deleted:
+                return RestResponse.fail(message="该账号已被归档, 可以使用后台恢复")
+            else:
+                return RestResponse.fail(message="具有相同手机号的用户已存在")
         operator = self.request.user  # type: models.Profile
         instance = models.Profile.objects.create(
             username=serializer.validated_data.get('username'),

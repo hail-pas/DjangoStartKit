@@ -16,5 +16,5 @@ class PageParam(PlainSchema):
 
 
 class HbasePageParam(PlainSchema):
-    start_row_key = serializers.CharField(help_text="起始row_key")
-    page_size = serializers.IntegerField(help_text="页大小")
+    start_row_key = serializers.CharField(help_text="起始row_key", required=False, default="")
+    page_size = serializers.IntegerField(help_text="页大小", default=10, required=False)

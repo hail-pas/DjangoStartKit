@@ -3,6 +3,7 @@ import sys
 import random
 import string
 import threading
+import uuid
 from itertools import chain
 from typing import List, Union, Optional, Callable
 from asyncio import sleep
@@ -18,6 +19,9 @@ from redis import Redis
 from conf.config import local_configs
 from storages.redis import get_sync_redis, keys
 import time
+import logging
+
+logger = logging.getLogger()
 
 COMMON_TIME_STRING = "%Y-%m-%d %H:%M:%S"
 COMMON_DATE_STRING = "%Y-%m-%d"
@@ -350,8 +354,41 @@ def hash_collision_reverse(_dict: dict):
     return ret
 
 
-def datetime_to_timestamp(value):
+def millseconds_to_format_str(millseconds, format_str: str = "%Y-%m-%d %H:%M:%S"):
+    """时间戳装换为格式化时间"""
+    return time.strftime(format_str, time.localtime(millseconds / 1000))
+
+
+def format_str_to_millseconds(value):
     """格式化时间转换为时间戳"""
     value = datetime.strftime(value, "%Y-%m-%d %H:%M:%S")
     value = time.strptime(value, "%Y-%m-%d %H:%M:%S")
     return int(time.mktime(value) * 1000)
+
+
+def gen_uuid():
+    return str(uuid.uuid1())
+
+
+def file_upload_to(instance, filename):
+    name = instance.__class__.__name__
+    return '/'.join(filter(None, [name, instance.__str__(), gen_uuid(), filename]))
+
+
+def filter_dict(dict_obj, callback):
+    new_dict = dict()
+    for (key, value) in dict_obj.items():
+        if callback(key, value):
+            new_dict[key] = value
+    return new_dict
+
+
+def flatten_list(_2d_list):
+    flat_list = []
+    for element in _2d_list:
+        if type(element) is list:
+            for item in element:
+                flat_list.append(item)
+        else:
+            flat_list.append(element)
+    return flat_list
