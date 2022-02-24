@@ -28,7 +28,7 @@ Django Quick Start Kit
 # 快速启动
 ```shell script
 # 复制配置并填充
-cp .env.template ${environment}.env
+cp conf/envs/.env.template conf/envs/${environment}.env
 
 # 创建虚拟环境
 python -m venv .venv
