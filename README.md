@@ -168,3 +168,33 @@ from storages.redis import RedisUtil
 
 RedisUtil.set(RedisCacheKey.redis_lock.format("lock_target"))
 ```
+# 定时任务
+tasks/timed 定时任务
+tasks/asynchronous 异步任务
+```python
+from tasks import TaskType, task_manager
+
+@task_manager.task(
+    name="信息同步",
+    type_=TaskType.timed,
+    description="调用接口同步数据",
+    cron="30 * * * *"
+)
+def info_sync():
+    """
+    调用接口同步数据 description
+    """
+    pass
+
+@task_manager.task(
+    name="异步任务",
+    type_=TaskType.asynchronous,
+    description="异步任务示例",
+)
+def async_task():
+    """
+    异步任务示例 description
+    """
+    pass
+
+```
