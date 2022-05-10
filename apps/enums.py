@@ -33,52 +33,27 @@ class ResponseCodeEnum(IntEnumMore):
 #     json_ = ("json", "Json")
 #     list_ = ("list", "数组")
 
-class GroupTypeEnum(StrEnumMore):
+class SystemResourceTypeEnum(StrEnumMore):
     """
-    分组码表
-    function = ("function", "功能")
-    interface = ("interface", "接口")
     """
     menu = ("menu", "菜单")
-    permission = ("permission", "权限聚合组")
+    button = ("button", "按钮")
 
 
-class PermissionTypeEnum(StrEnumMore):
+class PermissionRelationEnum(StrEnumMore):
     """
-    权限组预置 code, 目前只有：查看 和 操作
+    互斥、依赖、包含
     """
-    view = ("view", "查看权限")
-    operate = ("operate", "操作权限")
+    exclusive = ("exclusive", "互斥")
+    dependent = ("dependent", "依赖")
+    inclusive = ("inclusive", "包含")
 
 
-class MenuLevel1(StrEnumMore):
+class LogicalRelationEnum:
     """
-    一级菜单
+    与、或、非
     """
-    index = ("index", "首页")
-
-
-class MenuLevel2(StrEnumMore):
-    """
-    二级菜单
-    """
-    index_ = ("index_main", "首页主页面")
-
-
-class PermissionEnum(StrEnumMore):
-    """
-    自定义权限码表, 集成自 MenuLevel2, 将二级菜单映射成权限
-    所有的权限判断都使用 apps.permissions.py 中的权限类
-    所有权限为:  PermissionTypeEnum + MenuLevel2 + PermissionEnum
-    """
-    pass
-
-
-class RoleCodeEnum(StrEnumMore):
-    """
-    预置角色码表
-    """
-    super_admin = ("super_admin", "超管")
+    
 
 
 class GenderEnum(StrEnumMore):
@@ -87,6 +62,14 @@ class GenderEnum(StrEnumMore):
     """
     male = ("male", "男")
     female = ("female", "女")
+
+
+class PermissionEnum(StrEnumMore):
+    """
+    所有的权限判断都使用 apps.permissions.py 中的权限类
+    所有权限为:  PermissionTypeEnum + MenuLevel2 + PermissionEnum
+    """
+    pass
 
 
 # ==================================================

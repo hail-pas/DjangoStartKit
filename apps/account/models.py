@@ -213,7 +213,7 @@ class SystemResource(LabelFieldMixin, RemarkFieldMixin, BaseModel):
     )
 
     def __str__(self):
-        return self.label
+        return f"{self.parent.label + '-' if self.parent else ''}" + self.label
 
     class Meta:
         verbose_name = u'系统资源'
@@ -223,8 +223,14 @@ class SystemResource(LabelFieldMixin, RemarkFieldMixin, BaseModel):
         ordering = ["order_num"]
 
 
-class DataFilter(LabelFieldMixin, RemarkFieldMixin, BaseModel):
-    content_type = models.OneToOneField(
+class DataFilter(RemarkFieldMixin, BaseModel):
+    label = models.CharField(
+        verbose_name="名称",
+        max_length=32,
+        help_text="名称",
+        unique=True
+    )
+    content_type = models.ForeignKey(
         to=ContentType,
         on_delete=models.CASCADE,
         related_name="data_filters",
@@ -265,13 +271,25 @@ class DataFilter(LabelFieldMixin, RemarkFieldMixin, BaseModel):
         ],
     ]
     """
-    options = models.CharField(
+    [
+        ["自己创建的", "operator=profile"],
+        ["全部", ""],
+    ]
+    options = models.JSONField(
         max_length=256,
-        null=True,
+        default=list,
         blank=True,
         verbose_name="选中的代码字符串",
         help_text="代码字符串, 一般为字典filter"
     )
+
+    def __str__(self):
+        return self.content_type.app_labeled_name
+
+    class Meta:
+        verbose_name = "数据过滤Q配置"
+        verbose_name_plural = verbose_name
+        ordering = ["-id"]
 
 
 class DataFilterFields(LabelFieldMixin, RemarkFieldMixin, BaseModel):
@@ -300,13 +318,21 @@ class DataFilterFields(LabelFieldMixin, RemarkFieldMixin, BaseModel):
             ],
         ]
     """
-    options = models.CharField(
+    options = models.JSONField(
         max_length=256,
         null=True,
         blank=True,
-        verbose_name="选中的代码字符串",
+        verbose_name="可选代码字符串",
         help_text="代码字符串, 一般为字典filter"
     )
+
+    def __str__(self):
+        return self.content_type.app_labeled_name + ": " + ",".join(self.fields)
+
+    class Meta:
+        verbose_name = "数据过滤字段配置"
+        verbose_name_plural = verbose_name
+        ordering = ["-id"]
 
 
 class PermissionRelation(models.Model):
@@ -318,6 +344,9 @@ class PermissionRelation(models.Model):
         choices=enums.PermissionRelationEnum.choices(),
         help_text='组类型',
     )
+
+    def __str__(self):
+        return self.permission_b.codename + self.relation + self.permission_b.codename
 
     class Meta:
         verbose_name = u'权限关系'

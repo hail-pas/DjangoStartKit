@@ -15,10 +15,10 @@ class CustomModelBackend(ModelBackend):
         return user_obj.user_permissions.all()
 
     def _get_group_permissions(self, user_obj):
-        user_groups_field = UserModel._meta.get_field('groups')  # noqa
-        user_groups_query = 'group__%s' % user_groups_field.related_query_name()
-        group_perms = Permission.objects.filter(**{user_groups_query: user_obj})
+        # user_groups_field = UserModel._meta.get_field('groups')  # noqa
+        # user_groups_query = 'group__%s' % user_groups_field.related_query_name()
+        # group_perms = Permission.objects.filter(**{user_groups_query: user_obj})
         # 通过获取角色拥有的系统资源关联的权限
         system_resource_perm_ids = user_obj.roles.all().values_list("system_resources__permissions__id", flat=True)
         system_resource_perms = Permission.objects.filter(id__in=system_resource_perm_ids)
-        return system_resource_perms | group_perms
+        return system_resource_perms

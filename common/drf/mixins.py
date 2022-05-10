@@ -19,7 +19,8 @@ class CustomGenericViewSet(GenericViewSet):
             return self.queryset.none()
         from django.db.models import Q  # eval_string内使用
         queryset = super().get_queryset()
-        q_filters = self.request.user.roles.all().values_list("data_filters__eval_string", flat=True)
+        profile = self.request.user
+        q_filters = profile.roles.all().values_list("data_filters__eval_string", flat=True)
         q_filters = " | ".join(q_filters)  # 取或
         return queryset.filter(eval(q_filters))
 
@@ -154,7 +155,7 @@ class RestModelViewSet(RestCreateModelMixin,
                        RestUpdateModelMixin,
                        RestDestroyModelMixin,
                        RestListModelMixin,
-                       GenericViewSet):
+                       CustomGenericViewSet):
     """
     返回 RestResponse
     """

@@ -58,7 +58,9 @@ class LoginView(ObtainJSONWebToken):
             data={
                 'token': request.json_data["token"],
                 'user': ProfileSerializer(instance=profile).data,
-                "menu": get_profile_system_resource(profile, SystemResource.objects.filter(parent=None)),
+                "menu": get_profile_system_resource(profile, SystemResource.objects.filter(
+                    parent=None) & SystemResource.objects.filter(
+                    id__in=profile.roles.all().values_list("system_resources__id", flat=True))),
             }
         )
 
