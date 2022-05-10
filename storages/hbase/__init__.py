@@ -1,5 +1,5 @@
 import binascii
-from typing import Dict, List, Type, Tuple, Union, Callable
+from typing import Dict, List, Type, Tuple, Union, Callable, Any
 from contextlib import contextmanager
 
 from cachetools.func import lru_cache
@@ -111,9 +111,9 @@ class BaseModelMeta(type):
     def response_model(cls, is_list: bool = True):
         properties = {
         }
-        json_fields_mapper = cls._json_fields_mapper
-        for k, _ in cls._str_to_bytes_map.items():
-            if k in cls._json_fields and k in json_fields_mapper:
+        json_fields_mapper = cls._json_fields_mapper  # noqa
+        for k, _ in cls._str_to_bytes_map.items():  # noqa
+            if k in cls._json_fields and k in json_fields_mapper:  # noqa
                 in_properties = {}
                 for (in_k, desc) in json_fields_mapper.get(k):
                     in_properties[in_k] = openapi.Schema(type=openapi.TYPE_STRING, default="", description=desc)
@@ -188,41 +188,83 @@ class BaseModel(metaclass=BaseModelMeta):
         table_name = None
 
     @classmethod
+    def value_decode(cls, field_name, value):
+        if isinstance(value, bytes):
+            try:
+                if field_name in cls._hex_fields:
+                    value = binascii.hexlify(value).decode()
+                elif field_name in cls._json_fields:
+                    value = loads(value.decode())
+                else:
+                    value = value.decode()
+            except UnicodeDecodeError:
+                value = str(value)
+        return value
+
+    @classmethod
+    def field_range_map(cls):
+        raise NotImplemented
+        # 左闭右闭
+        # map = {
+        #     "A:a01": [0, 252], "A:a02": [1, 2], "A:a03": [1, 2], "A:a04": [1, 2], "A:a05": [1, 2],
+        #     "A:a06": [0, 1], "A:a07": [0, 1], "A:a08": [0, 3], "A:a09": [0, 9], "A:a10": [0, 3],
+        #     "A:a11": [0, 3], "A:a12": [1, 6], "A:a13": [0, 32768], "A:a14": [0, 32768], "A:a15": [0, 2000],
+        #     "A:a16": [-327, 327], "A:a17": [0, 8], "A:a18": [1, 50], "A:a19": [51, 255], "A:a20": [0, 3],
+        #     "A:a21": [0, 200], "A:a22": [0, 200], "A:a23": [0, 100], "A:a24": [0, 100],
+        #     "A:a25": [-40, 210], "A:a26": [0, 2000], "A:a27": [-1000, 1000], "A:a28": [0, 25.4], "A:a29": [-40, 210],
+        #     "A:a30": [0, 4095], "A:a31": [0, 250], "A:a32": [0, 15], "A:a33": [0, 250], "A:a34": [0, 15],
+        #     "A:a35": [0, 250], "A:a36": [-40, 210], "A:a37": [0, 250], "A:a38": [-40, 210], "A:a39": [3, 4],
+        # }
+        # return map
+
+    @classmethod
+    def data_clean(cls, data: Union[List, Dict]):
+        if isinstance(data, dict):
+            return cls.field_clean(data)
+        elif isinstance(data, (tuple, list)):
+            result = []
+            for d in data:
+                if isinstance(d, dict):
+                    result.append(cls.field_clean(d))
+            return result
+        else:
+            raise RuntimeError(f"Not Supported Data Type - {type(data)}")
+
+    @classmethod
+    def field_clean(cls, single_data: dict, place_holder: str = "-", keep_original: bool = True,
+                    customize_display: Callable[[Any], str] = None) -> dict:
+        """
+        customize_display = lambda v: {"-65534": "无效", "-65535": "异常"}.get(v)
+        """
+        result = {}
+        for k, v in single_data.items():
+            result[k] = v
+            defined_range = cls.field_range_map().get(k)
+            try:
+                if defined_range and not defined_range[0] <= float(v) <= defined_range[1]:
+                    result[k] = place_holder
+                    if keep_original:
+                        result[f"{k}__original"] = v
+                    if customize_display:
+                        result[k] = customize_display(v)
+            except Exception:  # noqa
+                pass
+        return result
+
+    @classmethod
     def serialize(cls, retrieved_data: Union[list, dict]):
         if isinstance(retrieved_data, dict):
             item = {}
             for k, v in cls._bytes_to_str_map.items():
                 value = retrieved_data.get(k)
-                if isinstance(value, bytes):
-                    try:
-                        if v in cls._hex_fields:
-                            value = binascii.hexlify(value).decode()
-                        elif v in cls._json_fields:
-                            value = loads(value.decode())
-                        else:
-                            value = value.decode()
-                    except UnicodeDecodeError:
-                        value = str(value)
-                item[v] = value
+                item[k.decode("utf-8")] = cls.value_decode(v, value)
             return item
         result = []
         for row_key, hbase_data in retrieved_data:
             item = {"row_key": row_key.decode()}
             for k, v in cls._bytes_to_str_map.items():
                 value = hbase_data.get(k)
-                if not value:
-                    continue
-                if isinstance(value, bytes):
-                    try:
-                        if v in cls._hex_fields:
-                            value = binascii.hexlify(value).decode()
-                        elif v in cls._json_fields:
-                            value = loads(value.decode())
-                        else:
-                            value = value.decode()
-                    except UnicodeDecodeError:
-                        value = str(value)
-                item[v] = value
+                item[k.decode("utf-8")] = cls.value_decode(v, value)
             result.append(Map(item))
         return result
 
@@ -231,9 +273,9 @@ class BaseModel(metaclass=BaseModelMeta):
             cls,
             row_start: str = None,
             row_stop: str = None,
-            row_prefix: str = None,
+            row_prefix: bytes = None,
             columns: List[str] = None,
-            filter: str = None,
+            filter: str = None,  # noqa
             timestamp: int = None,
             include_timestamp: bool = False,
             batch_size: int = 1000,
@@ -257,7 +299,7 @@ class BaseModel(metaclass=BaseModelMeta):
             data = table.scan(
                 row_start=row_start,
                 row_stop=row_stop,
-                row_prefix=row_prefix,
+                row_prefix=row_prefix,  # noqa
                 columns=columns,
                 filter=filter,
                 timestamp=timestamp,

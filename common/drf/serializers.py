@@ -22,7 +22,7 @@ class CustomModelSerializer(ModelSerializer):
 
     def __init__(self, instance=None, data=empty, **kwargs):
         self.simple_list = kwargs.pop("simple_list", None)
-        self._pre_serialize = getattr(self.Meta, "pre_serialize", None)
+        self._pre_serialize = getattr(self.Meta, "pre_serialize", None) # noqa
         super().__init__(instance, data, **kwargs)
 
     def get_field_names(self, declared_fields, info):
@@ -203,8 +203,7 @@ class CustomModelSerializer(ModelSerializer):
                     ret[field.field_name] = field.choices.get(field.to_representation(attribute))
                 else:
                     if isinstance(field, ChoiceField):
-                        ret[f"{field.field_name}_display"] = field.choices.get(field.to_representation(attribute))
-                        ret[f"enum_{field.field_name}"] = field.choices.get(field.to_representation(attribute))
+                        ret[f"enum_{field.field_name}_display"] = field.choices.get(field.to_representation(attribute))
                     elif isinstance(field, DateTimeField):
                         field.format = COMMON_TIME_STRING
                     ret[field.field_name] = field.to_representation(attribute)

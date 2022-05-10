@@ -1,6 +1,7 @@
 import logging
 
 from django.db import models
+from django.urls import URLResolver
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg import openapi
 from drf_yasg.generators import OpenAPISchemaGenerator
@@ -48,25 +49,18 @@ class CustomPagination(PageNumberPagination):
                             total_count=self.page.paginator.count)
 
 
-class CustomLogFormatter(logging.Formatter):
+class JSONFormatter(logging.Formatter):
     """
     Logging Formatter to add colors and count warning / errors
     """
-
-    grey = "\x1b[38;21m"
-    green = "\x1b[32;21m"
-    yellow = "\x1b[33;21m"
-    red = "\x1b[31;21m"
-    bold_red = "\x1b[31;1m"
-    reset = "\x1b[0m"
-    format = '{"level": "%(levelname)s", "time": "%(asctime)s", "exec": "%(pathname)s", "func": "%(funcName)s", ' \
-             '"msg": "%(message)s"} '
+    #  "exec": "%(pathname)s", "func": "%(funcName)s"
+    format = '{"asctime": "%(asctime)s", "process": %(process)d, "levelname": "%(levelname)s", "filename": "%(pathname)s", "name": "%(funcName)s", "lineno": %(lineno)d, "message": "%(message)s"}'
     FORMATS = {
-        logging.DEBUG: grey + format + reset,
-        logging.INFO: green + format + reset,
-        logging.WARNING: yellow + format + reset,
-        logging.ERROR: red + format + reset,
-        logging.CRITICAL: bold_red + format + reset
+        logging.DEBUG: format,
+        logging.INFO: format,
+        logging.WARNING: format,
+        logging.ERROR: format,
+        logging.CRITICAL: format,
     }
 
     def format(self, record):
@@ -114,7 +108,10 @@ class CustomSwaggerAutoSchema(SwaggerAutoSchema):
         if action and action == "list":
             for param in params:
                 if param.name == "search":
-                    param.description = f"搜索字段: {', '.join(self.view.search_fields)}"  # noqa
+                    if getattr(self.view, "search_fields", None):
+                        param.description = f"搜索字段: {', '.join(self.view.search_fields)}"  # noqa
+                    else:
+                        params.remove(param)
             simple_list_param = Parameter(
                 name="simple_list", in_=IN_QUERY,
                 description=f"英文逗号分隔, 指定返回字段: "
@@ -129,34 +126,12 @@ class CustomSwaggerAutoSchema(SwaggerAutoSchema):
 class CustomOpenAPISchemaGenerator(OpenAPISchemaGenerator):
     def get_schema(self, request=None, public=False):
         """Generate a :class:`.Swagger` object with custom tags"""
+        from core.urls import urlpatterns
         swagger = super().get_schema(request, public)
-        tags = [
-            {
-                "name": "account",
-                "description": "",
-            }, {
-                "name": "auth",
-                "description": "",
-            }, {
-                "name": "info",
-                "description": "",
-            }, {
-                "name": "information",
-                "description": "",
-            }, {
-                "name": "config",
-                "description": "",
-            }, {
-                "name": "export",
-                "description": "",
-            }, {
-                "name": "monitor",
-                "description": "",
-            }, {
-                "name": "analysis",
-                "description": "",
-            }
-        ]
+        tags = list(map(lambda url_pattern: url_pattern.urlconf_module.__name__.split(".")[1], filter(
+            lambda url_pattern: True if isinstance(url_pattern, URLResolver) and not isinstance(
+                url_pattern.urlconf_module, list) and url_pattern.urlconf_module.__name__.startswith(
+                "apps.") else False, urlpatterns)))
         swagger.tags = tags
         return swagger
 
@@ -177,3 +152,14 @@ class HideInspector(CoreAPICompatInspector):
         if type(filter_backend) in (OrderingFilter, SearchFilter, DjangoFilterBackend):
             return
         return NotHandled
+
+
+def get_operation_keys(self, sub_path, method, view):
+    str_list: list = self._gen.get_keys(sub_path, method, view)
+    if str_list[-1] == "read" and \
+            view.action not in ['retrieve', 'list', 'create', 'update', 'partial_update', 'destroy']:
+        str_list = str_list[:-1]
+    return str_list
+
+
+OpenAPISchemaGenerator.get_operation_keys = get_operation_keys

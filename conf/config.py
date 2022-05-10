@@ -21,7 +21,7 @@ class LocalConfig(BaseSettings):
     ENVIRONMENT: str = Environment.development.value
     DEBUG: bool = False
 
-    SERVER_HOST: str = "localhost"
+    SERVER_HOST: str = "0.0.0.0"
     SERVER_PORT: int = 8000
 
     @validator("ENVIRONMENT", allow_reuse=True)

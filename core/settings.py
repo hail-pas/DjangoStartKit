@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-from core.restful import CustomLogFormatter
+from core.restful import JSONFormatter
 from conf.config import local_configs
 from conf.enums import Environment
 
@@ -197,15 +197,14 @@ AES_SECRET = local_configs.AES_SECRET
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    "filters": {"require_debug_false": {"()": "django.utils.log.RequireDebugFalse"}},
+    "filters": {
+        "require_debug_false": {
+            "()": "django.utils.log.RequireDebugFalse"
+        }
+    },
     "formatters": {
         "verbose": {
-            '()': CustomLogFormatter if not DEBUG else logging.Formatter,
-            "format": '{"time": "%(asctime)s", "exec": "%(pathname)s", "func": "%(funcName)s", "msg": "%(message)s"}',
-        },
-        'concise': {
-            'format': '[%(levelname)s][%(asctime)s][%(filename)s:%(lineno)d] %(message)s',
-            'datefmt': '%Y-%m-%d %H:%M:%S',
+            '()': JSONFormatter,
         },
     },
     'handlers': {
@@ -214,9 +213,15 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "verbose",
         },
+        "error_file": {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR.as_posix() + '/logs/error.log',
+            "formatter": "verbose",
+        }
     },
     'root': {
-        'handlers': ['console'],
+        'handlers': ['console', 'error_file'],
         'level': logging.getLevelName(logging.INFO) if not DEBUG else logging.getLevelName(logging.DEBUG),
     },
 }

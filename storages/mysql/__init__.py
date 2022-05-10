@@ -49,10 +49,27 @@ class BaseModel(models.Model):
 
 
 class LabelFieldMixin(models.Model):
-    label = models.CharField(verbose_name="名称", max_length=50, help_text="名称")
+    label = models.CharField(
+        verbose_name="名称",
+        max_length=32,
+        help_text="名称"
+    )
 
     def __str__(self):
         return self.label
+
+    class Meta:
+        abstract = True
+
+
+class RemarkFieldMixin(models.Model):
+    remark = models.CharField(
+        '备注',
+        max_length=128,
+        blank=True,
+        default="",
+        help_text='备注说明',
+    )
 
     class Meta:
         abstract = True

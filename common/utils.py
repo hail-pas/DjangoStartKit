@@ -5,18 +5,16 @@ import string
 import threading
 import uuid
 from itertools import chain
-from typing import List, Union, Optional, Callable
+from typing import List, Union, Optional, Callable, Any
 from asyncio import sleep
 from datetime import datetime
 from functools import wraps
 from contextlib import contextmanager
 from collections import namedtuple
 import pytz
-import requests
 from django.db.models import QuerySet
 from django.http import HttpRequest
 from redis import Redis
-from conf.config import local_configs
 from storages.redis import get_sync_redis, keys
 import time
 import logging
@@ -375,15 +373,15 @@ def file_upload_to(instance, filename):
     return '/'.join(filter(None, [name, instance.__str__(), gen_uuid(), filename]))
 
 
-def filter_dict(dict_obj, callback):
-    new_dict = dict()
+def filter_dict(dict_obj: dict, callback: Callable[[Any, Any], dict]):
+    new_dict = {}
     for (key, value) in dict_obj.items():
         if callback(key, value):
             new_dict[key] = value
     return new_dict
 
 
-def flatten_list(_2d_list):
+def flatten_list(_2d_list: List):
     flat_list = []
     for element in _2d_list:
         if type(element) is list:
@@ -392,3 +390,13 @@ def flatten_list(_2d_list):
         else:
             flat_list.append(element)
     return flat_list
+
+
+def underscore_to_camelcase(value):
+    def camelcase():
+        yield str.lower
+        while True:
+            yield str.capitalize
+
+    c = camelcase()
+    return "".join(next(c)(x) if x else '_' for x in value.split("_"))

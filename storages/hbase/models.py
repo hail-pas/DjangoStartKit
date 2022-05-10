@@ -20,5 +20,5 @@ class OBDInfoBaseData(BaseModel):
         json_fields_mapper = {
             "InfoList": (
                 list[dict],
-                [("Attr1", "Attr1描述"), ("Attr1", "Attr2描述")])
+                [("Attr1", "Attr1描述"), ("Attr2", "Attr2描述")])
         }

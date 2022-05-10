@@ -1,6 +1,6 @@
 from common.types import PlainSchema
 from rest_framework import serializers
-from apps.account.serializers import ProfileSerializer, CustomizeGroupListSerializer
+from apps.account.serializers import ProfileSerializer, SystemResourceSerializer
 
 
 class CaptchaResponse(PlainSchema):
@@ -11,4 +11,4 @@ class CaptchaResponse(PlainSchema):
 class LoginResponse(PlainSchema):
     token = serializers.CharField(help_text="token")
     user = ProfileSerializer()
-    menu = CustomizeGroupListSerializer()
+    menu = SystemResourceSerializer(many=True)

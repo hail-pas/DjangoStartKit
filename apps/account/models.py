@@ -1,9 +1,10 @@
 # Create your models here.
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.contrib.auth.models import Permission, GroupManager
+from django.contrib.auth.models import Permission, GroupManager, Group, PermissionsMixin
 from django.db.models import Manager
 from django.utils.crypto import get_random_string
-from storages.mysql import BaseModel, DeletedFieldManager
+from storages.mysql import BaseModel, DeletedFieldManager, LabelFieldMixin, RemarkFieldMixin
 from apps import enums
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import (
@@ -17,7 +18,7 @@ from django.core.mail import send_mail
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-allowed_chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ123456789'
+allowed_chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ123456789'  # noqa
 
 
 class BaseUserManager(Manager):
@@ -25,7 +26,7 @@ class BaseUserManager(Manager):
     @classmethod
     def normalize_email(cls, email):
         """
-        Normalize the email address by lowercasing the domain part of it.
+        Normalize the email address by lowercase the domain part of it.
         """
         email = email or ''
         try:
@@ -36,7 +37,7 @@ class BaseUserManager(Manager):
             email = email_name + '@' + domain_part.lower()
         return email
 
-    def make_random_password(self, length=10, allowed_chars=allowed_chars):
+    def make_random_password(self, length=10, allowed_chars=allowed_chars):  # noqa
         """
         Generate a random password with the given length and given
         allowed_chars. The default value of allowed_chars does not have "I" or
@@ -66,96 +67,6 @@ class ProfileManager(BaseUserManager):
         return self.create_user(username, phone, password, **extra_fields)
 
 
-# 使用自定义权限组
-class PermissionsMixin(models.Model):
-    """
-    Add the fields and methods necessary to support the Group and Permission
-    models using the ModelBackend.
-    """
-    is_superuser = models.BooleanField(
-        _('superuser status'),
-        default=False,
-        help_text=_(
-            'Designates that this user has all permissions without '
-            'explicitly assigning them.'
-        ),
-    )
-    groups = models.ManyToManyField(
-        "CustomizeGroup",
-        verbose_name=_('groups'),
-        blank=True,
-        help_text=_(
-            'The groups this user belongs to. A user will get all permissions '
-            'granted to each of their groups.'
-        ),
-        related_name="user_set",
-        related_query_name="user",
-    )
-    user_permissions = models.ManyToManyField(
-        Permission,
-        verbose_name=_('user permissions'),
-        blank=True,
-        help_text=_('Specific permissions for this user.'),
-        related_name="user_set",
-        related_query_name="user",
-    )
-
-    class Meta:
-        abstract = True
-
-    def get_user_permissions(self, obj=None):
-        """
-        Return a list of permission strings that this user has directly.
-        Query all available auth backends. If an object is passed in,
-        return only permissions matching this object.
-        """
-        return _user_get_permissions(self, obj, 'user')
-
-    def get_group_permissions(self, obj=None):
-        """
-        Return a list of permission strings that this user has through their
-        groups. Query all available auth backends. If an object is passed in,
-        return only permissions matching this object.
-        """
-        return _user_get_permissions(self, obj, 'group')
-
-    def get_all_permissions(self, obj=None):
-        return _user_get_permissions(self, obj, 'all')
-
-    def has_perm(self, perm, obj=None):
-        """
-        Return True if the user has the specified permission. Query all
-        available auth backends, but return immediately if any backend returns
-        True. Thus, a user who has permission from a single auth backend is
-        assumed to have permission in general. If an object is provided, check
-        permissions for that object.
-        """
-        # Active superusers have all permissions.
-        if self.is_active and self.is_superuser:
-            return True
-
-        # Otherwise we need to check the backends.
-        return _user_has_perm(self, perm, obj)
-
-    def has_perms(self, perm_list, obj=None):
-        """
-        Return True if the user has each of the specified permissions. If
-        object is passed, check if the user has all required perms for it.
-        """
-        return all(self.has_perm(perm, obj) for perm in perm_list)
-
-    def has_module_perms(self, app_label):
-        """
-        Return True if the user has any permissions in the given app label.
-        Use similar logic as has_perm(), above.
-        """
-        # Active superusers have all permissions.
-        if self.is_active and self.is_superuser:
-            return True
-
-        return _user_has_module_perms(self, app_label)
-
-
 class AbstractUser(AbstractBaseUser, PermissionsMixin):
     """
     An abstract base class implementing a fully featured User model with
@@ -177,9 +88,19 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
         help_text=u'电话',
         error_messages={'unique': "使用该手机号的用户已存在"}
     )
-    first_name = models.CharField(_('first name'), max_length=150, blank=True)
-    last_name = models.CharField(_('last name'), max_length=150, blank=True)
-    email = models.EmailField(_('email address'), blank=True)
+    first_name = models.CharField(
+        _('first name'),
+        max_length=150,
+        blank=True
+    )
+    last_name = models.CharField(
+        _('last name'),
+        max_length=150,
+        blank=True)
+    email = models.EmailField(
+        _('email address'),
+        blank=True
+    )
     is_staff = models.BooleanField(
         _('staff status'),
         default=False,
@@ -193,7 +114,10 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
             'Unselect this instead of deleting accounts.'
         ),
     )
-    date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
+    date_joined = models.DateTimeField(
+        _('date joined'),
+        default=timezone.now
+    )
 
     EMAIL_FIELD = 'email'
     USERNAME_FIELD = 'phone'
@@ -220,39 +144,55 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
         return self.first_name
 
     def email_user(self, subject, message, from_email=None, **kwargs):
-        """Send an email to this user."""
+        """Send an email to this user."""  # noqa
         send_mail(subject, message, from_email, [self.email], **kwargs)
 
 
 # ========================================================================
+"""
+用户 - 用户组（组织、职位） - 角色（权限组） - 权限（权限互斥、依赖、包含）
+系统资源：菜单、按钮； 资源拥有权限； 角色获得其关联系统资源的所有相关权限
+    名称
+    父级
+    标识
+    类型（菜单/按钮/）
+    前端路由
+    是否启用
+    排序
+    备注
+数据资源权限：需要权限控制的业务数据
+    名称
+    ContentType
+    # TODO: 具体方案待确定
+    可选择权限项（存储到用户的数据权限配置字典, 角色也可以存储数据权限配置字典）
+    排序
+    备注
+"""
 
-class CustomizeGroup(BaseModel):
-    parents = models.ManyToManyField(
-        to='self',
-        through="GroupRelation",
-        verbose_name="父组",
-        help_text='父节点的ID',
+
+class SystemResource(LabelFieldMixin, RemarkFieldMixin, BaseModel):
+    """
+    系统资源
+    """
+    parent = models.ForeignKey(
+        to="self",
+        related_name="children",
+        on_delete=models.CASCADE,
+        verbose_name="父级",
+        help_text="父级",
+        blank=True,
+        null=True
     )
     code = models.CharField(
         '标识编码',
         max_length=64,
         help_text='标识编码',
     )
-    name = models.CharField("name", max_length=150, help_text="组名")
-    path = models.CharField("前端路由", max_length=128, help_text="前端路由", null=True, blank=True)
-    permissions = models.ManyToManyField(
-        Permission,
-        verbose_name="权限",
-        help_text="权限",
-        blank=True,
-    )
-    group_type = models.CharField(
-        '组类型',
+    route_path = models.CharField("前端路由", max_length=128, help_text="前端路由", null=True, blank=True)
+    type = models.CharField(
+        '资源类型',
         max_length=16,
-        choices=enums.GroupTypeEnum.choices(),
-        blank=True,
-        null=True,
-        default=enums.GroupTypeEnum.menu.value,
+        choices=enums.SystemResourceTypeEnum.choices(),
         help_text='组类型',
     )
     order_num = models.IntegerField(
@@ -265,91 +205,139 @@ class CustomizeGroup(BaseModel):
         default=True,
         help_text="当前分组是否可用"
     )
+    permissions = models.ManyToManyField(
+        Permission,
+        verbose_name="权限",
+        help_text="权限",
+        blank=True
+    )
 
     def __str__(self):
-        return self.name
-
-    def natural_key(self):
-        return (self.name,)
-
-    objects = GroupManager()
-
-    @classmethod
-    def _get_permission_ids(cls):
-        return CustomizeGroup.objects.filter(
-            group_type=enums.GroupTypeEnum.permission.value
-        ).values_list("id", flat=True)
-
-    @classmethod
-    def permission_groups(cls):
-        return cls.objects.filter(id__in=cls._get_permission_ids())
-
-    @classmethod
-    def _get_top_ids(cls):
-        return set(cls._get_permission_ids()) - set(GroupRelation.objects.all().values_list("child_id", flat=True))
-
-    @classmethod
-    def top_groups(cls):
-        return cls.objects.filter(id__in=cls._get_top_ids(), enabled=True)
-
-    @classmethod
-    def _get_menu_level1_ids(cls):
-        return GroupRelation.objects.filter(parent_id__in=cls._get_top_ids()).values_list("child_id", flat=True)
-
-    @classmethod
-    def menu_level1_groups(cls):
-        return cls.objects.filter(id__in=cls._get_menu_level1_ids(), enabled=True)
-
-    @classmethod
-    def menu_level2_groups(cls):
-        return cls.objects.filter(
-            id__in=GroupRelation.objects.filter(parent__in=cls._get_menu_level1_ids(), enabled=True).values_list(
-                "child_id", flat=True))
+        return self.label
 
     class Meta:
-        verbose_name = u'自定义分组'
+        verbose_name = u'系统资源'
         verbose_name_plural = verbose_name
-        permissions = enums.PermissionTypeEnum.choices() + enums.MenuLevel2.choices() + enums.PermissionEnum.choices()
-        unique_together = ("code", "name")
+        permissions = enums.PermissionEnum.choices()
+        unique_together = ("code", "parent")
         ordering = ["order_num"]
 
 
-class GroupRelation(models.Model):
-    parent = models.ForeignKey(CustomizeGroup, on_delete=models.CASCADE, related_name="parent_set")
-    child = models.ForeignKey(CustomizeGroup, on_delete=models.CASCADE, related_name="children")
+class DataFilter(LabelFieldMixin, RemarkFieldMixin, BaseModel):
+    content_type = models.OneToOneField(
+        to=ContentType,
+        on_delete=models.CASCADE,
+        related_name="data_filters",
+        verbose_name="数据模型",
+        help_text="数据模型",
+    )
+    eval_string = models.CharField(
+        max_length=256,
+        null=True,
+        blank=True,
+        verbose_name="代码字符串",
+        help_text="代码字符串, 为Q查询"
+    )
+    """
+    eval_string_prototype = "Q({field1}) & Q({field2}) | Q({field3})"
+    eval_string = eval_string_prototype.format(**{"field1": value1, })
+    """
+    eval_string_prototype = models.CharField(
+        max_length=512,
+        verbose_name="代码字符串模版",
+        help_text="代码字符串模版"
+    )
+    field = models.JSONField(
+        "选中过滤字段项",
+        default=list,
+        blank=True,
+        help_text="选中过滤字段项"
+    )
+    """
+    [
+        [ # field1
+            ["label", "value1"],
+            ["label", "value2"],
+        ],
+        [ # field2
+            [],
+            [],
+        ],
+    ]
+    """
+    options = models.CharField(
+        max_length=256,
+        null=True,
+        blank=True,
+        verbose_name="选中的代码字符串",
+        help_text="代码字符串, 一般为字典filter"
+    )
+
+
+class DataFilterFields(LabelFieldMixin, RemarkFieldMixin, BaseModel):
+    content_type = models.ForeignKey(
+        to=ContentType,
+        on_delete=models.CASCADE,
+        related_name="data_sources",
+        verbose_name="数据模型",
+        help_text="数据模型"
+    )
+    fields = models.JSONField(
+        "过滤字段项",
+        default=list,
+        blank=True,
+        help_text="过滤字段项"
+    )
+    """
+        [
+            [ # field1
+                ["label", "value1"],
+                ["label", "value2"],
+            ],
+            [ # field2
+                [],
+                [],
+            ],
+        ]
+    """
+    options = models.CharField(
+        max_length=256,
+        null=True,
+        blank=True,
+        verbose_name="选中的代码字符串",
+        help_text="代码字符串, 一般为字典filter"
+    )
+
+
+class PermissionRelation(models.Model):
+    permission_a = models.ForeignKey(Permission, on_delete=models.CASCADE, related_name="relation_as_a")
+    permission_b = models.ForeignKey(Permission, on_delete=models.CASCADE, related_name="relation_as_b")
+    relation = models.CharField(
+        '关系',
+        max_length=16,
+        choices=enums.PermissionRelationEnum.choices(),
+        help_text='组类型',
+    )
 
     class Meta:
-        verbose_name = u'分组层级关系'
+        verbose_name = u'权限关系'
         verbose_name_plural = verbose_name
 
 
-class Role(BaseModel):
-    code = models.CharField(
-        '英文Code',
-        max_length=64,
-        help_text='英文Code',
-    )
-    name = models.CharField(
-        '名称',
-        max_length=64,
-        unique=True,
-        help_text=u'角色名称',
-        error_messages={'unique': "使用该名称的角色已存在"}
-    )
-    groups = models.ManyToManyField(
-        CustomizeGroup,
+class Role(Group, RemarkFieldMixin, BaseModel):
+    system_resources = models.ManyToManyField(
+        to=SystemResource,
         related_name="roles",
-        verbose_name='角色分组',
-        help_text='角色分组',
-    )
-    operate_groups = models.JSONField(default=list, verbose_name="操作权限", help_text="操作权限")
-    view_groups = models.JSONField(default=list, verbose_name="查看权限", help_text="查看权限")
-    remark = models.CharField(
-        '备注',
-        max_length=128,
+        help_text="系统资源",
+        verbose_name="系统资源",
         blank=True,
-        default="",
-        help_text='角色说明',
+    )
+    data_filters = models.ManyToManyField(
+        to=DataFilter,
+        related_name="roles",
+        help_text="数据限制",
+        verbose_name="数据限制",
+        blank=True,
     )
 
     def __str__(self):
@@ -388,6 +376,7 @@ class Profile(BaseModel, AbstractUser):
     display_fields_config = models.JSONField(
         "自定义字段配置JSON",
         default=dict,
+        blank=True,
         help_text="自定义字段配置JSON"
     )
 

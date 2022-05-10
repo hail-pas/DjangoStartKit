@@ -8,8 +8,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_jwt.views import ObtainJSONWebToken
 
 from apps import enums
-from apps.account.models import Profile, CustomizeGroup
-from apps.account.serializers import ProfileSerializer, CustomizeGroupListSerializer, get_profile_menu
+from apps.account.models import Profile, SystemResource
+from apps.account.serializers import ProfileSerializer, get_profile_system_resource
 from apps.auth import serializers, schemas
 from apps.responses import RestResponse
 from common.swagger import custom_swagger_auto_schema
@@ -54,17 +54,11 @@ class LoginView(ObtainJSONWebToken):
 
         profile.last_login = timezone.now()
         profile.save(update_fields=["last_login"])
-        all_menu = CustomizeGroup.menu_level1_groups()
-        if profile.roles.filter(code=enums.RoleCodeEnum.super_admin.value).first():
-            menu = CustomizeGroupListSerializer(instance=all_menu, many=True).data
-        else:
-            menu = get_profile_menu(profile)
-
         return RestResponse.ok(
             data={
                 'token': request.json_data["token"],
                 'user': ProfileSerializer(instance=profile).data,
-                "menu": menu,
+                "menu": get_profile_system_resource(profile, SystemResource.objects.filter(parent=None)),
             }
         )
 

@@ -4,9 +4,24 @@ from rest_framework import status
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.settings import api_settings
 from rest_framework.viewsets import GenericViewSet
-
 from apps.responses import RestResponse
 from core.restful import CustomPagination
+
+
+class CustomGenericViewSet(GenericViewSet):
+
+    def get_queryset(self):
+        """
+        使用DataFilter过滤数据
+        """
+        if getattr(self, 'swagger_fake_view', False):
+            # queryset just for schema generation metadata
+            return self.queryset.none()
+        from django.db.models import Q  # eval_string内使用
+        queryset = super().get_queryset()
+        q_filters = self.request.user.roles.all().values_list("data_filters__eval_string", flat=True)
+        q_filters = " | ".join(q_filters)  # 取或
+        return queryset.filter(eval(q_filters))
 
 
 class RestCreateModelMixin:
@@ -24,7 +39,7 @@ class RestCreateModelMixin:
     def perform_create(self, serializer):
         serializer.save()
 
-    def get_success_headers(self, data):
+    def get_success_headers(self, data):  # noqa
         try:
             return {'Location': str(data[api_settings.URL_FIELD_NAME])}
         except (TypeError, KeyError):
@@ -44,9 +59,9 @@ class RestListModelMixin:
         if simple_list_param:
             simple_list = simple_list_param.split(",")
             simple_list = [i.strip() for i in simple_list]
-            simple_list = list(set(self.serializer_class().fields.keys()).intersection(set(simple_list)))
+            simple_list = list(set(self.serializer_class().fields.keys()).intersection(set(simple_list)))  # noqa
 
-        queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.filter_queryset(self.get_queryset())  # noqa
 
         profile = request.user
 
@@ -65,12 +80,13 @@ class RestListModelMixin:
         page = self.paginate_queryset(queryset)  # noqa
         if page is not None:
             if simple_list:
-                return self.get_paginated_response(self.get_serializer(page, simple_list=simple_list, many=True).data)
+                return self.get_paginated_response(  # noqa
+                    self.get_serializer(page, simple_list=simple_list, many=True).data)  # noqa
             serializer = self.get_serializer(page, many=True)  # noqa
             return self.get_paginated_response(serializer.data)  # noqa
 
         if simple_list:
-            return RestResponse(data=self.get_serializer(queryset, simple_list=simple_list, many=True).data)
+            return RestResponse(data=self.get_serializer(queryset, simple_list=simple_list, many=True).data)  # noqa
 
         serializer = self.get_serializer(queryset, many=True)  # noqa
         return RestResponse(data=serializer.data)
@@ -106,7 +122,7 @@ class RestUpdateModelMixin:
 
         return RestResponse(data=serializer.data)
 
-    def perform_update(self, serializer):
+    def perform_update(self, serializer):  # noqa
         serializer.save()
 
     def partial_update(self, request, *args, **kwargs):
@@ -142,10 +158,4 @@ class RestModelViewSet(RestCreateModelMixin,
     """
     返回 RestResponse
     """
-
-    def get_queryset(self):
-        if getattr(self, 'swagger_fake_view', False):
-            # queryset just for schema generation metadata
-            return self.queryset.none()
-
-        return super(RestModelViewSet, self).get_queryset()
+    pass
