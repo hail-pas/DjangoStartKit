@@ -1,17 +1,17 @@
 import binascii
-from typing import Dict, List, Type, Tuple, Union, Callable, Any
+from typing import Any, Dict, List, Type, Tuple, Union, Callable
 from contextlib import contextmanager
 
-from cachetools.func import lru_cache
+from ujson import loads
 from drf_yasg import openapi
 from pydantic import BaseModel as PydanticBaseModel
 from happybase import Table, Connection, ConnectionPool
-from ujson import loads
+from cachetools.func import lru_cache
 
-from common.utils import get_random_host_and_port
+from conf.enums import Environment
 from conf.config import local_configs
 from common.types import Map
-from conf.enums import Environment
+from common.utils import get_random_host_and_port
 
 
 def hbase_connection_pool(size: int = 50, **kwargs) -> ConnectionPool:
@@ -24,7 +24,7 @@ def hbase_connection_pool(size: int = 50, **kwargs) -> ConnectionPool:
 def hbase_connection(**kwargs):
     if "host" not in kwargs:
         host, port = get_random_host_and_port(local_configs.THRIFT_SERVERS)
-        kwargs.update(dict(host=host, port=int(port), ))
+        kwargs.update(dict(host=host, port=int(port),))
     conn = Connection(**kwargs)
     try:
         yield conn
@@ -51,8 +51,9 @@ class BaseModelMeta(type):
             if _.startswith("_") or _ == "Meta" or isinstance(attr, classmethod):
                 continue
             assert isinstance(attr, (list, tuple)) and len(attr) == 2, f"{_} 必须使用('column_name', 'verbose_name')"
-            assert isinstance(attr[0], (str, bytes)) and isinstance(attr[1],
-                                                                    str), f"{_} 使用 str 或 bytes 类型指定 column_name, 使用 str 指定 verbose_name"  # noqa
+            assert isinstance(attr[0], (str, bytes)) and isinstance(
+                attr[1], str
+            ), f"{_} 使用 str 或 bytes 类型指定 column_name, 使用 str 指定 verbose_name"  # noqa
         if not abstract:
             table_name = getattr(meta_class, "table_name", None)
             if not table_name:
@@ -109,30 +110,26 @@ class BaseModelMeta(type):
     @property
     @lru_cache
     def response_model(cls, is_list: bool = True):
-        properties = {
-        }
+        properties = {}
         json_fields_mapper = cls._json_fields_mapper  # noqa
         for k, _ in cls._str_to_bytes_map.items():  # noqa
             if k in cls._json_fields and k in json_fields_mapper:  # noqa
                 in_properties = {}
                 for (in_k, desc) in json_fields_mapper.get(k):
                     in_properties[in_k] = openapi.Schema(type=openapi.TYPE_STRING, default="", description=desc)
-                properties[k] = openapi.Schema(type=openapi.TYPE_OBJECT, properties=in_properties,
-                                               description=f"{k}字段结构")
+                properties[k] = openapi.Schema(
+                    type=openapi.TYPE_OBJECT, properties=in_properties, description=f"{k}字段结构"
+                )
             else:
                 properties[k] = openapi.Schema(type=openapi.TYPE_STRING, default="", description=getattr(cls, k)[1])
 
         data_schema = openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties=properties,
-            description=f"{cls.__name__}单数据响应体结构"
+            type=openapi.TYPE_OBJECT, properties=properties, description=f"{cls.__name__}单数据响应体结构"
         )
 
         if is_list:
             data_schema = openapi.Schema(
-                type=openapi.TYPE_ARRAY,
-                items=data_schema,
-                description=f"{cls.__name__}列表响应体结构"
+                type=openapi.TYPE_ARRAY, items=data_schema, description=f"{cls.__name__}列表响应体结构"
             )
 
         properties = {
@@ -142,9 +139,7 @@ class BaseModelMeta(type):
             "data": data_schema,
         }
         rest_schema = openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties=properties,
-            description=f"{cls.__name__}响应体结构"
+            type=openapi.TYPE_OBJECT, properties=properties, description=f"{cls.__name__}响应体结构"
         )
 
         return rest_schema
@@ -155,7 +150,7 @@ class BaseModelMeta(type):
         env_to_table_prefix = {
             Environment.development.value: "dev",
             Environment.test.value: "test",
-            Environment.production.value: "pro"
+            Environment.production.value: "pro",
         }
         return env_to_table_prefix[local_configs.ENVIRONMENT]
 
@@ -203,7 +198,7 @@ class BaseModel(metaclass=BaseModelMeta):
 
     @classmethod
     def field_range_map(cls):
-        raise NotImplemented
+        raise NotImplementedError
         # 左闭右闭
         # map = {
         #     "A:a01": [0, 252], "A:a02": [1, 2], "A:a03": [1, 2], "A:a04": [1, 2], "A:a05": [1, 2],
@@ -231,8 +226,13 @@ class BaseModel(metaclass=BaseModelMeta):
             raise RuntimeError(f"Not Supported Data Type - {type(data)}")
 
     @classmethod
-    def field_clean(cls, single_data: dict, place_holder: str = "-", keep_original: bool = True,
-                    customize_display: Callable[[Any], str] = None) -> dict:
+    def field_clean(
+        cls,
+        single_data: dict,
+        place_holder: str = "-",
+        keep_original: bool = True,
+        customize_display: Callable[[Any], str] = None,
+    ) -> dict:
         """
         customize_display = lambda v: {"-65534": "无效", "-65535": "异常"}.get(v)
         """
@@ -270,20 +270,20 @@ class BaseModel(metaclass=BaseModelMeta):
 
     @classmethod
     def scan(
-            cls,
-            row_start: str = None,
-            row_stop: str = None,
-            row_prefix: bytes = None,
-            columns: List[str] = None,
-            filter: str = None,  # noqa
-            timestamp: int = None,
-            include_timestamp: bool = False,
-            batch_size: int = 1000,
-            scan_batching: bool = None,
-            limit=None,
-            sorted_columns: bool = False,
-            reverse: bool = False,
-            specify_table_name: str = None,
+        cls,
+        row_start: str = None,
+        row_stop: str = None,
+        row_prefix: bytes = None,
+        columns: List[str] = None,
+        filter: str = None,  # noqa
+        timestamp: int = None,
+        include_timestamp: bool = False,
+        batch_size: int = 1000,
+        scan_batching: bool = None,
+        limit=None,
+        sorted_columns: bool = False,
+        reverse: bool = False,
+        specify_table_name: str = None,
     ):
         if cls._pool is None:
             cls._pool = hbase_connection_pool()
@@ -314,13 +314,13 @@ class BaseModel(metaclass=BaseModelMeta):
 
     @classmethod
     def row(
-            cls,
-            row: str,
-            columns: List[Union[str, bytes]] = None,
-            timestamp: int = None,
-            include_timestamp: bool = False,
-            serialize_fnc: Callable = None,
-            specify_table_name: str = None,
+        cls,
+        row: str,
+        columns: List[Union[str, bytes]] = None,
+        timestamp: int = None,
+        include_timestamp: bool = False,
+        serialize_fnc: Callable = None,
+        specify_table_name: str = None,
     ):
         if cls._pool is None:
             cls._pool = hbase_connection_pool()
@@ -343,12 +343,12 @@ class BaseModel(metaclass=BaseModelMeta):
 
     @classmethod
     def rows(
-            cls,
-            rows: List[str],
-            columns: List[str] = None,
-            timestamp: int = None,
-            include_timestamp=False,
-            specify_table_name: str = None,
+        cls,
+        rows: List[str],
+        columns: List[str] = None,
+        timestamp: int = None,
+        include_timestamp=False,
+        specify_table_name: str = None,
     ):
         if cls._pool is None:
             cls._pool = hbase_connection_pool()
@@ -366,12 +366,7 @@ class BaseModel(metaclass=BaseModelMeta):
 
     @classmethod
     def put(
-            cls,
-            row: str,
-            data: dict,
-            timestamp: int = None,
-            wal: bool = True,
-            specify_table_name: str = None,
+        cls, row: str, data: dict, timestamp: int = None, wal: bool = True, specify_table_name: str = None,
     ):
         if cls._pool is None:
             cls._pool = hbase_connection_pool()

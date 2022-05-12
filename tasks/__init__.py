@@ -1,7 +1,8 @@
 """
 异步、定时 任务
 """
-from typing import Callable, Dict, Optional
+from typing import Dict, Callable, Optional
+
 from common.types import StrEnumMore
 
 
@@ -18,13 +19,13 @@ class TaskType(StrEnumMore):
 
 class Task:
     def __init__(
-            self,
-            type_: TaskType,
-            function: Callable,
-            cron: Optional[str] = "",
-            description: Optional[str] = "",
-            file_name: Optional[str] = "",
-            **k8s_kwargs
+        self,
+        type_: TaskType,
+        function: Callable,
+        cron: Optional[str] = "",
+        description: Optional[str] = "",
+        file_name: Optional[str] = "",
+        **k8s_kwargs,
     ):
         self.type_ = type_
         self.function = function
@@ -48,18 +49,17 @@ _task_map: Dict[str, Task] = {}
 
 
 class TaskManager:
-
     @property
     def task_map(self) -> Dict:
         return _task_map
 
     def task(  # noqa
-            self,
-            name: Optional[str] = "",
-            description: Optional[str] = "",
-            type_: TaskType = TaskType.asynchronous,
-            cron: str = None,
-            **k8s_kwargs
+        self,
+        name: Optional[str] = "",
+        description: Optional[str] = "",
+        type_: TaskType = TaskType.asynchronous,
+        cron: str = None,
+        **k8s_kwargs,
     ):
         def _1(func):
             global _task_map

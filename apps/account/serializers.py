@@ -1,22 +1,20 @@
-from pypinyin import lazy_pinyin
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueValidator
 
 from apps import enums
 from apps.account import models
-from common.drf.serializers import CustomModelSerializer
 from common.validators import check_china_mobile_phone
+from common.drf.serializers import CustomModelSerializer
 
 
 class RoleSerializer(CustomModelSerializer):
     class Meta:
         model = models.Role
-        read_only_fields = {'id', }
-        fields = read_only_fields.union({
-            'name',
-            'remark',
-        })
+        read_only_fields = {
+            "id",
+        }
+        fields = read_only_fields.union({"name", "remark"})
 
 
 class RoleListSerializer(RoleSerializer):
@@ -32,18 +30,13 @@ class ProfileSerializer(CustomModelSerializer):
     class Meta:
         model = models.Profile
         read_only_fields = {
-            'id',
-            'is_active',
-            'last_login',
-            'create_time',
-            'update_time',
+            "id",
+            "is_active",
+            "last_login",
+            "create_time",
+            "update_time",
         }
-        fields = read_only_fields.union({
-            'username',
-            'phone',
-            'roles',
-            'gender',
-        })
+        fields = read_only_fields.union({"username", "phone", "roles", "gender"})
 
 
 class ProfileListSerializer(ProfileSerializer):
@@ -52,13 +45,20 @@ class ProfileListSerializer(ProfileSerializer):
 
 class ProfileCreateUpdateSerializer(ProfileSerializer):
     username = serializers.CharField(required=True, help_text="用户名", max_length=128)
-    phone = serializers.CharField(required=True, help_text="手机号",
-                                  validators=[
-                                      UniqueValidator(queryset=models.Profile._base_manager.all(),  # noqa
-                                                      message="使用该手机号的用户已存在")])
+    phone = serializers.CharField(
+        required=True,
+        help_text="手机号",
+        validators=[UniqueValidator(queryset=models.Profile._base_manager.all(), message="使用该手机号的用户已存在")],  # noqa
+    )
     gender = serializers.ChoiceField(required=True, help_text="性别", choices=enums.GenderEnum.choices())
-    roles = serializers.PrimaryKeyRelatedField(required=True, allow_empty=True, help_text='所属角色(int)', label='所属角色',
-                                               many=True, queryset=models.Role.objects.all())
+    roles = serializers.PrimaryKeyRelatedField(
+        required=True,
+        allow_empty=True,
+        help_text="所属角色(int)",
+        label="所属角色",
+        many=True,
+        queryset=models.Role.objects.all(),
+    )
 
     class Meta:
         model = models.Profile
@@ -101,7 +101,8 @@ def get_profile_system_resource(profile, instance, many: bool = True):
         def get_children(self, obj):  # noqa
             serializer = NestedSystemResourceSerializer(
                 instance=models.SystemResource.objects.filter(id__in=system_resource_ids) & obj.children.all(),
-                many=True)
+                many=True,
+            )
             return serializer.data
 
     return NestedSystemResourceSerializer(instance=instance, many=many).data

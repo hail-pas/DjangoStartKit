@@ -1,40 +1,37 @@
 # Create your models here.
-from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.contrib.auth.models import Permission, GroupManager, Group, PermissionsMixin
+from django.utils import timezone
+from django.core.mail import send_mail
 from django.db.models import Manager
 from django.utils.crypto import get_random_string
-from storages.mysql import BaseModel, DeletedFieldManager, LabelFieldMixin, RemarkFieldMixin
-from apps import enums
-from django.contrib.auth.base_user import AbstractBaseUser
-from django.contrib.auth.models import (
-    Permission,
-    _user_get_permissions,  # noqa
-    _user_has_perm,  # noqa
-    _user_has_module_perms,  # noqa
-)
-from django.contrib.auth.validators import UnicodeUsernameValidator
-from django.core.mail import send_mail
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.contrib.auth.models import _user_has_perm  # noqa
+from django.contrib.auth.models import _user_get_permissions  # noqa
+from django.contrib.auth.models import _user_has_module_perms  # noqa
+from django.contrib.auth.models import Group, Permission, PermissionsMixin
+from django.contrib.auth.base_user import AbstractBaseUser
+from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.contrib.contenttypes.models import ContentType
 
-allowed_chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ123456789'  # noqa
+from apps import enums
+from storages.mysql import BaseModel, LabelFieldMixin, RemarkFieldMixin
+
+allowed_chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ123456789"  # noqa
 
 
 class BaseUserManager(Manager):
-
     @classmethod
     def normalize_email(cls, email):
         """
         Normalize the email address by lowercase the domain part of it.
         """
-        email = email or ''
+        email = email or ""
         try:
-            email_name, domain_part = email.strip().rsplit('@', 1)
+            email_name, domain_part = email.strip().rsplit("@", 1)
         except ValueError:
             pass
         else:
-            email = email_name + '@' + domain_part.lower()
+            email = email_name + "@" + domain_part.lower()
         return email
 
     def make_random_password(self, length=10, allowed_chars=allowed_chars):  # noqa
@@ -57,13 +54,13 @@ class ProfileManager(BaseUserManager):
         return user
 
     def create_superuser(self, username, phone, password, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
 
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError('Superuser must have is_staff=True.')
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True.')
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError("Superuser must have is_staff=True.")
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError("Superuser must have is_superuser=True.")
         return self.create_user(username, phone, password, **extra_fields)
 
 
@@ -74,58 +71,35 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
 
     Username and password are required. Other fields are optional.
     """
+
     username_validator = UnicodeUsernameValidator()
 
-    username = models.CharField(
-        _('用户名'),
-        max_length=128,
-        help_text="用户名, 最长128",
-    )
+    username = models.CharField(_("用户名"), max_length=128, help_text="用户名, 最长128",)
     phone = models.CharField(
-        '电话',
-        max_length=11,
-        unique=True,
-        help_text=u'电话',
-        error_messages={'unique': "使用该手机号的用户已存在"}
+        "电话", max_length=11, unique=True, help_text="电话", error_messages={"unique": "使用该手机号的用户已存在"}
     )
-    first_name = models.CharField(
-        _('first name'),
-        max_length=150,
-        blank=True
-    )
-    last_name = models.CharField(
-        _('last name'),
-        max_length=150,
-        blank=True)
-    email = models.EmailField(
-        _('email address'),
-        blank=True
-    )
+    first_name = models.CharField(_("first name"), max_length=150, blank=True)
+    last_name = models.CharField(_("last name"), max_length=150, blank=True)
+    email = models.EmailField(_("email address"), blank=True)
     is_staff = models.BooleanField(
-        _('staff status'),
-        default=False,
-        help_text=_('Designates whether the user can log into this admin site.'),
+        _("staff status"), default=False, help_text=_("Designates whether the user can log into this admin site."),
     )
     is_active = models.BooleanField(
-        _('active'),
+        _("active"),
         default=True,
         help_text=_(
-            'Designates whether this user should be treated as active. '
-            'Unselect this instead of deleting accounts.'
+            "Designates whether this user should be treated as active. " "Unselect this instead of deleting accounts."
         ),
     )
-    date_joined = models.DateTimeField(
-        _('date joined'),
-        default=timezone.now
-    )
+    date_joined = models.DateTimeField(_("date joined"), default=timezone.now)
 
-    EMAIL_FIELD = 'email'
-    USERNAME_FIELD = 'phone'
-    REQUIRED_FIELDS = ['username', "password"]
+    EMAIL_FIELD = "email"
+    USERNAME_FIELD = "phone"
+    REQUIRED_FIELDS = ["username", "password"]
 
     class Meta:
-        verbose_name = _('user')
-        verbose_name_plural = _('users')
+        verbose_name = _("user")
+        verbose_name_plural = _("users")
         abstract = True
 
     def clean(self):
@@ -136,7 +110,7 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
         """
         Return the first_name plus the last_name, with a space in between.
         """
-        full_name = '%s %s' % (self.first_name, self.last_name)
+        full_name = "%s %s" % (self.first_name, self.last_name)
         return full_name.strip()
 
     def get_short_name(self):
@@ -174,6 +148,7 @@ class SystemResource(LabelFieldMixin, RemarkFieldMixin, BaseModel):
     """
     系统资源
     """
+
     parent = models.ForeignKey(
         to="self",
         related_name="children",
@@ -181,42 +156,20 @@ class SystemResource(LabelFieldMixin, RemarkFieldMixin, BaseModel):
         verbose_name="父级",
         help_text="父级",
         blank=True,
-        null=True
+        null=True,
     )
-    code = models.CharField(
-        '标识编码',
-        max_length=64,
-        help_text='标识编码',
-    )
+    code = models.CharField("标识编码", max_length=64, help_text="标识编码",)
     route_path = models.CharField("前端路由", max_length=128, help_text="前端路由", null=True, blank=True)
-    type = models.CharField(
-        '资源类型',
-        max_length=16,
-        choices=enums.SystemResourceTypeEnum.choices(),
-        help_text='组类型',
-    )
-    order_num = models.IntegerField(
-        '排列序号',
-        default=1,
-        help_text='排列序号',
-    )
-    enabled = models.BooleanField(
-        "启用状态",
-        default=True,
-        help_text="当前分组是否可用"
-    )
-    permissions = models.ManyToManyField(
-        Permission,
-        verbose_name="权限",
-        help_text="权限",
-        blank=True
-    )
+    type = models.CharField("资源类型", max_length=16, choices=enums.SystemResourceTypeEnum.choices(), help_text="组类型",)
+    order_num = models.IntegerField("排列序号", default=1, help_text="排列序号",)
+    enabled = models.BooleanField("启用状态", default=True, help_text="当前分组是否可用")
+    permissions = models.ManyToManyField(Permission, verbose_name="权限", help_text="权限", blank=True)
 
     def __str__(self):
         return f"{self.parent.label + '-' if self.parent else ''}" + self.label
 
     class Meta:
-        verbose_name = u'系统资源'
+        verbose_name = "系统资源"
         verbose_name_plural = verbose_name
         permissions = enums.PermissionEnum.choices()
         unique_together = ("code", "parent")
@@ -224,41 +177,17 @@ class SystemResource(LabelFieldMixin, RemarkFieldMixin, BaseModel):
 
 
 class DataFilter(RemarkFieldMixin, BaseModel):
-    label = models.CharField(
-        verbose_name="名称",
-        max_length=32,
-        help_text="名称",
-        unique=True
-    )
+    label = models.CharField(verbose_name="名称", max_length=32, help_text="名称", unique=True)
     content_type = models.ForeignKey(
-        to=ContentType,
-        on_delete=models.CASCADE,
-        related_name="data_filters",
-        verbose_name="数据模型",
-        help_text="数据模型",
+        to=ContentType, on_delete=models.CASCADE, related_name="data_filters", verbose_name="数据模型", help_text="数据模型",
     )
-    eval_string = models.CharField(
-        max_length=256,
-        null=True,
-        blank=True,
-        verbose_name="代码字符串",
-        help_text="代码字符串, 为Q查询"
-    )
+    eval_string = models.CharField(max_length=256, null=True, blank=True, verbose_name="代码字符串", help_text="代码字符串, 为Q查询")
     """
     eval_string_prototype = "Q({field1}) & Q({field2}) | Q({field3})"
     eval_string = eval_string_prototype.format(**{"field1": value1, })
     """
-    eval_string_prototype = models.CharField(
-        max_length=512,
-        verbose_name="代码字符串模版",
-        help_text="代码字符串模版"
-    )
-    field = models.JSONField(
-        "选中过滤字段项",
-        default=list,
-        blank=True,
-        help_text="选中过滤字段项"
-    )
+    eval_string_prototype = models.CharField(max_length=512, verbose_name="代码字符串模版", help_text="代码字符串模版")
+    field = models.JSONField("选中过滤字段项", default=list, blank=True, help_text="选中过滤字段项")
     """
     [
         [ # field1
@@ -271,20 +200,12 @@ class DataFilter(RemarkFieldMixin, BaseModel):
         ],
     ]
     """
-    [
-        ["自己创建的", "operator=profile"],
-        ["全部", ""],
-    ]
     options = models.JSONField(
-        max_length=256,
-        default=list,
-        blank=True,
-        verbose_name="选中的代码字符串",
-        help_text="代码字符串, 一般为字典filter"
+        max_length=256, default=list, blank=True, verbose_name="选中的代码字符串", help_text="代码字符串, 一般为字典filter"
     )
 
     def __str__(self):
-        return self.content_type.app_labeled_name
+        return self.label
 
     class Meta:
         verbose_name = "数据过滤Q配置"
@@ -294,18 +215,9 @@ class DataFilter(RemarkFieldMixin, BaseModel):
 
 class DataFilterFields(LabelFieldMixin, RemarkFieldMixin, BaseModel):
     content_type = models.ForeignKey(
-        to=ContentType,
-        on_delete=models.CASCADE,
-        related_name="data_sources",
-        verbose_name="数据模型",
-        help_text="数据模型"
+        to=ContentType, on_delete=models.CASCADE, related_name="data_sources", verbose_name="数据模型", help_text="数据模型"
     )
-    fields = models.JSONField(
-        "过滤字段项",
-        default=list,
-        blank=True,
-        help_text="过滤字段项"
-    )
+    fields = models.JSONField("过滤字段项", default=list, blank=True, help_text="过滤字段项")
     """
         [
             [ # field1
@@ -319,11 +231,7 @@ class DataFilterFields(LabelFieldMixin, RemarkFieldMixin, BaseModel):
         ]
     """
     options = models.JSONField(
-        max_length=256,
-        null=True,
-        blank=True,
-        verbose_name="可选代码字符串",
-        help_text="代码字符串, 一般为字典filter"
+        max_length=256, null=True, blank=True, verbose_name="可选代码字符串", help_text="代码字符串, 一般为字典filter"
     )
 
     def __str__(self):
@@ -338,42 +246,29 @@ class DataFilterFields(LabelFieldMixin, RemarkFieldMixin, BaseModel):
 class PermissionRelation(models.Model):
     permission_a = models.ForeignKey(Permission, on_delete=models.CASCADE, related_name="relation_as_a")
     permission_b = models.ForeignKey(Permission, on_delete=models.CASCADE, related_name="relation_as_b")
-    relation = models.CharField(
-        '关系',
-        max_length=16,
-        choices=enums.PermissionRelationEnum.choices(),
-        help_text='组类型',
-    )
+    relation = models.CharField("关系", max_length=16, choices=enums.PermissionRelationEnum.choices(), help_text="组类型",)
 
     def __str__(self):
         return self.permission_b.codename + self.relation + self.permission_b.codename
 
     class Meta:
-        verbose_name = u'权限关系'
+        verbose_name = "权限关系"
         verbose_name_plural = verbose_name
 
 
 class Role(Group, RemarkFieldMixin, BaseModel):
     system_resources = models.ManyToManyField(
-        to=SystemResource,
-        related_name="roles",
-        help_text="系统资源",
-        verbose_name="系统资源",
-        blank=True,
+        to=SystemResource, related_name="roles", help_text="系统资源", verbose_name="系统资源", blank=True,
     )
     data_filters = models.ManyToManyField(
-        to=DataFilter,
-        related_name="roles",
-        help_text="数据限制",
-        verbose_name="数据限制",
-        blank=True,
+        to=DataFilter, related_name="roles", help_text="数据限制", verbose_name="数据限制", blank=True,
     )
 
     def __str__(self):
         return self.name
 
     class Meta:
-        verbose_name = '角色'
+        verbose_name = "角色"
         verbose_name_plural = verbose_name
 
 
@@ -381,33 +276,15 @@ class Profile(BaseModel, AbstractUser):
     """
     username、phone
     """
-    roles = models.ManyToManyField(
-        Role,
-        related_name="profiles",
-        verbose_name='所属角色',
-        help_text=u'所属角色(int)',
-    )
+
+    roles = models.ManyToManyField(Role, related_name="profiles", verbose_name="所属角色", help_text="所属角色(int)",)
     gender = models.CharField(
-        "性别",
-        max_length=24,
-        choices=enums.GenderEnum.choices(),
-        default=enums.GenderEnum.male.value,
-        help_text="性别"
+        "性别", max_length=24, choices=enums.GenderEnum.choices(), default=enums.GenderEnum.male.value, help_text="性别"
     )
     operator = models.ForeignKey(
-        'self',
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        default=None,
-        help_text='操作人'
+        "self", on_delete=models.SET_NULL, blank=True, null=True, default=None, help_text="操作人"
     )
-    display_fields_config = models.JSONField(
-        "自定义字段配置JSON",
-        default=dict,
-        blank=True,
-        help_text="自定义字段配置JSON"
-    )
+    display_fields_config = models.JSONField("自定义字段配置JSON", default=dict, blank=True, help_text="自定义字段配置JSON")
 
     @property
     def role_codes(self):
@@ -420,6 +297,6 @@ class Profile(BaseModel, AbstractUser):
     objects = ProfileManager()
 
     class Meta(AbstractUser.Meta):
-        verbose_name = '用户'
+        verbose_name = "用户"
         verbose_name_plural = verbose_name
-        swappable = 'AUTH_USER_MODEL'
+        swappable = "AUTH_USER_MODEL"

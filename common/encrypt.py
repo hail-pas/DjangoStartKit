@@ -63,7 +63,7 @@ class RSAUtil:
         cipher = PKCS1_v1_5.new(key)
         res = []
         for i in range(0, len(text), length):
-            text_item = text[i: i + length]
+            text_item = text[i : i + length]
             cipher_text = cipher.encrypt(text_item.encode(encoding="utf-8"))
             res.append(cipher_text)
         return base64.b64encode(b"".join(res)).decode()
@@ -76,7 +76,7 @@ class RSAUtil:
         cipher = PKCS1_v1_5.new(key)
         return cipher.decrypt(base64.b64decode(text), Random.new().read(15 + SHA.digest_size)).decode()
 
-    def _get_private_key(self, ):
+    def _get_private_key(self,):
         """
         从pfx文件读取私钥
         """
@@ -159,7 +159,7 @@ class SignAuth:
         self.private_key = private_key
 
     def verify(
-            self, sign: str, data_str: str,
+        self, sign: str, data_str: str,
     ):
         """
         校验sign

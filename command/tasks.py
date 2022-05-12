@@ -1,11 +1,13 @@
-import importlib
 import os
 import pathlib
-import typer
+import importlib
 from typing import Dict
+
+import typer
+
 from tasks import Task, TaskType
-from common.k8s_api import KubernetesAPI, KubeSetting
 from conf.config import local_configs
+from common.k8s_api import KubeSetting, KubernetesAPI
 
 tasks_create_typer = typer.Typer(short_help="任务创建")
 task = tasks_create_typer.command
@@ -49,9 +51,7 @@ def show_all_jobs():
 
 
 @task()
-def create_job(
-        job_name: str = typer.Option(default="", help="任务名字")
-):
+def create_job(job_name: str = typer.Option(default="", help="任务名字")):
     """
     创建任务
     """

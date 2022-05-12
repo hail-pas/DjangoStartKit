@@ -1,14 +1,13 @@
 import logging
-from functools import lru_cache
 from math import ceil
-from typing import Optional, Any
+from typing import Any, Optional
+from functools import lru_cache
 
-from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models.query import QuerySet
-from django.http import JsonResponse
 from drf_yasg import openapi
 from pydantic import BaseModel
+from django.http import JsonResponse
 from rest_framework import serializers
+from django.core.serializers.json import DjangoJSONEncoder
 
 from apps.enums import ResponseCodeEnum
 from common.types import PlainSchema
@@ -21,6 +20,7 @@ class _PageInfo(BaseModel):
     """
     翻页相关信息
     """
+
     total_page: int
     total_count: int
     page_size: int
@@ -46,9 +46,9 @@ class _PageInfo(BaseModel):
                 "total_page": openapi.Schema(type=openapi.TYPE_INTEGER, default=1, description="总页数"),
                 "total_count": openapi.Schema(type=openapi.TYPE_INTEGER, default=1, description="总页数"),
                 "page_size": openapi.Schema(type=openapi.TYPE_INTEGER, default=10, description="每页数据条数"),
-                "page_num": openapi.Schema(type=openapi.TYPE_INTEGER, default=1, description="页码")
+                "page_num": openapi.Schema(type=openapi.TYPE_INTEGER, default=1, description="页码"),
             },
-            description="响应体结构"
+            description="响应体结构",
         )
         return _schema
 
@@ -74,13 +74,14 @@ class _Resp(BaseModel):
 
     @classmethod
     def to_serializer(cls, resp_serializer, page_info: bool = False):
-
         def generate_serializer(_name: str):
 
             attrs = {
-                "code": serializers.ChoiceField(default=ResponseCodeEnum.success.value,
-                                                choices=ResponseCodeEnum.choices(),
-                                                help_text=f"响应状态码: {ResponseCodeEnum.choices()}"),
+                "code": serializers.ChoiceField(
+                    default=ResponseCodeEnum.success.value,
+                    choices=ResponseCodeEnum.choices(),
+                    help_text=f"响应状态码: {ResponseCodeEnum.choices()}",
+                ),
                 "success": serializers.BooleanField(default=True, help_text="是否成功"),
                 "message": serializers.CharField(default="", help_text="响应信息"),
                 "data": resp_serializer,
@@ -123,11 +124,7 @@ class _Resp(BaseModel):
         }
         if page_info:
             properties["page_info"] = _PageInfo.to_schema()
-        rest_schema = openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties=properties,
-            description="响应体结构"
-        )
+        rest_schema = openapi.Schema(type=openapi.TYPE_OBJECT, properties=properties, description="响应体结构")
         return rest_schema
 
     def dict(self, *args, **kwargs):  # real signature unknown
@@ -145,13 +142,26 @@ class RestResponse(JsonResponse):
 
     result: Any = None
 
-    def __init__(self, code: int = ResponseCodeEnum.success.value, success: bool = True,
-                 message: Optional[str] = None, data: Optional[Any] = None, encoder=DjangoJSONEncoder,
-                 page_size: int = None, page_num: int = None, total_count: int = None, **kwargs):
+    def __init__(
+        self,
+        code: int = ResponseCodeEnum.success.value,
+        success: bool = True,
+        message: Optional[str] = None,
+        data: Optional[Any] = None,
+        encoder=DjangoJSONEncoder,
+        page_size: int = None,
+        page_num: int = None,
+        total_count: int = None,
+        **kwargs,
+    ):
         page_info = None
         if all([page_size is not None, page_num is not None, total_count is not None]):
-            page_info = _PageInfo(page_size=page_size, page_num=page_num, total_page=ceil(total_count / page_size),
-                                  total_count=total_count)
+            page_info = _PageInfo(
+                page_size=page_size,
+                page_num=page_num,
+                total_page=ceil(total_count / page_size),
+                total_count=total_count,
+            )
         self.result = _Resp(code=code, success=success, message=message, page_info=page_info).dict()
         mapper(resp_serialize, data)
         self.result["data"] = data

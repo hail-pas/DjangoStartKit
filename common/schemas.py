@@ -3,6 +3,7 @@
 """
 
 from rest_framework import serializers
+
 from common.types import PlainSchema, StrEnumMore
 
 

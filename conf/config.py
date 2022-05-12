@@ -1,8 +1,8 @@
-import multiprocessing
 import os
-from functools import lru_cache
+import multiprocessing
+from typing import Any, Dict, List, Optional
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from functools import lru_cache
 
 from pydantic import BaseSettings, validator
 
@@ -15,6 +15,7 @@ class LocalConfig(BaseSettings):
     """
     全部的配置信息
     """
+
     # ProjectInfo
     PROJECT_NAME: str = "core"
     DESCRIPTION: str = "Django-start-kit"
@@ -32,8 +33,9 @@ class LocalConfig(BaseSettings):
 
     @validator("DEBUG", allow_reuse=True)
     def check_debug_value(cls, v: Optional[str], values: Dict[str, Any]):
-        assert not (v and values[
-            "ENVIRONMENT"] == Environment.production.value), f'Production cannot set with debug enabled'
+        assert not (
+            v and values["ENVIRONMENT"] == Environment.production.value
+        ), "Production cannot set with debug enabled"
         return v
 
     # ApiInfo
@@ -63,7 +65,6 @@ class LocalConfig(BaseSettings):
     REDIS_DB: int = 0
     REDIS_SEARCH_DB: int = 1
 
-
     # =========HBase
     THRIFT_SERVERS: Optional[List[str]] = ["192.168.3.75:9090"]
 
@@ -91,28 +92,24 @@ class LocalConfig(BaseSettings):
     @property
     def DATABASES(self) -> dict:
         return {
-            'default': {
-                'ENGINE': 'django.db.backends.mysql',
-                'NAME': self.DB_NAME,
-                'USER': self.DB_USER,
-                'PASSWORD': self.DB_PASSWORD,
-                'HOST': self.DB_HOST,
-                'PORT': self.DB_PORT,
-                'OPTIONS': {
-                    'charset': 'utf8mb4',
-                    'use_unicode': True,
-                },
-                'TEST': {
-                    'CHARSET': 'utf8mb4',
-                    'COLLATION': 'utf8mb4_bin',
-                },
+            "default": {
+                "ENGINE": "django.db.backends.mysql",
+                "NAME": self.DB_NAME,
+                "USER": self.DB_USER,
+                "PASSWORD": self.DB_PASSWORD,
+                "HOST": self.DB_HOST,
+                "PORT": self.DB_PORT,
+                "OPTIONS": {"charset": "utf8mb4", "use_unicode": True},
+                "TEST": {"CHARSET": "utf8mb4", "COLLATION": "utf8mb4_bin"},
             },
         }
 
     class Config:
         case_sensitive = True
-        env_file = str(
-            BASE_DIR.absolute()) + f'/conf/envs/{os.environ.get("environment", Environment.development.value.lower())}.env'
+        env_file = (
+            str(BASE_DIR.absolute())
+            + f'/conf/envs/{os.environ.get("environment", Environment.development.value.lower())}.env'
+        )
         env_file_encoding = "utf-8"
 
 

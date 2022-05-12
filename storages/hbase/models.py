@@ -5,6 +5,7 @@ class OBDInfoBaseData(BaseModel):
     """
     基础信息
     """
+
     protocol = (b"A:a04", "协议")
     collectTimeStr = (b"A:a05", "采集时间")
     commandFlag = (b"A:a07", "命令单元")
@@ -15,10 +16,10 @@ class OBDInfoBaseData(BaseModel):
     class Meta:
         table_name = f"{BaseModel.table_prefix}_obd_info"
         row_key_format = "{unique_code}__{create_datetime}"
-        hex_fields = ["rawData", ]
-        json_fields = ["InfoList", ]
-        json_fields_mapper = {
-            "InfoList": (
-                list[dict],
-                [("Attr1", "Attr1描述"), ("Attr2", "Attr2描述")])
-        }
+        hex_fields = [
+            "rawData",
+        ]
+        json_fields = [
+            "InfoList",
+        ]
+        json_fields_mapper = {"InfoList": (list[dict], [("Attr1", "Attr1描述"), ("Attr2", "Attr2描述")])}

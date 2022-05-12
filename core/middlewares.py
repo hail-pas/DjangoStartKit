@@ -1,15 +1,16 @@
 import ujson
 from django.http import HttpRequest, HttpResponse
-from django.utils.encoding import smart_text
 from rest_framework import status, exceptions
-from rest_framework.authentication import get_authorization_header
-from rest_framework.exceptions import ValidationError, ErrorDetail, AuthenticationFailed
+from django.utils.encoding import smart_text
 from rest_framework.request import Request
-from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from django.utils.translation import ugettext as _
+from rest_framework.exceptions import ErrorDetail, ValidationError, AuthenticationFailed
 from rest_framework_jwt.settings import api_settings
+from rest_framework.authentication import get_authorization_header
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
+
+from common.types import ContentTypeEnum, RequestMethodEnum
 from apps.responses import RestResponse
-from common.types import RequestMethodEnum, ContentTypeEnum
 
 
 class RequestProcessMiddleware:
@@ -40,8 +41,12 @@ class RequestProcessMiddleware:
         request.param_data = None
         request.json_data = None
 
-        if request.method.lower() in [RequestMethodEnum.OPTIONS.value, RequestMethodEnum.HEAD.value,
-                                      RequestMethodEnum.CONNECT.value, RequestMethodEnum.TRACE.value]:
+        if request.method.lower() in [
+            RequestMethodEnum.OPTIONS.value,
+            RequestMethodEnum.HEAD.value,
+            RequestMethodEnum.CONNECT.value,
+            RequestMethodEnum.TRACE.value,
+        ]:
             return
         cls = getattr(view_processor, "cls", None)
         if not cls:
@@ -70,7 +75,7 @@ class RequestProcessMiddleware:
                 request.param_data = q_ser.validated_data
             if body_serializer and request.content_type == ContentTypeEnum.APPlICATION_JSON.value:
                 # 只校验json传输
-                data = ujson.loads((request.body or b'{}').decode('utf8'))
+                data = ujson.loads((request.body or b"{}").decode("utf8"))
                 b_ser = body_serializer(data=data)
                 b_ser.is_valid(raise_exception=True)
                 request.json_data = b_ser.validated_data
@@ -149,7 +154,8 @@ class CustomJSONWebTokenAuthentication(JSONWebTokenAuthentication):
 
         Authorization: JWT eyJhbGciOiAiSFMyNTYiLCAidHlwIj
     """
-    www_authenticate_realm = 'api'
+
+    www_authenticate_realm = "api"
 
     def get_jwt_value(self, request):
         auth = get_authorization_header(request).split()
@@ -164,14 +170,13 @@ class CustomJSONWebTokenAuthentication(JSONWebTokenAuthentication):
             return None
 
         if len(auth) == 1:
-            msg = _('Invalid Authorization header. No credentials provided.')
+            msg = _("Invalid Authorization header. No credentials provided.")
             raise exceptions.AuthenticationFailed(msg)
 
         return auth[1]
 
 
 class AuthenticationMiddlewareJWT:
-
     def __init__(self, get_response):
         self.get_response = get_response
         # One-time configuration and initialization.

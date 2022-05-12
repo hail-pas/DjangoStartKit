@@ -1,6 +1,7 @@
-from apps.auth import views
 from django.urls import path
 from rest_framework import routers
+
+from apps.auth import views
 
 router = routers.SimpleRouter()
 

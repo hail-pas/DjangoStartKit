@@ -31,6 +31,15 @@ pypinyin = "0.40.0"
 redisearch = "2.1.1"
 cachetools = "4.2.4"
 kubernetes = "9.0.0"
+gevent = "21.1.2"
+gunicorn = "20.1.0"
+
+# poetry install --no-dev
+[tool.poetry.dev-dependencies]
+black = "19.10b0"
+flake8 = "3.9.1"
+isort = "5.1.4"
+pytest = "6.2.4"
 
 [[tool.poetry.source]]
 name = "aliyun"

@@ -13,6 +13,6 @@ class DateTimeToTimeStampFilter(Filter):
             return qs
         if self.distinct:
             qs = qs.distinct()
-        lookup = '%s__%s' % (self.field_name, self.lookup_expr)
+        lookup = "%s__%s" % (self.field_name, self.lookup_expr)
         qs = self.get_method(qs)(**{lookup: datetime_to_timestamp(value)})
         return qs

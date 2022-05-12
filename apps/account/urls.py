@@ -1,4 +1,3 @@
-from django.urls import path
 from rest_framework import routers
 
 from apps.account import views
@@ -10,5 +9,4 @@ router.register("systemResource", views.SystemResourceViewSet)
 
 urlpatterns = router.urls
 
-urlpatterns += [
-]
+urlpatterns += []

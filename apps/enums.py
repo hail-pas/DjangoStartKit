@@ -1,13 +1,12 @@
 """
 全部的Enum类型
 """
-import enum
-import inspect
 import sys
-from enum import unique, Enum
+import inspect
+from enum import unique
 from typing import List, Tuple
 
-from common.types import StrEnumMore, IntEnumMore, MyEnum
+from common.types import MyEnum, IntEnumMore, StrEnumMore
 
 
 @unique
@@ -33,9 +32,11 @@ class ResponseCodeEnum(IntEnumMore):
 #     json_ = ("json", "Json")
 #     list_ = ("list", "数组")
 
+
 class SystemResourceTypeEnum(StrEnumMore):
     """
     """
+
     menu = ("menu", "菜单")
     button = ("button", "按钮")
 
@@ -44,6 +45,7 @@ class PermissionRelationEnum(StrEnumMore):
     """
     互斥、依赖、包含
     """
+
     exclusive = ("exclusive", "互斥")
     dependent = ("dependent", "依赖")
     inclusive = ("inclusive", "包含")
@@ -53,13 +55,15 @@ class LogicalRelationEnum:
     """
     与、或、非
     """
-    
+
+    pass
 
 
 class GenderEnum(StrEnumMore):
     """
     性别码表
     """
+
     male = ("male", "男")
     female = ("female", "女")
 
@@ -69,6 +73,7 @@ class PermissionEnum(StrEnumMore):
     所有的权限判断都使用 apps.permissions.py 中的权限类
     所有权限为:  PermissionTypeEnum + MenuLevel2 + PermissionEnum
     """
+
     pass
 
 
@@ -76,20 +81,18 @@ class PermissionEnum(StrEnumMore):
 # 在该行上面新增 Enum 类
 # ==================================================
 # [("name", Enum)]
-__enum_set__ = list(filter(
-    lambda cls_name_and_cls:
-    True if issubclass(cls_name_and_cls[1], (StrEnumMore, IntEnumMore))
-            and cls_name_and_cls[1] not in [StrEnumMore, IntEnumMore]
-    else False,
-    inspect.getmembers(sys.modules[__name__], inspect.isclass)
-))
+__enum_set__ = list(
+    filter(
+        lambda cls_name_and_cls: True
+        if issubclass(cls_name_and_cls[1], (StrEnumMore, IntEnumMore))
+        and cls_name_and_cls[1] not in [StrEnumMore, IntEnumMore]
+        else False,
+        inspect.getmembers(sys.modules[__name__], inspect.isclass),
+    )
+)
 
 __enum_choices__ = list(
-    map(
-        lambda cls_name_and_cls:
-        (cls_name_and_cls[0], cls_name_and_cls[1].__doc__.strip()),
-        __enum_set__
-    )
+    map(lambda cls_name_and_cls: (cls_name_and_cls[0], cls_name_and_cls[1].__doc__.strip()), __enum_set__)
 )
 
 

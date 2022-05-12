@@ -3,9 +3,9 @@
 """
 import re
 
-CHINA_PHONE_RE = re.compile(r'^1[3-9]\d{9}$')
+CHINA_PHONE_RE = re.compile(r"^1[3-9]\d{9}$")
 
-GLOBAL_PHONE_RE = re.compile(r'^\+[1-9]\d{1,14}$')
+GLOBAL_PHONE_RE = re.compile(r"^\+[1-9]\d{1,14}$")
 
 
 def check_china_mobile_phone(phone: str):

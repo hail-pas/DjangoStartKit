@@ -1,23 +1,25 @@
 import os
 import sys
+import time
+import uuid
 import random
 import string
+import logging
 import threading
-import uuid
-from itertools import chain
-from typing import List, Union, Optional, Callable, Any
+from typing import Any, List, Union, Callable, Optional
 from asyncio import sleep
 from datetime import datetime
 from functools import wraps
+from itertools import chain
 from contextlib import contextmanager
 from collections import namedtuple
+
 import pytz
-from django.db.models import QuerySet
-from django.http import HttpRequest
 from redis import Redis
-from storages.redis import get_sync_redis, keys
-import time
-import logging
+from django.http import HttpRequest
+from django.db.models import QuerySet
+
+from storages.redis import get_sync_redis
 
 logger = logging.getLogger()
 
@@ -26,13 +28,13 @@ COMMON_DATE_STRING = "%Y-%m-%d"
 
 
 def join_params(
-        params: dict,
-        key: str = None,
-        filter_none: bool = True,
-        exclude_keys: List = None,
-        sep: str = "&",
-        reverse: bool = False,
-        key_alias: str = "key",
+    params: dict,
+    key: str = None,
+    filter_none: bool = True,
+    exclude_keys: List = None,
+    sep: str = "&",
+    reverse: bool = False,
+    key_alias: str = "key",
 ):
     """
     字典排序拼接参数
@@ -75,7 +77,7 @@ def get_client_ip(request: HttpRequest):
     """
     ip = request.META.get("HTTP_X_FORWARDED_FOR", "")
     if not ip:
-        ip = request.META.get('REMOTE_ADDR', "")
+        ip = request.META.get("REMOTE_ADDR", "")
     client_ip = ip.split(",")[-1].strip() if ip else ""
     return client_ip
 
@@ -213,6 +215,7 @@ def make_redis_lock(get_redis: Callable[[], Redis], timeout: int = 60):
     """
     redis key 做为锁标示，相当于资源的互斥锁，是非可重入锁注意避免死锁
     usage:
+    >>> from storages.redis import keys
     >>> r_lock = make_redis_lock(get_sync_redis)
     >>> with r_lock.lock(keys.RedisCacheKey.redis_lock.format("name")):
     >>>    pass
@@ -256,7 +259,7 @@ def make_redis_lock(get_redis: Callable[[], Redis], timeout: int = 60):
                 [v],
             )
 
-    _redis_lock = RedisLock(lock=lock, )
+    _redis_lock = RedisLock(lock=lock,)
 
     return _redis_lock
 
@@ -326,7 +329,7 @@ def merge_dict(dict1: dict, dict2: dict = None, reverse: bool = False):
         else:
             merged = {**dict1, **dict2}
     except (AttributeError, ValueError) as e:
-        raise TypeError('original and updates must be a dictionary: %s' % e)
+        raise TypeError("original and updates must be a dictionary: %s" % e)
 
     if not reverse:
         return merged
@@ -370,7 +373,7 @@ def gen_uuid():
 
 def file_upload_to(instance, filename):
     name = instance.__class__.__name__
-    return '/'.join(filter(None, [name, instance.__str__(), gen_uuid(), filename]))
+    return "/".join(filter(None, [name, instance.__str__(), gen_uuid(), filename]))
 
 
 def filter_dict(dict_obj: dict, callback: Callable[[Any, Any], dict]):
@@ -399,4 +402,4 @@ def underscore_to_camelcase(value):
             yield str.capitalize
 
     c = camelcase()
-    return "".join(next(c)(x) if x else '_' for x in value.split("_"))
+    return "".join(next(c)(x) if x else "_" for x in value.split("_"))

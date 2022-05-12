@@ -11,13 +11,14 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import os
 import logging
-from datetime import datetime, timedelta
 from pathlib import Path
+from datetime import timedelta
+
+from conf.enums import Environment
+from conf.config import local_configs
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 from core.restful import JSONFormatter
-from conf.config import local_configs
-from conf.enums import Environment
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -25,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-261wsap!!!du+oe#74pur=6$v8pqlm9$w42mev4h^s%)nisll5'
+SECRET_KEY = "django-insecure-261wsap!!!du+oe#74pur=6$v8pqlm9$w42mev4h^s%)nisll5"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = local_configs.DEBUG
@@ -37,62 +38,61 @@ ENVIRONMENT = local_configs.ENVIRONMENT
 
 INSTALLED_APPS = [
     # >>> 跨域
-    'corsheaders',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+    "corsheaders",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
     # ===========================
-    'rest_framework',  # >>> rest
-    'rest_framework_jwt',
-    'drf_yasg',  # >>> swagger
-    'django_filters',  # >>> filter
-    'captcha',
+    "rest_framework",  # >>> rest
+    "rest_framework_jwt",
+    "drf_yasg",  # >>> swagger
+    "django_filters",  # >>> filter
+    "captcha",
     # apps
-    'apps.account',
-    'apps.info',
+    "apps.account",
+    "apps.info",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
     # >>> 跨域
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # ===================================================
-    'core.middlewares.AuthenticationMiddlewareJWT',
-    'core.middlewares.ResponseProcessMiddleware',
-    'core.middlewares.RequestProcessMiddleware',
+    "core.middlewares.AuthenticationMiddlewareJWT",
+    "core.middlewares.ResponseProcessMiddleware",
+    "core.middlewares.RequestProcessMiddleware",
 ]
 
-ROOT_URLCONF = 'core.urls'
+ROOT_URLCONF = "core.urls"
 AUTH_USER_MODEL = "account.Profile"
 AUTHENTICATION_BACKENDS = ["core.authenticate.CustomModelBackend"]
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates']
-        ,
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'core.wsgi.application'
+WSGI_APPLICATION = "core.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
@@ -103,18 +103,10 @@ DATABASES = local_configs.DATABASES
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
 # Internationalization
@@ -133,45 +125,45 @@ USE_TZ = local_configs.USE_TZ
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
-DATETIME_FORMAT = 'Y-m-d H:i:s'
+DATETIME_FORMAT = "Y-m-d H:i:s"
 
 # Media files
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ==================================================================================================
 # REST FRAMEWORK
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-        'rest_framework.permissions.DjangoModelPermissions',
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
+        "rest_framework.permissions.DjangoModelPermissions",
     ),
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
-        'core.restful.CsrfExemptSessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_jwt.authentication.JSONWebTokenAuthentication",
+        "core.restful.CsrfExemptSessionAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
     ),
-    'DEFAULT_FILTER_BACKENDS': (
-        'django_filters.rest_framework.DjangoFilterBackend',
-        'rest_framework.filters.OrderingFilter',
-        'rest_framework.filters.SearchFilter',
+    "DEFAULT_FILTER_BACKENDS": (
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.OrderingFilter",
+        "rest_framework.filters.SearchFilter",
     ),
-    'DEFAULT_PAGINATION_CLASS': 'core.restful.CustomPagination',
-    'DATETIME_FORMAT': "%Y-%m-%d %H:%M:%S",
-    'DEFAULT_PARSER_CLASSES': [
-        'rest_framework.parsers.FormParser',
-        'rest_framework.parsers.MultiPartParser',
-        'rest_framework.parsers.JSONParser',
+    "DEFAULT_PAGINATION_CLASS": "core.restful.CustomPagination",
+    "DATETIME_FORMAT": "%Y-%m-%d %H:%M:%S",
+    "DEFAULT_PARSER_CLASSES": [
+        "rest_framework.parsers.FormParser",
+        "rest_framework.parsers.MultiPartParser",
+        "rest_framework.parsers.JSONParser",
     ],
 }
 
@@ -182,12 +174,15 @@ CORS_ALLOW_CREDENTIALS = True
 
 # JWT_AUTH
 JWT_AUTH = {
-    'JWT_AUTH_HEADER_PREFIX': local_configs.JWT_AUTH_HEADER_PREFIX,
-    'JWT_RESPONSE_PAYLOAD_HANDLER':
-        lambda token, user, request: {"token": token, "user_id": user.id, "username": user.username},
-    'JWT_SECRET_KEY': local_configs.JWT_SECRET,
-    'JWT_EXPIRATION_DELTA': timedelta(minutes=local_configs.JWT_EXPIRATION_DELTA_MINUTES),
-    'JWT_REFRESH_EXPIRATION_DELTA': timedelta(minutes=local_configs.JWT_REFRESH_EXPIRATION_DELTA_DELTA_MINUTES),
+    "JWT_AUTH_HEADER_PREFIX": local_configs.JWT_AUTH_HEADER_PREFIX,
+    "JWT_RESPONSE_PAYLOAD_HANDLER": lambda token, user, request: {
+        "token": token,
+        "user_id": user.id,
+        "username": user.username,
+    },
+    "JWT_SECRET_KEY": local_configs.JWT_SECRET,
+    "JWT_EXPIRATION_DELTA": timedelta(minutes=local_configs.JWT_EXPIRATION_DELTA_MINUTES),
+    "JWT_REFRESH_EXPIRATION_DELTA": timedelta(minutes=local_configs.JWT_REFRESH_EXPIRATION_DELTA_DELTA_MINUTES),
 }
 
 # AES
@@ -195,34 +190,26 @@ AES_SECRET = local_configs.AES_SECRET
 
 # Logging
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    "filters": {
-        "require_debug_false": {
-            "()": "django.utils.log.RequireDebugFalse"
-        }
-    },
-    "formatters": {
-        "verbose": {
-            '()': JSONFormatter,
-        },
-    },
-    'handlers': {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {"require_debug_false": {"()": "django.utils.log.RequireDebugFalse"}},
+    "formatters": {"verbose": {"()": JSONFormatter}},
+    "handlers": {
         "console": {
             "level": logging.getLevelName(logging.INFO) if not DEBUG else logging.getLevelName(logging.DEBUG),
             "class": "logging.StreamHandler",
             "formatter": "verbose",
         },
         "error_file": {
-            'level': 'ERROR',
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR.as_posix() + '/logs/error.log',
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "filename": BASE_DIR.as_posix() + "/logs/error.log",
             "formatter": "verbose",
-        }
+        },
     },
-    'root': {
-        'handlers': ['console', 'error_file'],
-        'level': logging.getLevelName(logging.INFO) if not DEBUG else logging.getLevelName(logging.DEBUG),
+    "root": {
+        "handlers": ["console", "error_file"],
+        "level": logging.getLevelName(logging.INFO) if not DEBUG else logging.getLevelName(logging.DEBUG),
     },
 }
 
@@ -230,18 +217,10 @@ LOGGING = {
 SWAGGER_SETTINGS = {
     "doc_expansion": "full",
     "token_type": local_configs.JWT_AUTH_HEADER_PREFIX,
-    'PERSIST_AUTH': True if local_configs.ENVIRONMENT == Environment.development.value else False,
-    'SECURITY_DEFINITIONS': {
-        'JWT': {
-            'type': 'apiKey',
-            'name': 'Authorization',
-            'in': 'header'
-        }
-    },
-    'DEFAULT_AUTO_SCHEMA_CLASS': 'core.restful.CustomSwaggerAutoSchema',
-
-    'DEFAULT_GENERATOR_CLASS': 'core.restful.CustomOpenAPISchemaGenerator',
-
+    "PERSIST_AUTH": True if local_configs.ENVIRONMENT == Environment.development.value else False,
+    "SECURITY_DEFINITIONS": {"JWT": {"type": "apiKey", "name": "Authorization", "in": "header"}},
+    "DEFAULT_AUTO_SCHEMA_CLASS": "core.restful.CustomSwaggerAutoSchema",
+    "DEFAULT_GENERATOR_CLASS": "core.restful.CustomOpenAPISchemaGenerator",
     # ],
     # 'DEFAULT_FILTER_INSPECTORS': [
     #     'drf_yasg.inspectors.CoreAPICompatInspector',

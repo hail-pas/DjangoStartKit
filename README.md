@@ -19,7 +19,7 @@ Django Quick Start Kit
 |-- tasks<br>
 |       |-- 异步、定时任务实现目录<br>
 |- command.py 命令行工具<br>
-|- main.py<br>
+|- Makefile<br>
 |- manage.py<br>
 |- poetry.toml 依赖定义文件<br>
 |- project.lock 依赖管理文件<br>
@@ -59,6 +59,17 @@ poetry add target-pack[==version]
 # python 3.9
 pip install poetry   # 安装 poetry 依赖管理工具
 poetry update  # 等价于 poetry lock && poetry install
+```
+# 代码管理 Makefile/git
+```shell
+# 更新依赖
+make up
+# 安装依赖
+make deps
+# 格式化, 需要忽略的不规范格式化使用注释 #noqa
+make style
+# 检查代码
+make chcek
 ```
 # Response 格式化
 使用统一的 Response 类<br>

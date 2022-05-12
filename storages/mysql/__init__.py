@@ -17,23 +17,9 @@ class DeletedFieldManager(Manager):
 class BaseModel(models.Model):
     objects = Manager()
 
-    create_time = models.DateTimeField(
-        "创建时间",
-        auto_now_add=True,
-        help_text="创建时间",
-        editable=False
-    )
-    update_time = models.DateTimeField(
-        u"更新时间",
-        auto_now=True,
-        help_text="更新时间",
-    )
-    deleted = models.BooleanField(
-        u"是否已删除",
-        default=False,
-        blank=False,
-        help_text="是否已删除",
-    )
+    create_time = models.DateTimeField("创建时间", auto_now_add=True, help_text="创建时间", editable=False)
+    update_time = models.DateTimeField("更新时间", auto_now=True, help_text="更新时间")
+    deleted = models.BooleanField("是否已删除", default=False, blank=False, help_text="是否已删除")
 
     def save(self, *args, **kwargs):
         """ On save, update timestamps """
@@ -45,15 +31,11 @@ class BaseModel(models.Model):
 
     class Meta:
         abstract = True
-        ordering = ['-id']  # 默认倒序
+        ordering = ["-id"]  # 默认倒序
 
 
 class LabelFieldMixin(models.Model):
-    label = models.CharField(
-        verbose_name="名称",
-        max_length=32,
-        help_text="名称"
-    )
+    label = models.CharField(verbose_name="名称", max_length=32, help_text="名称")
 
     def __str__(self):
         return self.label
@@ -63,13 +45,7 @@ class LabelFieldMixin(models.Model):
 
 
 class RemarkFieldMixin(models.Model):
-    remark = models.CharField(
-        '备注',
-        max_length=128,
-        blank=True,
-        default="",
-        help_text='备注说明',
-    )
+    remark = models.CharField("备注", max_length=128, blank=True, default="", help_text="备注说明",)
 
     class Meta:
         abstract = True

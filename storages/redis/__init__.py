@@ -1,4 +1,5 @@
 import redis as s_redis
+
 from conf.config import local_configs
 
 
@@ -16,8 +17,12 @@ class RedisUtil:
 
     @classmethod
     def init(
-            cls, host=local_configs.REDIS_HOST, port=local_configs.REDIS_PORT, password=local_configs.REDIS_PASSWORD,
-            db=local_configs.REDIS_DB, **kwargs,
+        cls,
+        host=local_configs.REDIS_HOST,
+        port=local_configs.REDIS_PORT,
+        password=local_configs.REDIS_PASSWORD,
+        db=local_configs.REDIS_DB,
+        **kwargs,
     ):
         cls._host = host
         cls._port = port
@@ -32,8 +37,9 @@ class RedisUtil:
         if db == local_configs.REDIS_DB:
             return cls._pool
         else:
-            return s_redis.ConnectionPool(host=cls._host, port=cls._port, password=cls._password, db=db,
-                                          **cls._extra_kwargs)
+            return s_redis.ConnectionPool(
+                host=cls._host, port=cls._port, password=cls._password, db=db, **cls._extra_kwargs
+            )
 
     @classmethod
     def _exp_of_none(cls, *args, exp_of_none, callback):
@@ -133,7 +139,7 @@ class RedisUtil:
         v = cls.r.hgetall(name)
         if v is None:
             return default
-        return {k.decode('utf-8'): v.decode('utf-8') for k, v in v.items()}
+        return {k.decode("utf-8"): v.decode("utf-8") for k, v in v.items()}
 
 
 RedisUtil.init()

@@ -1,7 +1,5 @@
-from captcha.models import CaptchaStore
-from django.utils import timezone
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
+
 from common.types import PlainSchema
 from common.drf.serializers import CustomJSONWebTokenSerializer
 
