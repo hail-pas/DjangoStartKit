@@ -130,9 +130,9 @@ class ResponseProcessMiddleware:
                 if error_value and isinstance(error_value, list):
                     error_value = error_value[0]
                 msg = error_value
-                if error_field not in ["non_field_errors", "detail"]:
-                    msg = f"错误字段: {error_field}-{error_value}"
-                    # msg = f"{error_value}"
+                # if error_field not in ["non_field_errors", "detail"]:
+                #     msg = f"错误字段: {error_field}-{error_value}"
+                #     # msg = f"{error_value}"
                 response.data = RestResponse.fail(message=msg, data=data).dict()
 
             elif isinstance(data, str):

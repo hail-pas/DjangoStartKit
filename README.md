@@ -1,5 +1,12 @@
 # DjangoStartKit
-Django Quick Start Kit
+[![Code style: black](https://img.shields.io/badge/DjangoStartKit-v0.01-green)](https://github.com/hail-pas/DjangoStartKit)
+[![Code style: black](https://img.shields.io/badge/Python-3.9-blue)](https://github.com/python/cpython)
+[![Code style: black](https://img.shields.io/badge/Django-3.2.9-blue)](https://github.com/django/django)
+[![Code style: black](https://img.shields.io/badge/djangorestframework-3.12.4-blue)](https://github.com/encode/django-rest-framework)
+[![Code style: black](https://img.shields.io/badge/redisearch-2.1.1-blue)](https://github.com/RediSearch/RediSearch)
+[![Code style: black](https://img.shields.io/badge/gunicorn-20.1.0-blue)](https://github.com/benoitc/gunicorn)
+
+<br>Django Quick Start Kit<br>
 
 # 目录结构
 |-- apps<br>

@@ -171,6 +171,19 @@ REST_FRAMEWORK = {
 ALLOWED_HOSTS = ["*"]
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+    # 自定义头部
+    "locale",  # 多语言
+]
 
 # JWT_AUTH
 JWT_AUTH = {
