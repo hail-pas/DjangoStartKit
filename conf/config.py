@@ -155,7 +155,7 @@ class LocalConfig(BaseSettings):
 
 def yaml_config_settings_source(settings: BaseSettings) -> Dict[str, Any]:
     encoding = settings.__config__.env_file_encoding
-    return yaml.load(Path(CONFIG_FILE_PREFIX + ".yml").read_text(encoding), yaml.FullLoader)
+    return yaml.load(Path(CONFIG_FILE_PREFIX + ".yaml").read_text(encoding), yaml.FullLoader)
 
 
 @lru_cache()
