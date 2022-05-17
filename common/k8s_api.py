@@ -21,15 +21,15 @@ class KubeSetting(object):
         if namespace:
             self._namespace = namespace
         else:
-            self._namespace = local_configs.KUBE_NAMESPACE
+            self._namespace = local_configs.K8S.NAMESPACE
         if image:
             self._image = image
         else:
-            self._image = local_configs.KUBE_IMAGE
+            self._image = local_configs.K8S.IMAGE
         if pvc_name:
             self._pvc_name = pvc_name
         else:
-            self._pvc_name = local_configs.KUBE_PVC_NAME
+            self._pvc_name = local_configs.K8S.PVC_NAME
         self._name = name
         self._command = command
         self._schedule = '"{}"'.format(schedule)
@@ -97,7 +97,7 @@ class KubernetesAPI(object):
             kube_config.load_kube_config(config_file=config_file, client_configuration=self.configuration)
         except Exception as e:
             logger.warning("Get Kubernetes Config Fail!, {}".format(e))
-            self.configuration.host = local_configs.KUBE_HOST
+            self.configuration.host = local_configs.K8S.HOST
             with open("/var/run/secrets/kubernetes.io/serviceaccount/token", "r") as f:
                 self.configuration.api_key["authorization"] = "Bearer %s" % f.read()
 

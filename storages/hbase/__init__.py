@@ -15,7 +15,7 @@ from common.utils import get_random_host_and_port
 
 
 def hbase_connection_pool(size: int = 50, **kwargs) -> ConnectionPool:
-    host, port = get_random_host_and_port(local_configs.THRIFT_SERVERS)
+    host, port = get_random_host_and_port(local_configs.HBASE.SERVERS)
     pool = ConnectionPool(size=size, host=host, port=int(port), **kwargs)
     return pool
 
@@ -23,7 +23,7 @@ def hbase_connection_pool(size: int = 50, **kwargs) -> ConnectionPool:
 @contextmanager
 def hbase_connection(**kwargs):
     if "host" not in kwargs:
-        host, port = get_random_host_and_port(local_configs.THRIFT_SERVERS)
+        host, port = get_random_host_and_port(local_configs.HBASE.SERVERS)
         kwargs.update(dict(host=host, port=int(port),))
     conn = Connection(**kwargs)
     try:
@@ -152,7 +152,7 @@ class BaseModelMeta(type):
             Environment.test.value: "test",
             Environment.production.value: "pro",
         }
-        return env_to_table_prefix[local_configs.ENVIRONMENT]
+        return env_to_table_prefix[local_configs.PROJECT.ENVIRONMENT]
 
 
 class BaseModel(metaclass=BaseModelMeta):

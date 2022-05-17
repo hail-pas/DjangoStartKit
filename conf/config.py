@@ -1,14 +1,93 @@
 import os
 import multiprocessing
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from pathlib import Path
 from functools import lru_cache
 
-from pydantic import BaseSettings, validator
+import yaml
+from pydantic import BaseModel, BaseSettings, validator
 
 from conf.enums import Environment
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+CONFIG_FILE_PREFIX = (
+    str(BASE_DIR.absolute()) + f'/conf/envs/{os.environ.get("environment", Environment.development.value.lower())}'
+)
+
+
+class HostAndPort(BaseModel):
+    HOST: str
+    PORT: str
+
+
+class RelationalDb(HostAndPort):
+    USER: str
+    PASSWORD: str
+    DB: str
+
+
+class Redis(HostAndPort):
+    PASSWORD: Optional[str] = None
+    DB: int = 0
+
+
+class Server(HostAndPort):
+    WORKERS_NUM: int = multiprocessing.cpu_count() * int(os.getenv("WORKERS_PER_CORE", "2")) + 1
+    WHITELIST: list = []
+    REQUEST_SCHEME: str = "https"
+
+
+class Project(BaseModel):
+    NAME: str = "DjangoStartKit"
+    DEBUG: bool = False
+    ENVIRONMENT: str = Environment.production.value
+    DESCRIPTION: str = "Django-start-kit"
+    LANGUAGE_CODE: str = "zh-hans"
+    TIME_ZONE: str = "Asia/Shanghai"
+    USE_TZ: str = False
+
+    @validator("ENVIRONMENT", allow_reuse=True)
+    def check_if_environment_in(cls, v):  # noqa
+        env_options = [e.value for e in Environment]
+        assert v in env_options, f'Illegal environment config value, options: {",".join(env_options)}'
+        return v
+
+    @validator("DEBUG", allow_reuse=True)
+    def check_debug_value(cls, v: Optional[str], values: Dict[str, Any]):  # noqa
+        if "ENVIRONMENT" in values.keys():
+            assert not (
+                v and values["ENVIRONMENT"] == Environment.production.value
+            ), "Production cannot set with debug enabled"
+        return v
+
+
+class Hbase(BaseModel):
+    SERVERS: list = []
+
+
+class Kafka(BaseModel):
+    SERVERS: list = []
+
+
+class Jwt(BaseModel):
+    SECRET: str
+    AUTH_HEADER_PREFIX: str = "JWT"
+    EXPIRATION_DELTA_MINUTES: int = 432000
+    REFRESH_EXPIRATION_DELTA_DELTA_MINUTES: int = 4320
+
+
+class Aes(BaseModel):
+    SECRET: str
+
+
+class K8s(BaseModel):
+    HOST: str
+    NAMESPACE: str
+    IMAGE: str
+    PVC_NAME: str
+    CONFIG_FILE: Optional[str] = ""
+    CONFIG_MAP_NAME: Optional[str] = ""
 
 
 class LocalConfig(BaseSettings):
@@ -16,89 +95,42 @@ class LocalConfig(BaseSettings):
     全部的配置信息
     """
 
-    # ProjectInfo
-    PROJECT_NAME: str = "core"
-    DESCRIPTION: str = "Django-start-kit"
-    ENVIRONMENT: str = Environment.development.value
-    DEBUG: bool = False
+    PROJECT: Project
 
-    SERVER_HOST: str = "0.0.0.0"
-    SERVER_PORT: int = 8000
+    SERVER: Server
 
-    @validator("ENVIRONMENT", allow_reuse=True)
-    def check_if_environment_in(cls, v):
-        env_options = [e.value for e in Environment]
-        assert v in env_options, f'Illegal environment config value, options: {",".join(env_options)}'
-        return v
+    RELATIONAL_DB: RelationalDb
 
-    @validator("DEBUG", allow_reuse=True)
-    def check_debug_value(cls, v: Optional[str], values: Dict[str, Any]):
-        assert not (
-            v and values["ENVIRONMENT"] == Environment.production.value
-        ), "Production cannot set with debug enabled"
-        return v
+    REDIS: Redis
+
+    JWT: Jwt
+
+    AES: Aes
+
+    HBASE: Hbase
+
+    KAFKA: Kafka  # noqa
+
+    K8S: K8s
 
     # ApiInfo
 
     # API_V1_ROUTE: str = "/api"
     # OPED_API_ROUTE: str = "/api/openapi.json"
 
-    # gunicorn
-    WORKERS_NUM: int = multiprocessing.cpu_count() * int(os.getenv("WORKERS_PER_CORE", "2")) + 1
-
-    # DataBase
-    # ========MySQL
-    DB_HOST: str = "localhost"
-    DB_PORT: int = 3306
-    DB_USER: str = ""
-    DB_NAME: str = ""
-    DB_PASSWORD: str = ""
-
-    LANGUAGE_CODE: str = "zh-hans"
-    TIME_ZONE: str = "Asia/Shanghai"
-    USE_TZ: bool = False
-
-    # =========Redis
-    REDIS_HOST: str = "127.0.0.1"
-    REDIS_PORT: int = 6379
-    REDIS_PASSWORD: str = None
-    REDIS_DB: int = 0
-    REDIS_SEARCH_DB: int = 1
-
-    # =========HBase
-    THRIFT_SERVERS: Optional[List[str]] = ["192.168.3.75:9090"]
-
-    # Kafka
-    KAFKA_BOOTSTRAP_SERVERS: Optional[List[str]] = ["localhost:9091"]
-
-    # Template
-    # TEMPLATE_PATH: str = f"{ROOT}/templates"
-
-    # Static
     # STATIC_PATH: str = "/static"
     # STATIC_DIR: str = f"{ROOT}/static"
-
-    # JWT
-    JWT_AUTH_HEADER_PREFIX: str = "JWT"
-    JWT_SECRET: str
-    JWT_EXPIRATION_DELTA_MINUTES: int = 60 * 24 * 3  # token 过期时间
-    JWT_REFRESH_EXPIRATION_DELTA_DELTA_MINUTES: int = 60 * 24 * 5  # 刷新token过期时间
-    AES_SECRET: Optional[str]
-    # SIGN_SECRET: Optional[str]
-
-    # IP WhiteList
-    HOST_WHITELIST: Optional[List[str]] = []
 
     @property
     def DATABASES(self) -> dict:
         return {
             "default": {
                 "ENGINE": "django.db.backends.mysql",
-                "NAME": self.DB_NAME,
-                "USER": self.DB_USER,
-                "PASSWORD": self.DB_PASSWORD,
-                "HOST": self.DB_HOST,
-                "PORT": self.DB_PORT,
+                "NAME": self.RELATIONAL_DB.DB,
+                "USER": self.RELATIONAL_DB.USER,
+                "PASSWORD": self.RELATIONAL_DB.PASSWORD,
+                "HOST": self.RELATIONAL_DB.HOST,
+                "PORT": self.RELATIONAL_DB.PORT,
                 "OPTIONS": {"charset": "utf8mb4", "use_unicode": True},
                 "TEST": {"CHARSET": "utf8mb4", "COLLATION": "utf8mb4_bin"},
             },
@@ -106,11 +138,24 @@ class LocalConfig(BaseSettings):
 
     class Config:
         case_sensitive = True
-        env_file = (
-            str(BASE_DIR.absolute())
-            + f'/conf/envs/{os.environ.get("environment", Environment.development.value.lower())}.env'
-        )
         env_file_encoding = "utf-8"
+
+        @classmethod
+        def customise_sources(
+            cls, init_settings, env_settings, file_secret_settings,  # noqa
+        ):
+            return (
+                init_settings,
+                yaml_config_settings_source,
+                # json_config_settings_source,
+                # env_settings,
+                file_secret_settings,
+            )
+
+
+def yaml_config_settings_source(settings: BaseSettings) -> Dict[str, Any]:
+    encoding = settings.__config__.env_file_encoding
+    return yaml.load(Path(CONFIG_FILE_PREFIX + ".yml").read_text(encoding), yaml.FullLoader)
 
 
 @lru_cache()

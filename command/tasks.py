@@ -67,7 +67,7 @@ def create_job(job_name: str = typer.Option(default="", help="任务名字")):
     name = f'timed-{job.function.__name__.replace("_", "-")}'  # noqa
     command = f'["python", {job.file_name}]'
     kube_setting = KubeSetting(name, command, schedule=job.cron)
-    KubernetesAPI(config_file=local_configs.KUBE_CONFIG_FILE).create_cron_job(kube_setting, **job.k8s_kwargs)
+    KubernetesAPI(config_file=local_configs.K8S.CONFIG_FILE).create_cron_job(kube_setting, **job.k8s_kwargs)
     print(f"创建任务-{job_name}成功")
 
 

@@ -1,13 +1,12 @@
 import redis
 from redisearch import Client
 
-from conf.config import local_configs
 from storages.redis import RedisUtil
 from storages.redis.keys import RedisSearchIndex
 
 
 def get_sync_redis():
-    return redis.Redis(connection_pool=RedisUtil.get_pool(local_configs.REDIS_SEARCH_DB))
+    return redis.Redis(connection_pool=RedisUtil.get_pool(0))  # 必须使用0
 
 
 class SerializableClient(Client):

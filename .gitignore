@@ -106,6 +106,8 @@ celerybeat.pid
 
 # Environments
 *.env
+conf/envs/*.yml
+~conf/envs/template.yml
 .venv
 env/
 venv/

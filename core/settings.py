@@ -29,10 +29,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-261wsap!!!du+oe#74pur=6$v8pqlm9$w42mev4h^s%)nisll5"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = local_configs.DEBUG
-SERVER_URL = f"{local_configs.SERVER_HOST}:{local_configs.SERVER_PORT}"
-PROJECT_NAME = local_configs.PROJECT_NAME
-ENVIRONMENT = local_configs.ENVIRONMENT
+DEBUG = local_configs.PROJECT.DEBUG
+SERVER_URL = f"{local_configs.SERVER.HOST}:{local_configs.SERVER.PORT}"
+PROJECT_NAME = local_configs.PROJECT.NAME
+ENVIRONMENT = local_configs.PROJECT.ENVIRONMENT
 
 # Application definition
 
@@ -112,19 +112,19 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
-LANGUAGE_CODE = local_configs.LANGUAGE_CODE
+LANGUAGE_CODE = local_configs.PROJECT.LANGUAGE_CODE
 
-TIME_ZONE = local_configs.TIME_ZONE
+TIME_ZONE = local_configs.PROJECT.TIME_ZONE
 
 USE_I18N = True
 
 USE_L10N = False
 
-USE_TZ = local_configs.USE_TZ
+USE_TZ = local_configs.PROJECT.USE_TZ
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
-
+REQUEST_SCHEME = local_configs.SERVER.REQUEST_SCHEME
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
@@ -187,19 +187,19 @@ CORS_ALLOW_HEADERS = [
 
 # JWT_AUTH
 JWT_AUTH = {
-    "JWT_AUTH_HEADER_PREFIX": local_configs.JWT_AUTH_HEADER_PREFIX,
+    "JWT_AUTH_HEADER_PREFIX": local_configs.JWT.AUTH_HEADER_PREFIX,
     "JWT_RESPONSE_PAYLOAD_HANDLER": lambda token, user, request: {
         "token": token,
         "user_id": user.id,
         "username": user.username,
     },
-    "JWT_SECRET_KEY": local_configs.JWT_SECRET,
-    "JWT_EXPIRATION_DELTA": timedelta(minutes=local_configs.JWT_EXPIRATION_DELTA_MINUTES),
-    "JWT_REFRESH_EXPIRATION_DELTA": timedelta(minutes=local_configs.JWT_REFRESH_EXPIRATION_DELTA_DELTA_MINUTES),
+    "JWT_SECRET_KEY": local_configs.JWT.SECRET,
+    "JWT_EXPIRATION_DELTA": timedelta(minutes=local_configs.JWT.EXPIRATION_DELTA_MINUTES),
+    "JWT_REFRESH_EXPIRATION_DELTA": timedelta(minutes=local_configs.JWT.REFRESH_EXPIRATION_DELTA_DELTA_MINUTES),
 }
 
 # AES
-AES_SECRET = local_configs.AES_SECRET
+AES_SECRET = local_configs.AES.SECRET
 
 # Logging
 LOGGING = {
@@ -229,18 +229,9 @@ LOGGING = {
 # Swagger Auth
 SWAGGER_SETTINGS = {
     "doc_expansion": "full",
-    "token_type": local_configs.JWT_AUTH_HEADER_PREFIX,
-    "PERSIST_AUTH": True if local_configs.ENVIRONMENT == Environment.development.value else False,
+    "token_type": local_configs.JWT.AUTH_HEADER_PREFIX,
+    "PERSIST_AUTH": True if local_configs.PROJECT.ENVIRONMENT == Environment.development.value else False,
     "SECURITY_DEFINITIONS": {"JWT": {"type": "apiKey", "name": "Authorization", "in": "header"}},
     "DEFAULT_AUTO_SCHEMA_CLASS": "core.restful.CustomSwaggerAutoSchema",
     "DEFAULT_GENERATOR_CLASS": "core.restful.CustomOpenAPISchemaGenerator",
-    # ],
-    # 'DEFAULT_FILTER_INSPECTORS': [
-    #     'drf_yasg.inspectors.CoreAPICompatInspector',
-    # ],
-    # 'DEFAULT_PAGINATOR_INSPECTORS': [
-    #     'drf_yasg.inspectors.DjangoRestResponsePagination',
-    #     'drf_yasg.inspectors.CoreAPICompatInspector',
-    # ],
-    #
 }
