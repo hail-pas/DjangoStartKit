@@ -238,7 +238,7 @@ class Third(APIBaseConfig):
             )
         except Exception as e:
             logger.error(f"request failed: {e}")
-            return response_cls()
+            return response_cls(success=False, status_code=None, data=None)
         else:
             logger.debug(raw_response.text)
             return self.parse_response(api, raw_response, response_cls)
