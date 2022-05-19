@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from apps.account import models, serializers
 from apps.responses import RestResponse
 from common.swagger import custom_swagger_auto_schema
-from apps.permissions import AccountPermission
+from apps.permissions import URIBasedPermission
 from common.drf.mixins import RestModelViewSet, RestListModelMixin, CustomGenericViewSet, RestRetrieveModelMixin
 from common.drf.decorators import camelCaseAction
 
@@ -25,7 +25,7 @@ class ProfileViewSet(RestModelViewSet,):
         "gender",
     )
     parser_classes = (JSONParser,)
-    permission_classes = (IsAuthenticated, AccountPermission)
+    permission_classes = (IsAuthenticated, URIBasedPermission)
 
     def get_serializer_class(self):
         if self.action == "list":
