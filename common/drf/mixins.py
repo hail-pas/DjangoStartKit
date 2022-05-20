@@ -24,7 +24,9 @@ class CustomGenericViewSet(GenericViewSet):
         profile = self.request.user
         q_filters = profile.roles.all().values_list("data_filters__eval_string", flat=True)
         q_filters = " | ".join(q_filters)  # 取或
-        return queryset.filter(eval(q_filters))
+        if q_filters:
+            return queryset.filter(eval(q_filters))
+        return queryset
 
 
 class RestCreateModelMixin:

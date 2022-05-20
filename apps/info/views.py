@@ -24,4 +24,7 @@ from common.swagger import custom_swagger_auto_schema
 )
 @api_view(["GET"])
 def enums(request, *args, **kwargs):
+    """
+    映射码表
+    """
     return RestResponse.ok(data=get_enum_content(request.param_data["enum_name"], request.param_data["is_inversed"]))

@@ -7,7 +7,10 @@ from rest_framework import status
 from drf_yasg.openapi import IN_QUERY, TYPE_STRING, Parameter
 from drf_yasg.generators import OpenAPISchemaGenerator
 from drf_yasg.inspectors import NotHandled, SwaggerAutoSchema, CoreAPICompatInspector
+from rest_framework.utils import formatting
+from django.utils.encoding import smart_str
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.schemas import AutoSchema
 from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.authentication import SessionAuthentication
@@ -15,6 +18,23 @@ from rest_framework.authentication import SessionAuthentication
 from common.utils import model_to_dict
 from apps.responses import RestResponse, _Resp  # noqa
 from common.schemas import PageParam
+
+DRF_GENERATE_METHODS = [
+    "retrieve",
+    "list",
+    "create",
+    "update",
+    "partial_update",
+    "destroy",
+]
+DRF_GENERATE_METHODS_DESCRIPTION = {
+    "retrieve": "获取{}详情",
+    "list": "获取{}列表",
+    "create": "创建{}",
+    "update": "全量更新{}",
+    "partial_update": "部分更新{}",
+    "destroy": "删除{}",
+}
 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -76,7 +96,36 @@ class JSONFormatter(logging.Formatter):
         return formatter.format(record)
 
 
+class CustomAutoSchema(AutoSchema):
+    def get_description(self, path, method):
+        """
+        Determine a path description.
+
+        This will be based on the method docstring if one exists,
+        or else the class docstring.
+        """
+        view = self.view
+
+        method_name = getattr(view, "action", method.lower())
+        method_docstring = getattr(view, method_name, None).__doc__
+        if method_docstring:
+            # An explicit docstring on the method or action.
+            return self._get_description_section(view, method.lower(), formatting.dedent(smart_str(method_docstring)))
+        else:
+            if method_name in DRF_GENERATE_METHODS and view.queryset is not None:
+                return DRF_GENERATE_METHODS_DESCRIPTION[method_name].format(view.queryset.model._meta.label)  # noqa
+            return self._get_description_section(
+                view, getattr(view, "action", method.lower()), view.get_view_description()
+            )
+
+
 class CustomSwaggerAutoSchema(SwaggerAutoSchema):
+    def __init__(self, view, path, method, components, request, overrides, operation_keys=None):
+        super(SwaggerAutoSchema, self).__init__(view, path, method, components, request, overrides)
+        self._sch = CustomAutoSchema()
+        self._sch.view = view
+        self.operation_keys = operation_keys
+
     def get_responses(self):
         responses = super().get_responses()
 
@@ -161,6 +210,12 @@ class CustomOpenAPISchemaGenerator(OpenAPISchemaGenerator):
         swagger.tags = tags
         return swagger
 
+    def get_operation_keys(self, sub_path, method, view):
+        str_list: list = self._gen.get_keys(sub_path, method, view)
+        if str_list[-1] == "read" and view.action not in DRF_GENERATE_METHODS:
+            str_list = str_list[:-1]
+        return str_list
+
 
 class NoPagingAutoSchema(CustomSwaggerAutoSchema):
     """No page and page_size parameters in swagger
@@ -178,20 +233,3 @@ class HideInspector(CoreAPICompatInspector):
         if type(filter_backend) in (OrderingFilter, SearchFilter, DjangoFilterBackend):
             return
         return NotHandled
-
-
-def get_operation_keys(self, sub_path, method, view):
-    str_list: list = self._gen.get_keys(sub_path, method, view)
-    if str_list[-1] == "read" and view.action not in [
-        "retrieve",
-        "list",
-        "create",
-        "update",
-        "partial_update",
-        "destroy",
-    ]:
-        str_list = str_list[:-1]
-    return str_list
-
-
-OpenAPISchemaGenerator.get_operation_keys = get_operation_keys

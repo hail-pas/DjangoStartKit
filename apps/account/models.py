@@ -5,16 +5,18 @@ from django.core.mail import send_mail
 from django.db.models import Manager
 from django.utils.crypto import get_random_string
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.models import _user_has_perm  # noqa
-from django.contrib.auth.models import _user_get_permissions  # noqa
 from django.contrib.auth.models import _user_has_module_perms  # noqa
-from django.contrib.auth.models import Group, Permission, PermissionsMixin
+from django.contrib.auth.models import Permission, GroupManager, PermissionsMixin
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.contrib.contenttypes.models import ContentType
 
 from apps import enums
 from storages.mysql import BaseModel, LabelFieldMixin, RemarkFieldMixin
+from common.django.perms import _user_has_api_perm
+
+from django.contrib.auth.models import _user_get_permissions  # noqa; noqa
+
 
 allowed_chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ123456789"  # noqa
 
@@ -256,7 +258,8 @@ class PermissionRelation(models.Model):
         verbose_name_plural = verbose_name
 
 
-class Role(Group, RemarkFieldMixin, BaseModel):
+class Role(RemarkFieldMixin, BaseModel):
+    name = models.CharField(_("name"), max_length=150, unique=True)
     system_resources = models.ManyToManyField(
         to=SystemResource, related_name="roles", help_text="系统资源", verbose_name="系统资源", blank=True,
     )
@@ -264,8 +267,13 @@ class Role(Group, RemarkFieldMixin, BaseModel):
         to=DataFilter, related_name="roles", help_text="数据限制", verbose_name="数据限制", blank=True,
     )
 
+    objects = GroupManager()
+
     def __str__(self):
         return self.name
+
+    def natural_key(self):
+        return (self.name,)  # noqa
 
     class Meta:
         verbose_name = "角色"
@@ -293,6 +301,12 @@ class Profile(BaseModel, AbstractUser):
     @property
     def role_names(self):
         return self.roles.values_list("name").all()
+
+    def has_api_perm(self, method, uri):
+        if self.is_active and self.is_superuser:
+            return True
+
+        return _user_has_api_perm(self, method, uri)
 
     objects = ProfileManager()
 

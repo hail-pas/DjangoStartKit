@@ -17,7 +17,7 @@ from apps.account.serializers import ProfileSerializer, get_profile_system_resou
 class CaptchaView(views.APIView):
     """图形验证码
     get:
-        Return captcha hash_key and image_url
+        获取图形验证码
     """
 
     permission_classes = (AllowAny,)
@@ -32,7 +32,7 @@ class CaptchaView(views.APIView):
 
 
 class LoginView(ObtainJSONWebToken):
-    """登陆
+    """登录
     """
 
     permission_classes = (AllowAny,)

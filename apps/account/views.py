@@ -76,6 +76,9 @@ class ProfileViewSet(RestModelViewSet,):
     )
     @camelCaseAction(methods=["post"], detail=True)
     def reset_password(self, request, *args, **kwargs):
+        """
+        重置密码
+        """
         profile = self.get_object()  # type: models.Profile
         profile.set_password(profile.phone)
         profile.save()
@@ -92,7 +95,7 @@ class RoleViewSet(RestModelViewSet,):
     serializer_class = serializers.RoleSerializer
     queryset = models.Role.objects.all()
     search_fields = ("name",)
-    filter_fields = ("permissions",)
+    # filter_fields = ("",)
     parser_classes = (JSONParser,)
     permission_classes = (IsAuthenticated,)
 

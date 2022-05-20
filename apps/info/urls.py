@@ -7,4 +7,4 @@ router = routers.SimpleRouter()
 
 urlpatterns = router.urls
 
-urlpatterns += [path("enums", views.enums)]
+urlpatterns += [path("enums/", views.enums)]

@@ -8,7 +8,7 @@ router = routers.SimpleRouter()
 urlpatterns = router.urls
 
 urlpatterns += [
-    path("captcha", views.CaptchaView.as_view()),
-    path("login", views.LoginView.as_view()),
-    path("change_pwd", views.ChangePasswordView.as_view()),
+    path("captcha/", views.CaptchaView.as_view()),
+    path("login/", views.LoginView.as_view()),
+    path("change_pwd/", views.ChangePasswordView.as_view()),
 ]
