@@ -127,11 +127,11 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
 # ========================================================================
 """
 用户 - 用户组（组织、职位） - 角色（权限组） - 权限（权限互斥、依赖、包含）
-系统资源：菜单、按钮； 资源拥有权限； 角色获得其关联系统资源的所有相关权限
+系统资源：菜单、按钮、接口； 资源拥有权限； 角色获得其关联系统资源的所有相关权限
     名称
     父级
     标识
-    类型（菜单/按钮/）
+    类型（菜单/按钮/接口）
     前端路由
     是否启用
     排序
@@ -302,11 +302,11 @@ class Profile(BaseModel, AbstractUser):
     def role_names(self):
         return self.roles.values_list("name").all()
 
-    def has_api_perm(self, method, uri):
+    def has_api_perm(self, request, view):
         if self.is_active and self.is_superuser:
             return True
 
-        return _user_has_api_perm(self, method, uri)
+        return _user_has_api_perm(self, request, view)
 
     objects = ProfileManager()
 

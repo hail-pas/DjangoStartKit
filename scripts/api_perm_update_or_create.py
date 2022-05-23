@@ -14,6 +14,7 @@ if __name__ == '__main__':
     if not content_type:
         raise RuntimeError("未定义系统资源对象")
     for codename, name in API_DICT.items():
+        print("%50s %s" % (codename, name))
         perms = Permission.objects.update_or_create(
             content_type=content_type,
             codename=codename,
@@ -22,4 +23,3 @@ if __name__ == '__main__':
             }
         )
     print("Success")
-

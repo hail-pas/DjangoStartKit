@@ -2,7 +2,7 @@ from django.contrib import auth
 from django.core.exceptions import PermissionDenied
 
 
-def _user_has_api_perm(user, method, uri):
+def _user_has_api_perm(user, request, view):
     """check api based permission
     A backend can raise `PermissionDenied` to short-circuit permission checking.
     """
@@ -10,7 +10,7 @@ def _user_has_api_perm(user, method, uri):
         if not hasattr(backend, "has_api_perm"):
             continue
         try:
-            if backend.has_api_perm(user, method, uri):
+            if backend.has_api_perm(user, request, view):
                 return True
         except PermissionDenied:
             return False

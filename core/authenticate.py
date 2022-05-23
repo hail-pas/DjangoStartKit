@@ -26,9 +26,10 @@ class CustomModelBackend(ModelBackend):
         system_resource_perms = Permission.objects.filter(id__in=self.get_user_related_permissions(user_obj))
         return system_resource_perms
 
-    def has_api_perm(self, user_obj, method, uri):  # noqa
+    def has_api_perm(self, user_obj, request, view):  # noqa
         if user_obj.is_active and user_obj.is_superuser:
             return True
         return user_obj.is_active and Permission.objects.filter(
-            id__in=self.get_user_related_permissions(user_obj), codename=f"{method.upper()}:{uri}"
+            id__in=self.get_user_related_permissions(user_obj),
+            codename=f"{view.__module__}.{view.__class__.__name__}.{getattr(view, 'action', request.method.lower())}",
         )
