@@ -39,6 +39,7 @@ class SystemResourceTypeEnum(StrEnumMore):
 
     menu = ("menu", "菜单")
     button = ("button", "按钮")
+    api = ("api", "接口")
 
 
 class PermissionRelationEnum(StrEnumMore):
