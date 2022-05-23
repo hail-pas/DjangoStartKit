@@ -6,12 +6,9 @@ from apps.info import schemas
 from apps.enums import get_enum_content
 from apps.responses import RestResponse
 from common.swagger import custom_swagger_auto_schema
-from apps.permissions import URIBasedPermission
 
 
 class EnumsView(APIView):
-    permission_classes = [URIBasedPermission]
-
     @custom_swagger_auto_schema(
         query_serializer=schemas.EnumQueryIn,
         responses={

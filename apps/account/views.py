@@ -97,7 +97,7 @@ class RoleViewSet(RestModelViewSet,):
     search_fields = ("name",)
     # filter_fields = ("",)
     parser_classes = (JSONParser,)
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, URIBasedPermission)
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -121,7 +121,7 @@ class SystemResourceViewSet(RestListModelMixin, RestRetrieveModelMixin, CustomGe
     queryset = models.SystemResource.objects.all()
     filter_fields = ("parent", "type", "enabled")
     parser_classes = (JSONParser,)
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, URIBasedPermission)
 
     def get_queryset(self):
         return self.queryset.filter(parent=None)

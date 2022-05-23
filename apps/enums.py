@@ -36,7 +36,7 @@ class ResponseCodeEnum(IntEnumMore):
 class SystemResourceTypeEnum(StrEnumMore):
     """
     """
-
+    system = ("system", "")
     menu = ("menu", "菜单")
     button = ("button", "按钮")
     api = ("api", "接口")

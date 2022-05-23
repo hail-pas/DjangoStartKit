@@ -1,3 +1,5 @@
+from cachetools.func import ttl_cache
+from django.db.models import Q
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.auth.backends import ModelBackend
@@ -10,11 +12,11 @@ class CustomModelBackend(ModelBackend):
     自定义获取组权限
     """
 
-    def get_user_related_permissions(self, user_obj):  # noqa
-        return user_obj.roles.all().values_list("system_resources__permissions__id", flat=True)
-
-    def _get_user_permissions(self, user_obj):
-        return user_obj.user_permissions.all()
+    @ttl_cache
+    def get_user_related_permissions(self, user_obj_id):  # noqa
+        return Permission.objects.filter(
+            Q(systemresource__roles__profiles__id=user_obj_id) | Q(profile__id=user_obj_id)
+        )
 
     def _get_group_permissions(self, user_obj):
         # user_groups_field = UserModel._meta.get_field('groups')  # noqa
@@ -23,13 +25,20 @@ class CustomModelBackend(ModelBackend):
         # 通过获取角色拥有的系统资源关联的权限
         if user_obj.is_superuser:
             return Permission.objects.all()
-        system_resource_perms = Permission.objects.filter(id__in=self.get_user_related_permissions(user_obj))
-        return system_resource_perms
+        return self.get_user_related_permissions(user_obj.id)
 
     def has_api_perm(self, user_obj, request, view):  # noqa
         if user_obj.is_active and user_obj.is_superuser:
             return True
-        return user_obj.is_active and Permission.objects.filter(
-            id__in=self.get_user_related_permissions(user_obj),
-            codename=f"{view.__module__}.{view.__class__.__name__}.{getattr(view, 'action', request.method.lower())}",
+        return (
+            user_obj.is_active
+            and self.get_user_related_permissions(user_obj.id)
+            .filter(
+                codename=(
+                    f"{view.__module__}."
+                    f"{view.__class__.__name__}."
+                    f"{getattr(view, 'action', request.method.lower())}"
+                ),
+            )
+            .exists()
         )

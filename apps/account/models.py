@@ -1,24 +1,24 @@
 # Create your models here.
+import string
+
 from django.db import models
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.db.models import Manager
 from django.utils.crypto import get_random_string
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.models import _user_has_module_perms  # noqa
-from django.contrib.auth.models import Permission, GroupManager, PermissionsMixin
+from django.contrib.auth.models import Permission, GroupManager, _user_has_perm, _user_has_module_perms  # noqa
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.contrib.contenttypes.models import ContentType
 
 from apps import enums
 from storages.mysql import BaseModel, LabelFieldMixin, RemarkFieldMixin
-from common.django.perms import _user_has_api_perm
+from common.django.perms import _user_has_api_perm  # noqa
 
 from django.contrib.auth.models import _user_get_permissions  # noqa; noqa
 
-
-allowed_chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ123456789"  # noqa
+allowed_chars = string.ascii_lowercase + string.ascii_uppercase + string.digits  # noqa
 
 
 class BaseUserManager(Manager):
@@ -66,6 +66,81 @@ class ProfileManager(BaseUserManager):
         return self.create_user(username, phone, password, **extra_fields)
 
 
+class PermissionsMixin(models.Model):
+    """
+    Add the fields and methods necessary to support the Group and Permission
+    models using the ModelBackend.
+    """
+
+    is_superuser = models.BooleanField(
+        _("superuser status"),
+        default=False,
+        help_text=_("Designates that this user has all permissions without " "explicitly assigning them."),
+    )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        verbose_name=_("user permissions"),
+        blank=True,
+        help_text=_("Specific permissions for this user."),
+        related_name="profile_set",
+        related_query_name="profile",
+    )
+
+    class Meta:
+        abstract = True
+
+    def get_user_permissions(self, obj=None):
+        """
+        Return a list of permission strings that this user has directly.
+        Query all available auth backends. If an object is passed in,
+        return only permissions matching this object.
+        """
+        return _user_get_permissions(self, obj, "user")
+
+    def get_group_permissions(self, obj=None):
+        """
+        Return a list of permission strings that this user has through their
+        groups. Query all available auth backends. If an object is passed in,
+        return only permissions matching this object.
+        """
+        return _user_get_permissions(self, obj, "group")
+
+    def get_all_permissions(self, obj=None):
+        return _user_get_permissions(self, obj, "all")
+
+    def has_perm(self, perm, obj=None):
+        """
+        Return True if the user has the specified permission. Query all
+        available auth backends, but return immediately if any backend returns
+        True. Thus, a user who has permission from a single auth backend is
+        assumed to have permission in general. If an object is provided, check
+        permissions for that object.
+        """
+        # Active superusers have all permissions.
+        if self.is_active and self.is_superuser:  # noqa
+            return True
+
+        return _user_has_perm(self, perm, obj)
+
+    def has_perms(self, perm_list, obj=None):
+        """
+        Return True if the user has each of the specified permissions. If
+        object is passed, check if the user has all required perms for it.
+        """
+        return all(self.has_perm(perm, obj) for perm in perm_list)
+
+    def has_module_perms(self, app_label):
+        """
+        Return True if the user has any permissions in the given app label.
+        Use similar logic as has_perm(), above.
+        """
+        # Active superusers have all permissions.
+        if self.is_active and self.is_superuser:  # noqa
+            return True
+
+        return _user_has_module_perms(self, app_label)
+
+
 class AbstractUser(AbstractBaseUser, PermissionsMixin):
     """
     An abstract base class implementing a fully featured User model with
@@ -76,7 +151,7 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
 
     username_validator = UnicodeUsernameValidator()
 
-    username = models.CharField(_("用户名"), max_length=128, help_text="用户名, 最长128",)
+    username = models.CharField(_("用户名"), max_length=128, help_text="用户名, 最长128", )
     phone = models.CharField(
         "电话", max_length=11, unique=True, help_text="电话", error_messages={"unique": "使用该手机号的用户已存在"}
     )
@@ -150,7 +225,6 @@ class SystemResource(LabelFieldMixin, RemarkFieldMixin, BaseModel):
     """
     系统资源
     """
-
     parent = models.ForeignKey(
         to="self",
         related_name="children",
@@ -160,10 +234,10 @@ class SystemResource(LabelFieldMixin, RemarkFieldMixin, BaseModel):
         blank=True,
         null=True,
     )
-    code = models.CharField("标识编码", max_length=64, help_text="标识编码",)
+    code = models.CharField("标识编码", max_length=64, help_text="标识编码", )
     route_path = models.CharField("前端路由", max_length=128, help_text="前端路由", null=True, blank=True)
-    type = models.CharField("资源类型", max_length=16, choices=enums.SystemResourceTypeEnum.choices(), help_text="组类型",)
-    order_num = models.IntegerField("排列序号", default=1, help_text="排列序号",)
+    type = models.CharField("资源类型", max_length=16, choices=enums.SystemResourceTypeEnum.choices(), help_text="组类型", )
+    order_num = models.IntegerField("排列序号", default=1, help_text="排列序号", )
     enabled = models.BooleanField("启用状态", default=True, help_text="当前分组是否可用")
     permissions = models.ManyToManyField(Permission, verbose_name="权限", help_text="权限", blank=True)
 
@@ -248,7 +322,7 @@ class DataFilterFields(LabelFieldMixin, RemarkFieldMixin, BaseModel):
 class PermissionRelation(models.Model):
     permission_a = models.ForeignKey(Permission, on_delete=models.CASCADE, related_name="relation_as_a")
     permission_b = models.ForeignKey(Permission, on_delete=models.CASCADE, related_name="relation_as_b")
-    relation = models.CharField("关系", max_length=16, choices=enums.PermissionRelationEnum.choices(), help_text="组类型",)
+    relation = models.CharField("关系", max_length=16, choices=enums.PermissionRelationEnum.choices(), help_text="组类型", )
 
     def __str__(self):
         return self.permission_b.codename + self.relation + self.permission_b.codename
@@ -285,7 +359,9 @@ class Profile(BaseModel, AbstractUser):
     username、phone
     """
 
-    roles = models.ManyToManyField(Role, related_name="profiles", verbose_name="所属角色", help_text="所属角色(int)",)
+    roles = models.ManyToManyField(
+        Role, related_name="profiles", verbose_name="所属角色", help_text="所属角色(int)", blank=True
+    )
     gender = models.CharField(
         "性别", max_length=24, choices=enums.GenderEnum.choices(), default=enums.GenderEnum.male.value, help_text="性别"
     )
@@ -314,3 +390,18 @@ class Profile(BaseModel, AbstractUser):
         verbose_name = "用户"
         verbose_name_plural = verbose_name
         swappable = "AUTH_USER_MODEL"
+
+
+class System(LabelFieldMixin, RemarkFieldMixin, BaseModel):
+    """
+    系统
+    """
+    users = models.ManyToManyField(
+        to=Profile, related_name="systems", help_text="用户", verbose_name="用户", blank=True,
+    )
+    system_resources = models.ManyToManyField(
+        to=SystemResource, related_name="systems", help_text="系统资源", verbose_name="系统资源", blank=True,
+    )
+    data_filters = models.ManyToManyField(
+        to=DataFilter, related_name="systems", help_text="数据限制", verbose_name="数据限制", blank=True,
+    )
