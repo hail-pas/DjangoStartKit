@@ -2,7 +2,6 @@ import logging
 
 from drf_yasg import openapi
 from django.db import models
-from django.urls import URLResolver
 from rest_framework import status
 from drf_yasg.openapi import IN_QUERY, TYPE_STRING, Parameter
 from drf_yasg.generators import OpenAPISchemaGenerator
@@ -189,27 +188,6 @@ class CustomSwaggerAutoSchema(SwaggerAutoSchema):
 
 
 class CustomOpenAPISchemaGenerator(OpenAPISchemaGenerator):
-    def get_schema(self, request=None, public=False):
-        """Generate a :class:`.Swagger` object with custom tags"""
-        from core.urls import urlpatterns
-
-        swagger = super().get_schema(request, public)
-        tags = list(
-            map(
-                lambda url_pattern: url_pattern.urlconf_module.__name__.split(".")[1],
-                filter(
-                    lambda url_pattern: True
-                    if isinstance(url_pattern, URLResolver)
-                    and not isinstance(url_pattern.urlconf_module, list)
-                    and url_pattern.urlconf_module.__name__.startswith("apps.")
-                    else False,
-                    urlpatterns,
-                ),
-            )
-        )
-        swagger.tags = tags
-        return swagger
-
     def get_operation_keys(self, sub_path, method, view):
         str_list: list = self._gen.get_keys(sub_path, method, view)
         if str_list[-1] == "read" and view.action not in DRF_GENERATE_METHODS:

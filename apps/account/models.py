@@ -151,7 +151,7 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
 
     username_validator = UnicodeUsernameValidator()
 
-    username = models.CharField(_("用户名"), max_length=128, help_text="用户名, 最长128", )
+    username = models.CharField(_("用户名"), max_length=128, help_text="用户名, 最长128",)
     phone = models.CharField(
         "电话", max_length=11, unique=True, help_text="电话", error_messages={"unique": "使用该手机号的用户已存在"}
     )
@@ -225,6 +225,7 @@ class SystemResource(LabelFieldMixin, RemarkFieldMixin, BaseModel):
     """
     系统资源
     """
+
     parent = models.ForeignKey(
         to="self",
         related_name="children",
@@ -234,10 +235,10 @@ class SystemResource(LabelFieldMixin, RemarkFieldMixin, BaseModel):
         blank=True,
         null=True,
     )
-    code = models.CharField("标识编码", max_length=64, help_text="标识编码", )
+    code = models.CharField("标识编码", max_length=64, help_text="标识编码",)
     route_path = models.CharField("前端路由", max_length=128, help_text="前端路由", null=True, blank=True)
-    type = models.CharField("资源类型", max_length=16, choices=enums.SystemResourceTypeEnum.choices(), help_text="组类型", )
-    order_num = models.IntegerField("排列序号", default=1, help_text="排列序号", )
+    type = models.CharField("资源类型", max_length=16, choices=enums.SystemResourceTypeEnum.choices(), help_text="组类型",)
+    order_num = models.IntegerField("排列序号", default=1, help_text="排列序号",)
     enabled = models.BooleanField("启用状态", default=True, help_text="当前分组是否可用")
     permissions = models.ManyToManyField(Permission, verbose_name="权限", help_text="权限", blank=True)
 
@@ -322,7 +323,7 @@ class DataFilterFields(LabelFieldMixin, RemarkFieldMixin, BaseModel):
 class PermissionRelation(models.Model):
     permission_a = models.ForeignKey(Permission, on_delete=models.CASCADE, related_name="relation_as_a")
     permission_b = models.ForeignKey(Permission, on_delete=models.CASCADE, related_name="relation_as_b")
-    relation = models.CharField("关系", max_length=16, choices=enums.PermissionRelationEnum.choices(), help_text="组类型", )
+    relation = models.CharField("关系", max_length=16, choices=enums.PermissionRelationEnum.choices(), help_text="组类型",)
 
     def __str__(self):
         return self.permission_b.codename + self.relation + self.permission_b.codename
@@ -396,9 +397,8 @@ class System(LabelFieldMixin, RemarkFieldMixin, BaseModel):
     """
     系统
     """
-    users = models.ManyToManyField(
-        to=Profile, related_name="systems", help_text="用户", verbose_name="用户", blank=True,
-    )
+
+    users = models.ManyToManyField(to=Profile, related_name="systems", help_text="用户", verbose_name="用户", blank=True,)
     system_resources = models.ManyToManyField(
         to=SystemResource, related_name="systems", help_text="系统资源", verbose_name="系统资源", blank=True,
     )

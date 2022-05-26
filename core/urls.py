@@ -15,13 +15,12 @@ Including another URLconf
 """
 from django.conf import settings
 from django.http import HttpResponse
-from django.urls import path, include
+from django.urls import URLResolver, path, include
 from django.views import static as static_view
 from django.contrib import admin
 from rest_framework import permissions
 from django.conf.urls import url
 from django.conf.urls.static import static
-from rest_framework.documentation import include_docs_urls
 
 urlpatterns = [
     path("", lambda request: HttpResponse("OK")),
@@ -47,13 +46,25 @@ if settings.DEBUG:
     from drf_yasg import openapi
     from drf_yasg.views import get_schema_view
 
+    tags = list(
+        map(
+            lambda url_pattern: url_pattern.urlconf_module.__name__.split(".")[1],
+            filter(
+                lambda url_pattern: True
+                if isinstance(url_pattern, URLResolver)
+                and not isinstance(url_pattern.urlconf_module, list)
+                and url_pattern.urlconf_module.__name__.startswith("apps.")
+                else False,
+                urlpatterns,
+            ),
+        )
+    )
     schema_view = get_schema_view(
-        openapi.Info(title="DjangoStartKit API", default_version="1.0", description="API Doc of core",),
+        openapi.Info(title="DjangoStartKit API", default_version="1.0", description="API Doc of core", tags=tags),
         public=True,
         permission_classes=(permissions.AllowAny,),
     )
     urlpatterns += [
-        path(r"docs/", include_docs_urls(title="API", permission_classes=[permissions.AllowAny],)),
         url(r"^swagger(?P<format>\.json|\.yaml)$", schema_view.without_ui(cache_timeout=0), name="schema-json"),  # noqa
         url(r"^swagger/$", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),  # noqa
         url(r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),  # noqa
