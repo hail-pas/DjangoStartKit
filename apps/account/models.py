@@ -407,3 +407,7 @@ class System(LabelFieldMixin, RemarkFieldMixin, BaseModel):
     data_filters = models.ManyToManyField(
         to=DataFilter, related_name="systems", help_text="数据限制", verbose_name="数据限制", blank=True,
     )
+
+    class Meta:
+        verbose_name = "系统"
+        verbose_name_plural = verbose_name
