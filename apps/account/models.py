@@ -235,10 +235,10 @@ class SystemResource(LabelFieldMixin, RemarkFieldMixin, BaseModel):
         blank=True,
         null=True,
     )
+    reference_viewable = models.JSONField(verbose_name="可以关联查看的节点ID", help_text="可以关联查看的节点ID", default=list)
     code = models.CharField("标识编码", max_length=64, help_text="标识编码",)
     route_path = models.CharField("前端路由", max_length=128, help_text="前端路由", null=True, blank=True)
-    node_level = models.IntegerField("层级", null=True, blank=True)
-    icon_path = models.CharField("前端路由", max_length=128, help_text="前端路由", null=True, blank=True)
+    icon_path = models.CharField("图标", max_length=128, help_text="图标", null=True, blank=True)
     type = models.CharField("资源类型", max_length=16, choices=enums.SystemResourceTypeEnum.choices(), help_text="组类型",)
     order_num = models.IntegerField("排列序号", default=1, help_text="排列序号",)
     enabled = models.BooleanField("启用状态", default=True, help_text="当前分组是否可用")

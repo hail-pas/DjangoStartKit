@@ -75,11 +75,13 @@ class SystemResourceSerializer(CustomModelSerializer):
             "parent",
             "label",
             "code",
-            # "route_path",
+            "route_path",
+            "icon_path",
             "type",
             "order_num",
-            # "enabled",
+            "enabled",
             "children",
+            "reference_viewable",
             "remark",
         }
 
