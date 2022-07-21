@@ -22,6 +22,8 @@ class ViewPathAutoSchema(CustomAutoSchema):
         method_name = getattr(view, "action", method.lower())
         _view_path = f"{self.view.__module__}.{self.view.__class__.__name__}.{method_name}"
         _description = super().get_description(path, method)
+        if not _description:
+            _description = f"{method}:{path}"
         return f"{_view_path}%{_description}"
 
 

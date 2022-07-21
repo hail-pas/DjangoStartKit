@@ -169,7 +169,7 @@ class CustomSwaggerAutoSchema(SwaggerAutoSchema):
         action = getattr(self.view, "action", None)
         if action and action == "list":
             for param in params:
-                if param.name == "search":
+                if param.name == "search" and getattr(self.view, "search_fields", None):
                     if getattr(self.view, "search_fields", None):
                         param.description = f"搜索字段: {', '.join(self.view.search_fields)}"  # noqa
                     else:

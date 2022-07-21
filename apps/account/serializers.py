@@ -66,6 +66,16 @@ class ProfileCreateUpdateSerializer(ProfileSerializer):
         fields = ProfileSerializer.Meta.fields
 
 
+class SystemSerializer(CustomModelSerializer):
+    class Meta:
+        model = models.System
+        fields = {
+            "code",
+            "label",
+            "remark",
+        }
+
+
 class SystemResourceSerializer(CustomModelSerializer):
     children = serializers.SerializerMethodField("get_children")
 
@@ -81,7 +91,7 @@ class SystemResourceSerializer(CustomModelSerializer):
             "order_num",
             "enabled",
             "children",
-            "reference_viewable",
+            "reference_to",
             "remark",
         }
 
