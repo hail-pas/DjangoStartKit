@@ -253,6 +253,13 @@ class SystemResource(LabelFieldMixin, RemarkFieldMixin, BaseModel):
     assignable = models.BooleanField("是否可配置", default=True, help_text="配置时是否可分配")
     permissions = models.ManyToManyField(Permission, verbose_name="权限", help_text="权限", blank=True)
 
+    @classmethod
+    def root_menus(cls, profile):
+        menus = cls.objects.filter(
+            parent=None, enabled=True, type=enums.SystemResourceTypeEnum.menu.value, systems__in=[profile.system]
+        )
+        return menus
+
     def __str__(self):
         return f"{self.parent.label + '-' if self.parent else ''}" + self.label
 

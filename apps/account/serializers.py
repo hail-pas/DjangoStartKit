@@ -103,18 +103,11 @@ class SystemResourceSerializer(CustomModelSerializer):
 def get_profile_system_resource(profile, instance, many: bool = True):
     system_resource_ids = profile.roles.all().values_list("system_resources__id", flat=True)
 
-    class NestedSystemResourceSerializer(SystemResourceSerializer):
-        children = serializers.SerializerMethodField("get_children")
-
-        class Meta:
-            model = models.SystemResource
-            fields = "__all__"
-
+    class InnerSystemResourceSerializer(SystemResourceSerializer):
         def get_children(self, obj):  # noqa
-            serializer = NestedSystemResourceSerializer(
-                instance=models.SystemResource.objects.filter(id__in=system_resource_ids) & obj.children.all(),
-                many=True,
+            serializer = SystemResourceSerializer(
+                instance=obj.children.filter(enabled=True, id__in=system_resource_ids), many=True,
             )
             return serializer.data
 
-    return NestedSystemResourceSerializer(instance=instance, many=many).data
+    return InnerSystemResourceSerializer(instance=instance, many=many).data

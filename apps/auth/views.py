@@ -58,8 +58,7 @@ class LoginView(ObtainJSONWebToken):
                 "user": ProfileSerializer(instance=profile).data,
                 "menu": get_profile_system_resource(
                     profile,
-                    SystemResource.objects.filter(parent=None)
-                    & SystemResource.objects.filter(
+                    SystemResource.root_menus(profile).filter(
                         id__in=profile.roles.all().values_list("system_resources__id", flat=True)
                     ),
                 ),
