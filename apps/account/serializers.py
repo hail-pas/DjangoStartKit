@@ -105,7 +105,7 @@ def get_profile_system_resource(profile, instance, many: bool = True):
 
     class InnerSystemResourceSerializer(SystemResourceSerializer):
         def get_children(self, obj):  # noqa
-            serializer = SystemResourceSerializer(
+            serializer = InnerSystemResourceSerializer(
                 instance=obj.children.filter(enabled=True, id__in=system_resource_ids), many=True,
             )
             return serializer.data
