@@ -18,8 +18,8 @@ class BaseModel(models.Model):
     objects = Manager()
 
     create_time = models.DateTimeField("创建时间", auto_now_add=True, help_text="创建时间", editable=False)
-    update_time = models.DateTimeField("更新时间", auto_now=True, help_text="更新时间")
-    deleted = models.BooleanField("是否已删除", default=False, blank=False, help_text="是否已删除")
+    update_time = models.DateTimeField("更新时间", auto_now=True, help_text="更新时间", editable=False)
+    delete_time = models.DateTimeField("删除时间", null=True, blank=True, editable=False, help_text="删除时间")
 
     def save(self, *args, **kwargs):
         """ On save, update timestamps """
@@ -45,7 +45,7 @@ class LabelFieldMixin(models.Model):
 
 
 class RemarkFieldMixin(models.Model):
-    remark = models.CharField("备注", max_length=128, blank=True, default="", help_text="备注说明",)
+    remark = models.CharField("备注", max_length=128, blank=True, default="", help_text="备注说明", )
 
     class Meta:
         abstract = True

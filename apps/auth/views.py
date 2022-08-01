@@ -47,7 +47,7 @@ class LoginView(ObtainJSONWebToken):
         if not profile.is_active:
             return RestResponse.fail(message="该账号已被禁用")
 
-        if profile.deleted:
+        if profile.delete_time:
             return RestResponse.fail(message="该账号已被归档")
 
         profile.last_login = timezone.now()
@@ -78,7 +78,7 @@ class ChangePasswordView(ObtainJSONWebToken):
     def post(self, request, *args, **kwargs):
         profile = request.user  # type: Profile
 
-        if profile.deleted:
+        if profile.delete_time:
             return RestResponse.fail(message="该账号已被归档")
 
         if not profile.is_active:

@@ -1,3 +1,5 @@
+import datetime
+
 from drf_yasg import openapi
 from drf_yasg.utils import no_body
 from rest_framework import status
@@ -41,7 +43,7 @@ class ProfileViewSet(RestModelViewSet,):
             phone=serializer.validated_data.get("phone")
         ).first()  # type: models.Profile
         if existed:
-            if existed.deleted:
+            if existed.delete_time:
                 return RestResponse.fail(message="该账号已被归档, 可以使用后台恢复")
             else:
                 return RestResponse.fail(message="具有相同手机号的用户已存在")
@@ -61,10 +63,9 @@ class ProfileViewSet(RestModelViewSet,):
     @atomic
     def perform_destroy(self, instance):
         instance.is_active = False
-        instance.save()
-        instance.deleted = True
+        instance.delete_time = datetime.datetime.now()
         instance.operator = self.request.user
-        instance.save()
+        instance.save(update_fields=["is_active", "delete_time", "operator"])
 
     @custom_swagger_auto_schema(
         request_body=no_body,
