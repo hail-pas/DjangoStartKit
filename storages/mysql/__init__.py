@@ -4,6 +4,8 @@ from django.db import models
 from django.utils import timezone
 from django.db.models.manager import Manager
 
+from apps import enums
+
 
 class DeletedFieldManager(Manager):
     """
@@ -45,7 +47,23 @@ class LabelFieldMixin(models.Model):
 
 
 class RemarkFieldMixin(models.Model):
-    remark = models.CharField("备注", max_length=128, blank=True, default="", help_text="备注说明", )
+    remark = models.CharField("备注", max_length=128, blank=True, default="", help_text="备注说明")
+
+    class Meta:
+        abstract = True
+
+
+class OrderWeightFieldMixin(models.Model):
+    order_weight = models.CharField(max_length=16, verbose_name="排序比重", help_text="排序比重，越大越前", default="0")
+
+    class Meta:
+        abstract = True
+
+
+class StatusFieldMixin(models.Model):
+    status = models.CharField(
+        "状态", max_length=16, choices=enums.Status.choices(), default=enums.Status.enable.value, help_text="状态"
+    )
 
     class Meta:
         abstract = True
