@@ -16,13 +16,13 @@ class ResponseCodeEnum(IntEnumMore):
     """
 
     # 唯一成功响应
-    success = (100200, "成功")
+    success = (0, "成功")
 
     # HTTP 状态码  2xx - 5xx
     # 100{[2-5]]xx}, http status code 拼接
 
     # 失败响应，999倒序取
-    failed = (100999, "失败")
+    failed = (200001, "失败")
 
 
 # class EnumInfoResponseFormats(StrEnumMore):

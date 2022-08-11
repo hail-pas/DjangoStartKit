@@ -1,6 +1,7 @@
 import logging
 from math import ceil
 from typing import Any, Optional
+from datetime import datetime
 from functools import lru_cache
 
 from drf_yasg import openapi
@@ -11,7 +12,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 
 from apps.enums import ResponseCodeEnum
 from common.types import PlainSchema
-from common.utils import mapper, resp_serialize
+from common.utils import COMMON_TIME_STRING, mapper, resp_serialize
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +70,7 @@ class _Resp(BaseModel):
     code: int = ResponseCodeEnum.success.value
     success: bool = True
     message: Optional[str] = "success"
+    timestamp: datetime
     data: Optional[Any] = None
     page_info: Optional[_PageInfo] = None
 
@@ -162,7 +164,13 @@ class RestResponse(JsonResponse):
                 total_page=ceil(total_count / page_size),
                 total_count=total_count,
             )
-        self.result = _Resp(code=code, success=success, message=message, page_info=page_info).dict()
+        self.result = _Resp(
+            code=code,
+            success=success,
+            message=message,
+            timestamp=datetime.now().strftime(COMMON_TIME_STRING),
+            page_info=page_info,
+        ).dict()
         mapper(resp_serialize, data)
         self.result["data"] = data
         super().__init__(self.result, encoder, safe=True, json_dumps_params=None, **kwargs)
