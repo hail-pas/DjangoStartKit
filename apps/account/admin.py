@@ -5,6 +5,7 @@ from django.contrib import admin
 from django.db.models import fields
 from django.contrib.admin.sites import AlreadyRegistered
 
+from apps.account.models import Profile
 from conf.config import local_configs
 
 admin.site.site_title = admin.site.site_header = local_configs.PROJECT.NAME + local_configs.PROJECT.ENVIRONMENT
@@ -67,11 +68,18 @@ for model in app_models:  # noqa
             list_display.remove(one)
             # list_display.append(one)
 
+
     class XXXAdmin(admin.ModelAdmin):  # noqa
         list_filter = list_filter
         list_display = list_display
         search_fields = search_fields
         readonly_fields = readonly_fields
+
+        def save_model(self, request, obj, form, change):
+            if isinstance(obj, Profile) and not change:
+                obj.set_password(obj.password)
+            obj.save()
+
 
     try:  # noqa
         admin.site.register(model, XXXAdmin)
