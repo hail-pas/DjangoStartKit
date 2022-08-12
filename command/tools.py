@@ -8,7 +8,7 @@ tool_typer = typer.Typer(short_help="工具")
 
 src = pathlib.Path(__file__).parent.parent
 
-DIRS = ["apps", "command", "common", "core", "conf", "deploy", "tasks", "storages", "third_apis"]
+DIRS = ["apps", "command", "common", "core", "conf", "deploy", "tasks", "storages", "third_apis", "scripts"]
 FILES = [".dockerignore", ".gitignore", "manage.py", "command.py", "pyproject.toml", "main.py", "README.md", "Makefile"]
 
 
