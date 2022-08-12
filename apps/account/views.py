@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from apps.account import models, serializers
 from apps.responses import RestResponse
+from common import messages
 from common.swagger import custom_swagger_auto_schema
 from apps.permissions import URIBasedPermission
 from common.drf.mixins import RestModelViewSet, RestListModelMixin, CustomGenericViewSet, RestRetrieveModelMixin
@@ -44,9 +45,9 @@ class ProfileViewSet(RestModelViewSet,):
         ).first()  # type: models.Profile
         if existed:
             if existed.delete_time:
-                return RestResponse.fail(message="该账号已被归档, 可以使用后台恢复")
+                return RestResponse.fail(message=messages.AccountArchived)
             else:
-                return RestResponse.fail(message="具有相同手机号的用户已存在")
+                return RestResponse.fail(message=messages.AccountWithPhoneExisted)
         operator = self.request.user  # type: models.Profile
         instance = models.Profile.objects.create(
             username=serializer.validated_data.get("username"),
@@ -108,7 +109,7 @@ class RoleViewSet(RestModelViewSet,):
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()  # noqa
         if models.Profile.objects.filter(roles=instance).exists():
-            return RestResponse.fail(message=f"{instance.name} 角色下还存在关联用户，禁止删除")
+            return RestResponse.fail(message=messages.RoleWithUsers.format(instance.name))
         instance.delete()
         return RestResponse(status=status.HTTP_204_NO_CONTENT)
 

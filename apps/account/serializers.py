@@ -6,6 +6,7 @@ from apps import enums
 from apps.account import models
 from common.validators import check_china_mobile_phone
 from common.drf.serializers import CustomModelSerializer
+from common import messages
 
 
 class RoleSerializer(CustomModelSerializer):
@@ -48,7 +49,7 @@ class ProfileCreateUpdateSerializer(ProfileSerializer):
     phone = serializers.CharField(
         required=True,
         help_text="手机号",
-        validators=[UniqueValidator(queryset=models.Profile._base_manager.all(), message="使用该手机号的用户已存在")],  # noqa
+        validators=[UniqueValidator(queryset=models.Profile._base_manager.all(), message=messages.AccountWithPhoneExisted)],  # noqa
     )
     gender = serializers.ChoiceField(required=True, help_text="性别", choices=enums.GenderEnum.choices())
     roles = serializers.PrimaryKeyRelatedField(

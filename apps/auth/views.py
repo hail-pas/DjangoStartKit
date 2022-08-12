@@ -9,6 +9,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from apps.auth import schemas, serializers
 from apps.responses import RestResponse
+from common import messages
 from common.swagger import custom_swagger_auto_schema
 from apps.account.models import Profile, SystemResource
 from apps.account.serializers import ProfileSerializer, get_profile_system_resource
@@ -42,13 +43,13 @@ class LoginView(ObtainJSONWebToken):
     def post(self, request, *args, **kwargs):
         profile = request.json_data["user"]
         if not profile:
-            return RestResponse.fail(message="账号或用户名错误")
+            return RestResponse.fail(message=messages.UserOrPasswordError)
 
         if not profile.is_active:
-            return RestResponse.fail(message="该账号已被禁用")
+            return RestResponse.fail(message=messages.AccountArchived)
 
         if profile.delete_time:
-            return RestResponse.fail(message="该账号已被归档")
+            return RestResponse.fail(message=messages.AccountArchived)
 
         profile.last_login = timezone.now()
         profile.save(update_fields=["last_login"])
@@ -79,23 +80,23 @@ class ChangePasswordView(ObtainJSONWebToken):
         profile = request.user  # type: Profile
 
         if profile.delete_time:
-            return RestResponse.fail(message="该账号已被归档")
+            return RestResponse.fail(message=messages.AccountArchived)
 
         if not profile.is_active:
-            return RestResponse.fail(message="该账号已被禁用")
+            return RestResponse.fail(message=messages.AccountDisabled)
 
         old_password = request.json_data["old_password"]
         new_password = request.json_data["new_password"]
         confirm_password = request.json_data["confirm_password"]
 
         if not profile.check_password(old_password):
-            return RestResponse.fail(message="旧密码验证不通过")
+            return RestResponse.fail(message=messages.OldPasswordCheckFailed)
 
         if new_password != confirm_password:
-            return RestResponse.fail(message="新密码和确认密码不一致，请重新输入")
+            return RestResponse.fail(message=messages.OldAndNewPasswordNotConsistent)
 
         if new_password == old_password:
-            return RestResponse.fail(message="新密码不能和旧密码相同")
+            return RestResponse.fail(message=messages.OldSameAsNewPassword)
 
         profile.set_password(new_password)
         profile.save()
