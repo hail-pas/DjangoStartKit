@@ -62,7 +62,7 @@ class LoginView(ObtainJSONWebToken):
                     SystemResource.root_menus(profile).filter(
                         id__in=profile.roles.all().values_list("system_resources__id", flat=True)
                     ),
-                ),
+                )
             }
         )
 
