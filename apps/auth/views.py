@@ -7,9 +7,9 @@ from rest_framework.parsers import JSONParser
 from rest_framework_jwt.views import ObtainJSONWebToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
+from common import messages
 from apps.auth import schemas, serializers
 from apps.responses import RestResponse
-from common import messages
 from common.swagger import custom_swagger_auto_schema
 from apps.account.models import Profile, SystemResource
 from apps.account.serializers import ProfileSerializer, get_profile_system_resource

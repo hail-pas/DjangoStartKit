@@ -244,7 +244,7 @@ class SystemResource(LabelFieldMixin, RemarkFieldMixin, BaseModel):
         blank=True,
         null=True,
     )
-    code = models.CharField("标识编码", max_length=64, help_text="标识编码",)
+    code = models.CharField("标识编码", max_length=64, help_text="标识编码，冒号标识层级 {parent}:{current}",)
     route_path = models.CharField("前端路由", max_length=128, help_text="前端路由", null=True, blank=True)
     icon_path = models.CharField("图标", max_length=128, help_text="图标", null=True, blank=True)
     type = models.CharField("资源类型", max_length=16, choices=enums.SystemResourceTypeEnum.choices(), help_text="组类型",)
