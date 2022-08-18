@@ -70,7 +70,7 @@ class _Resp(BaseModel):
     code: int = ResponseCodeEnum.success.value
     success: bool = True
     message: Optional[str] = "success"
-    timestamp: datetime
+    timestamp: str
     data: Optional[Any] = None
     page_info: Optional[_PageInfo] = None
 

@@ -12,10 +12,10 @@ shell = partial(subprocess.run, shell=True)
 
 @redis_typer.command("shell", short_help="Redis命令行")
 def _shell(db: int = typer.Option(default=0, help="指定数据库")):
-    if settings.REDIS_PASSWORD:
+    if settings.REDIS.PASSWORD:
         cmd = "redis-cli -h {host} -p {port} -a {password} -n {db}".format(
-            host=settings.REDIS_HOST, port=settings.REDIS_PORT, password=settings.REDIS_PASSWORD, db=db,
+            host=settings.REDIS.HOST, port=settings.REDIS.PORT, password=settings.REDIS.PASSWORD, db=db,
         )
     else:
-        cmd = "redis-cli -h {host} -p {port} -n {db}".format(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=db,)
+        cmd = "redis-cli -h {host} -p {port} -n {db}".format(host=settings.REDIS.HOST, port=settings.REDIS.PORT, db=db,)
     shell(cmd)

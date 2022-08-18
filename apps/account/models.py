@@ -13,6 +13,7 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.contrib.contenttypes.models import ContentType
 
 from apps import enums
+from common.utils import file_upload_to
 from storages.mysql import BaseModel, LabelFieldMixin, RemarkFieldMixin
 from common.django.perms import _user_has_api_perm  # noqa
 
@@ -256,7 +257,7 @@ class SystemResource(LabelFieldMixin, RemarkFieldMixin, BaseModel):
     @classmethod
     def root_menus(cls, profile):
         menus = cls.objects.filter(
-            parent=None, enabled=True, type=enums.SystemResourceTypeEnum.menu.value, systems__in=[profile.system]
+            parent=None, enabled=True, type=enums.SystemResourceTypeEnum.menu.value, systems__in=profile.systems.all()
         )
         return menus
 
@@ -381,17 +382,14 @@ class Profile(BaseModel, AbstractUser):
     roles = models.ManyToManyField(
         Role, related_name="profiles", verbose_name="所属角色", help_text="所属角色(int)", blank=True
     )
+    nickname = models.CharField(max_length=128, verbose_name="昵称", help_text="昵称", default="")
+    avatar = models.FileField(verbose_name="头像", blank=True, upload_to=file_upload_to, null=True)
     gender = models.CharField(
         "性别", max_length=24, choices=enums.GenderEnum.choices(), default=enums.GenderEnum.male.value, help_text="性别"
     )
     operator = models.ForeignKey(
         "self", on_delete=models.SET_NULL, blank=True, null=True, default=None, help_text="操作人"
     )
-    display_fields_config = models.JSONField("自定义字段配置JSON", default=dict, blank=True, help_text="自定义字段配置JSON")
-
-    @property
-    def role_codes(self):
-        return self.roles.values_list("code").all()
 
     @property
     def role_names(self):

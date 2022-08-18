@@ -19,8 +19,13 @@ from django.urls import URLResolver, path, include
 from django.views import static as static_view
 from django.contrib import admin
 from rest_framework import permissions
+from channels.routing import URLRouter
 from django.conf.urls import url
 from django.conf.urls.static import static
+from channels.security.websocket import AllowedHostsOriginValidator
+
+from apps.chat.urls import websocket_urlpatterns as chat_websocket_urlpatterns
+from core.middlewares import ChannelsAuthenticationMiddlewareJWT
 
 urlpatterns = [
     path("", lambda request: HttpResponse("OK")),
@@ -31,6 +36,7 @@ urlpatterns = [
     path("auth/", include("apps.auth.urls")),
     path("info/", include("apps.info.urls")),
     path("account/", include("apps.account.urls")),
+    path("chat/", include("apps.chat.urls")),
 ]
 
 # Static
@@ -40,6 +46,11 @@ urlpatterns += [
     url(r"^static/(?P<path>.*)$", static_view.serve, {"document_root": settings.STATIC_ROOT}, name="static",),
     url(r"^media/(?P<path>.*)$", static_view.serve, {"document_root": settings.MEDIA_ROOT}, name="media"),
 ]
+
+websocket_urlpatterns = []
+websocket_urlpatterns.extend(chat_websocket_urlpatterns)
+
+websocket = AllowedHostsOriginValidator(ChannelsAuthenticationMiddlewareJWT(URLRouter(websocket_urlpatterns)))
 
 # API Docs
 if settings.DEBUG:

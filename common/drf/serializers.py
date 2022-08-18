@@ -127,7 +127,7 @@ class CustomModelSerializer(ModelSerializer):
             ]
             if "pk" in property_names:
                 property_names.remove("pk")
-            read_only_fields += tuple(property_names + ["id", "deleted", "create_time", "update_time"])
+            read_only_fields += tuple(property_names + ["id", "delete_time", "create_time", "update_time"])
             if not isinstance(read_only_fields, (list, tuple)):
                 raise TypeError(
                     "The `read_only_fields` option must be a list or tuple. "
@@ -249,3 +249,9 @@ class DateTimeToTimeStampField(DateTimeField):
 
         humanized_format = humanize_datetime.datetime_formats(input_formats)
         self.fail("invalid", format=humanized_format)
+
+
+class FileLinksFieldMixin(metaclass=serializers.SerializerMetaclass):
+    file_links = serializers.ListSerializer(
+        child=serializers.FileField(allow_null=True, label="文件链接", max_length=255, required=False), read_only=True
+    )

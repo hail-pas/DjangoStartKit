@@ -1,10 +1,25 @@
 from typing import List
+from contextlib import contextmanager
 
-from django.db import models
+from django.db import models, transaction
 from django.utils import timezone
+from django.db.transaction import get_connection
 from django.db.models.manager import Manager
+from django.db.models.fields.files import FieldFile
 
 from apps import enums
+
+
+@contextmanager
+def lock_table(model):
+    with transaction.atomic():
+        cursor = get_connection().cursor()
+        cursor.execute(f"LOCK TABLE {model._meta.db_table} WRITE")  # noqa
+        try:
+            yield
+        finally:
+            cursor.execute("UNLOCK TABLES;")
+            cursor.close()
 
 
 class DeletedFieldManager(Manager):
@@ -13,7 +28,7 @@ class DeletedFieldManager(Manager):
     """
 
     def get_queryset(self):
-        return super().get_queryset().filter(deleted=False)
+        return super().get_queryset().filter(delete_time__isnull=True)
 
 
 class BaseModel(models.Model):
@@ -67,3 +82,15 @@ class StatusFieldMixin(models.Model):
 
     class Meta:
         abstract = True
+
+
+file_field = models.FileField(verbose_name="文件路径", blank=True, max_length=255)
+
+
+class FileLinksPropertyMixin:
+    @property
+    def file_links(self):
+        return [
+            FieldFile(instance=self, field=file_field, name=path)
+            for path in flatten_list(self.pictures.all().values_list("path"))  # noqa
+        ]

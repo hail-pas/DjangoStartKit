@@ -1,4 +1,9 @@
+from urllib.parse import parse_qs
+
 import ujson
+from channels.db import database_sync_to_async
+from channels.middleware import BaseMiddleware
+from django.contrib.auth import get_user_model
 from django.http import HttpRequest, HttpResponse
 from rest_framework import status, exceptions
 from django.utils.encoding import smart_text
@@ -7,7 +12,8 @@ from django.utils.translation import ugettext as _
 from rest_framework.exceptions import ErrorDetail, ValidationError, AuthenticationFailed
 from rest_framework_jwt.settings import api_settings
 from rest_framework.authentication import get_authorization_header
-from rest_framework_jwt.authentication import JSONWebTokenAuthentication
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication, jwt_decode_handler, \
+    jwt_get_username_from_payload
 
 from common.types import ContentTypeEnum, RequestMethodEnum
 from apps.responses import RestResponse
@@ -195,3 +201,51 @@ class AuthenticationMiddlewareJWT:
         # Code to be executed for each request/response after
         # the view is called.
         return response
+
+
+class ChannelsAuthenticationMiddlewareJWT(BaseMiddleware):
+
+    def __init__(self, inner):
+        """
+        Middleware constructor - just takes inner application.
+        """
+        self.inner = inner
+
+    @database_sync_to_async
+    def get_user(self, jwt_value):
+        from django.contrib.auth.models import AnonymousUser
+        _user = AnonymousUser()
+        if not jwt_value:
+            return _user
+        try:
+            payload = jwt_decode_handler(jwt_value)
+        except:  # noqa
+            pass
+        else:
+            User = get_user_model()
+            username = jwt_get_username_from_payload(payload)
+
+            try:
+                temp_user = User.objects.get_by_natural_key(username)
+                if temp_user.is_active and not temp_user.delete_time:
+                    _user = temp_user
+            except User.DoesNotExist:
+                pass
+
+        return _user
+
+    async def __call__(self, scope, receive, send):
+        """
+        ASGI application; can insert things into the scope and run asynchronous
+        code.
+        """
+        # Copy scope to stop changes going upstream
+        scope = dict(scope)
+        query_param = parse_qs(scope["query_string"].decode())
+        token = query_param.get("token")
+        if token:
+            token = token[0]
+        scope["user"] = await self.get_user(token)
+
+        # Run the inner application along with the scope
+        return await super().__call__(scope, receive, send)

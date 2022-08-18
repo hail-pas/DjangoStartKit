@@ -12,7 +12,7 @@ from conf.enums import Environment
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 CONFIG_FILE_PREFIX = (
-    str(BASE_DIR.absolute()) + f'/conf/envs/{os.environ.get("environment", Environment.development.value.lower())}'
+    str(BASE_DIR.absolute()) + f'/conf/content/{os.environ.get("environment", Environment.development.value.lower())}'
 )
 
 
@@ -132,7 +132,12 @@ class LocalConfig(BaseSettings):
                 "HOST": self.RELATIONAL_DB.HOST,
                 "PORT": self.RELATIONAL_DB.PORT,
                 "OPTIONS": {"charset": "utf8mb4", "use_unicode": True},
-                "TEST": {"CHARSET": "utf8mb4", "COLLATION": "utf8mb4_bin"},
+                "TEST": {
+                    "ENGINE": "sqlite3",
+                    "NAME": f"test-{self.RELATIONAL_DB.DB}",
+                    "CHARSET": "utf8mb4",
+                    "COLLATION": "utf8mb4_bin",
+                },
             },
         }
 

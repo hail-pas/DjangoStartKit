@@ -22,35 +22,41 @@ class RoleListSerializer(RoleSerializer):
     pass
 
 
-class ProfileSerializer(CustomModelSerializer):
-    def validate_phone(self, value):  # noqa
-        if not check_china_mobile_phone(value):
-            raise ValidationError("请正确填写手机号")
-        return value
+class ProfileSimpleSerializer(CustomModelSerializer):
+    is_followed = serializers.SerializerMethodField(help_text="是否已关注")
+
+    def get_is_followed(self, obj):
+        request = self.context.get("request")
+        if request:
+            return models.FollowRelation.objects.filter(
+                followee=obj, followed=request.user.id, status=enums.Status.enable.value
+            ).exists()
 
     class Meta:
         model = models.Profile
-        read_only_fields = {
-            "id",
-            "is_active",
-            "last_login",
-            "create_time",
-            "update_time",
-        }
-        fields = read_only_fields.union({"username", "phone", "roles", "gender"})
+        fields = ["id", "avatar", "nickname", "is_followed"]
 
 
-class ProfileListSerializer(ProfileSerializer):
-    pass
+class ProfileListSerializer(CustomModelSerializer):
+    class Meta:
+        model = models.Profile
+        fields = {"is_active", "last_login", "username", "phone", "roles", "gender", "nickname", "avatar"}
 
 
-class ProfileCreateUpdateSerializer(ProfileSerializer):
+class ProfileSerializer(CustomModelSerializer):
+    class Meta:
+        model = models.Profile
+        exclude = ["roles", "operator"]
+
+
+class ProfileCreateUpdateSerializer(CustomModelSerializer):
     username = serializers.CharField(required=True, help_text="用户名", max_length=128)
     phone = serializers.CharField(
         required=True,
         help_text="手机号",
         validators=[
-            UniqueValidator(queryset=models.Profile._base_manager.all(), message=messages.AccountWithPhoneExisted)   # noqa
+            UniqueValidator(queryset=models.Profile._base_manager.all(), message=messages.AccountWithPhoneExisted)
+            # noqa
         ],
     )
     gender = serializers.ChoiceField(required=True, help_text="性别", choices=enums.GenderEnum.choices())
@@ -65,8 +71,7 @@ class ProfileCreateUpdateSerializer(ProfileSerializer):
 
     class Meta:
         model = models.Profile
-        read_only_fields = ProfileSerializer.Meta.read_only_fields
-        fields = ProfileSerializer.Meta.fields
+        fields = {"username", "phone", "roles", "gender", "nickname", "avatar"}
 
 
 class SystemSerializer(CustomModelSerializer):
@@ -114,3 +119,6 @@ def get_profile_system_resource(profile, instance, many: bool = True):
             return serializer.data
 
     return InnerSystemResourceSerializer(instance=instance, many=many).data
+
+
+ProfileSimpleSerializer

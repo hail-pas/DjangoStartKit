@@ -9,5 +9,8 @@ class RedisSearchIndex(str, Enum):
 @unique
 class RedisCacheKey(str, Enum):
     # Redis锁 Key
-    redis_lock = "redis_lock_{}"
+    ProfileOnline = "Profile:Online"  # bitmap
+    # {"Group": {"count": int, "message_id": int}, "Dialog": {"count": int, "message_id": int}} 数量和起始信息id
+    ProfileGroupUnreadInfo = "Profile:UnRead:{profile_id}:{chat_unique_id}"
+    RedisLock = "redis_lock_{}"
     AnalysisPrefix = RedisSearchIndex.AnalysisIndex.value + ":{}"

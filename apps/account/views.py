@@ -21,7 +21,7 @@ class ProfileViewSet(RestModelViewSet,):
     """
 
     serializer_class = serializers.ProfileSerializer
-    queryset = models.Profile.objects.filter(deleted=False, is_superuser=False)
+    queryset = models.Profile.objects.filter(delete_time__isnull=True, is_superuser=False)
     search_fields = ("phone", "username")
     filter_fields = (
         "roles",

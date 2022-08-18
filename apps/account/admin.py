@@ -63,7 +63,7 @@ for model in app_models:  # noqa
         list_display = list_display[:15]
     if len(list_filter) > 8:
         list_filter = list_filter[:8]
-    for one in ["ordering", "is_hidden", "deleted"]:
+    for one in ["ordering", "is_hidden", "delete_time"]:
         if one in list_display:
             list_display.remove(one)
             # list_display.append(one)

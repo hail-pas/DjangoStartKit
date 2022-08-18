@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import os
+import sys
 import logging
 from pathlib import Path
 from datetime import timedelta
@@ -51,9 +52,11 @@ INSTALLED_APPS = [
     "drf_yasg",  # >>> swagger
     "django_filters",  # >>> filter
     "captcha",
+    "channels",
     # apps
     "apps.account",
     "apps.info",
+    "apps.chat",
 ]
 
 MIDDLEWARE = [
@@ -93,11 +96,18 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "core.wsgi.application"
+ASGI_APPLICATION = "core.asgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = local_configs.DATABASES
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {"hosts": [(local_configs.REDIS.HOST, local_configs.REDIS.PORT)],},
+    },
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -165,6 +175,7 @@ REST_FRAMEWORK = {
         "rest_framework.parsers.MultiPartParser",
         "rest_framework.parsers.JSONParser",
     ],
+    "TEST_REQUEST_DEFAULT_FORMAT": "json",
 }
 
 # 跨域配置
