@@ -17,9 +17,4 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
 django.setup()
 from core.urls import websocket  # noqa
 
-application = ProtocolTypeRouter(
-    {
-        "http": AsgiHandler(),
-        "websocket": websocket
-    }
-)
+application = ProtocolTypeRouter({"http": AsgiHandler(), "websocket": websocket})

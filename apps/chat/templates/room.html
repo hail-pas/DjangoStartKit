@@ -9,15 +9,16 @@
 <textarea id="chat-log" cols="100" rows="20"></textarea><br>
 <input id="chat-message-input" type="text" size="100"><br>
 <input id="chat-message-submit" type="button" value="Send">
-{{ room_name|json_script:"room-name" }}
+{{ device_code|json_script:"device_code" }}
+{{ token|json_script:"token" }}
 <script>
-    const roomName = JSON.parse(document.getElementById('room-name').textContent);
-    const token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoyLCJ1c2VybmFtZSI6IjE4MDU5MjQ3MjEyIiwiZXhwIjoxNjg2NzMyMTY1LCJlbWFpbCI6IiIsInBob25lIjoiMTgwNTkyNDcyMTIifQ.pNndgR1yIiQIQeKRg4DFYsYwe57GBeRHSSomI_-QYgQ";
+    const deviceCode = JSON.parse(document.getElementById('device_code').textContent);
+    const token = JSON.parse(document.getElementById('token').textContent);
     const chatSocket = new WebSocket(
         'ws://'
         + window.location.host
-        + '/websocket.chat.dialog.'
-        + roomName
+        + '/websocket.chat.'
+        + deviceCode
         + "?token="
         + token
         {#+ '/'#}
@@ -26,12 +27,19 @@
     const reader = new FileReader();
 
     chatSocket.onmessage = function (e) {
-        let data;
         console.log("receiving: ", e)
-        e.data.text().then(res=>{
-             data = JSON.parse(res);
-             console.log("data: ", data);
-             document.querySelector('#chat-log').value += (data.payload.value + '\n');
+        let data;
+        e.data.text().then(res => {
+            data = JSON.parse(res);
+            console.log("data: ", data);
+            document.querySelector('#chat-log').value += (
+                data.payload.sender.id
+                + ':'
+                + data.payload.sender.nickname
+                + '\n'
+                + '      '
+                + data.payload.value + '\n'
+            );
         })
     };
 
@@ -50,7 +58,7 @@
         const messageInputDom = document.querySelector('#chat-message-input');
         const message = messageInputDom.value;
         const sendingData = {
-            'type': 'rich_text',
+            'type': 'text',
             'value': message
         };
         chatSocket.send(JSON.stringify(sendingData));

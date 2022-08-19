@@ -1,4 +1,4 @@
-from typing import Any, Optional, Union
+from typing import Any, Union, Optional
 
 from django.db import models
 from django.utils import timezone
@@ -21,6 +21,9 @@ class ProfileFieldMixin(models.Model):
 
 class UploadedFile(ProfileFieldMixin, LabelFieldMixin):
     file = models.FileField(verbose_name="文件", blank=False, null=False, upload_to=file_upload_to)
+    name = models.CharField(max_length=64, blank=True, null=True, help_text="文件名", verbose_name="文件名")
+    extension = models.CharField(max_length=32, blank=True, null=True, help_text="文件后缀", verbose_name="文件后缀")
+    size = models.IntegerField(default=0, help_text="文件大小", verbose_name="文件大小")
     create_time = models.DateTimeField("创建时间", auto_now_add=True, help_text="创建时间", editable=False)
 
     def __str__(self):
@@ -56,7 +59,9 @@ class GroupMembership(BaseModel, ProfileFieldMixin, StatusFieldMixin):
 
     @staticmethod
     def get_group_membership(profile_id: int, group_id: int):
-        return GroupMembership.objects.filter(profile_id=profile_id, group_id=group_id, status=enums.Status.enable.value).first()
+        return GroupMembership.objects.filter(
+            profile_id=profile_id, group_id=group_id, status=enums.Status.enable.value
+        ).first()
 
     class Meta:
         verbose_name = "圈子与用户"
@@ -80,8 +85,12 @@ class GroupMessage(ProfileFieldMixin):
     )
     value = models.TextField(help_text="消息体", verbose_name="消息体")
     file = models.ForeignKey(
-        UploadedFile, related_name="group_message", on_delete=models.DO_NOTHING, verbose_name="文件", blank=True,
-        null=True
+        UploadedFile,
+        related_name="group_message",
+        on_delete=models.DO_NOTHING,
+        verbose_name="文件",
+        blank=True,
+        null=True,
     )
     create_time = models.DateTimeField("创建时间", auto_now_add=True, help_text="创建时间", editable=False, db_index=True)
 
@@ -92,24 +101,28 @@ class GroupMessage(ProfileFieldMixin):
 
 
 class Dialog(BaseModel, StatusFieldMixin):
-    left_user = models.ForeignKey(to=Profile, verbose_name="用户", help_text="用户", on_delete=models.CASCADE,
-                                  related_name="as_left_user")  # noqa
-    right_user = models.ForeignKey(to=Profile, verbose_name="用户", help_text="用户", on_delete=models.CASCADE,
-                                   related_name="as_right_user")
+    left_user = models.ForeignKey(
+        to=Profile, verbose_name="用户", help_text="用户", on_delete=models.CASCADE, related_name="as_left_user"
+    )  # noqa
+    right_user = models.ForeignKey(
+        to=Profile, verbose_name="用户", help_text="用户", on_delete=models.CASCADE, related_name="as_right_user"
+    )
 
     def __str__(self):
         return f"{self.left_user.username} - {self.right_user.username}"
 
     @classmethod
-    def dialog_exists(cls, left_user_id: int, right_user_id: int) -> Optional["Dialog"]:
+    def get_dialog(cls, left_user_id: int, right_user_id: int) -> Optional["Dialog"]:
         return cls.objects.filter(
-            Q(left_user_id=left_user_id, right_user_id=right_user_id) | Q(left_user_id=right_user_id,
-                                                                          right_user_id=left_user_id)
+            Q(left_user_id=left_user_id, right_user_id=right_user_id)
+            | Q(left_user_id=right_user_id, right_user_id=left_user_id)
         ).first()
 
     @classmethod
     def create_or_update(cls, left_user_id: int, right_user_id: int) -> "Dialog":
-        exists = cls.dialog_exists(left_user_id, right_user_id)
+        if int(left_user_id) == int(right_user_id):
+            raise RuntimeError("Cannot dialog with self")
+        exists = cls.get_dialog(left_user_id, right_user_id)
         if not exists:
             exists = cls.objects.create(left_user_id=left_user_id, right_user_id=right_user_id)
         else:
@@ -122,8 +135,9 @@ class Dialog(BaseModel, StatusFieldMixin):
 
     @staticmethod
     def get_dialogs_for_user(user: Profile):
-        return Dialog.objects.filter(Q(left_user=user) | Q(right_user=user)).values_list("left_user_id",
-                                                                                         "right_user_id")
+        return Dialog.objects.filter(Q(left_user=user) | Q(right_user=user)).values_list(
+            "left_user_id", "right_user_id"
+        )
 
     class Meta:
         unique_together = (("left_user", "right_user"), ("right_user", "left_user"))
@@ -132,10 +146,12 @@ class Dialog(BaseModel, StatusFieldMixin):
 
 
 class DialogMessage(models.Model):
-    sender = models.ForeignKey(to=Profile, verbose_name="用户", help_text="用户", on_delete=models.CASCADE,
-                               related_name="sent_message")
-    receiver = models.ForeignKey(to=Profile, verbose_name="用户", help_text="用户", on_delete=models.CASCADE,
-                                 related_name="received_message")
+    sender = models.ForeignKey(
+        to=Profile, verbose_name="用户", help_text="用户", on_delete=models.CASCADE, related_name="sent_message"
+    )
+    receiver = models.ForeignKey(
+        to=Profile, verbose_name="用户", help_text="用户", on_delete=models.CASCADE, related_name="received_message"
+    )
     type = models.CharField(
         "消息类型",
         max_length=16,
@@ -145,8 +161,12 @@ class DialogMessage(models.Model):
     )
     value = models.TextField(help_text="消息体", verbose_name="消息体")
     file = models.ForeignKey(
-        UploadedFile, related_name="dialog_message", on_delete=models.DO_NOTHING, verbose_name="文件", blank=True,
-        null=True
+        UploadedFile,
+        related_name="dialog_message",
+        on_delete=models.DO_NOTHING,
+        verbose_name="文件",
+        blank=True,
+        null=True,
     )
     create_time = models.DateTimeField("创建时间", auto_now_add=True, help_text="创建时间", editable=False, db_index=True)
     read = models.BooleanField(verbose_name="是否已读", default=False, help_text="是否已读")

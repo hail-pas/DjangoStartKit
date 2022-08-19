@@ -13,12 +13,11 @@ urlpatterns = router.urls
 
 urlpatterns += [
     path("", views.index, name="index"),
-    path("<str:room_name>/", views.room, name="room"),
+    path("<str:phone>/<str:device_code>", views.room, name="room"),
 ]
 
-websocket_url_prefix = "websocket.chat."
+websocket_url_prefix = "websocket."
 
 websocket_urlpatterns = [
-    re_path(websocket_url_prefix + r"group.(?P<identifier>\d+)$", consumers.GroupChatConsumer.as_asgi()),
-    re_path(websocket_url_prefix + r"dialog.(?P<identifier>\d+)$", consumers.DialogConsumer.as_asgi()),
+    re_path(websocket_url_prefix + r"chat.(?P<device_code>\w+)", consumers.ChatConsumer.as_asgi()),
 ]

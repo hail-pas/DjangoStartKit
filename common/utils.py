@@ -217,7 +217,7 @@ def make_redis_lock(get_redis: Callable[[], Redis], timeout: int = 60):
     usage:
     >>> from storages.redis import keys
     >>> r_lock = make_redis_lock(get_sync_redis)
-    >>> with r_lock.lock(keys.RedisCacheKey.RedisLock.format("name")):
+    >>> with r_lock.lock(keys.RedisCacheKey.RedisLockKey.format("name")):
     >>>    pass
     """
     redis = None

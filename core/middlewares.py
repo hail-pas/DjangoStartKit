@@ -2,18 +2,21 @@ from urllib.parse import parse_qs
 
 import ujson
 from channels.db import database_sync_to_async
-from channels.middleware import BaseMiddleware
-from django.contrib.auth import get_user_model
 from django.http import HttpRequest, HttpResponse
 from rest_framework import status, exceptions
+from channels.middleware import BaseMiddleware
+from django.contrib.auth import get_user_model
 from django.utils.encoding import smart_text
 from rest_framework.request import Request
 from django.utils.translation import ugettext as _
 from rest_framework.exceptions import ErrorDetail, ValidationError, AuthenticationFailed
 from rest_framework_jwt.settings import api_settings
 from rest_framework.authentication import get_authorization_header
-from rest_framework_jwt.authentication import JSONWebTokenAuthentication, jwt_decode_handler, \
-    jwt_get_username_from_payload
+from rest_framework_jwt.authentication import (
+    JSONWebTokenAuthentication,
+    jwt_decode_handler,
+    jwt_get_username_from_payload,
+)
 
 from common.types import ContentTypeEnum, RequestMethodEnum
 from apps.responses import RestResponse
@@ -204,7 +207,6 @@ class AuthenticationMiddlewareJWT:
 
 
 class ChannelsAuthenticationMiddlewareJWT(BaseMiddleware):
-
     def __init__(self, inner):
         """
         Middleware constructor - just takes inner application.
@@ -214,6 +216,7 @@ class ChannelsAuthenticationMiddlewareJWT(BaseMiddleware):
     @database_sync_to_async
     def get_user(self, jwt_value):
         from django.contrib.auth.models import AnonymousUser
+
         _user = AnonymousUser()
         if not jwt_value:
             return _user

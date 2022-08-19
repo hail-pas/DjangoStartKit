@@ -77,13 +77,18 @@ class JSONFormatter(logging.Formatter):
     """
 
     #  "exec": "%(pathname)s", "func": "%(funcName)s"
+    simple_format = (
+        '{"asctime": "%(asctime)s", "levelname": "%(levelname)s", '  # "process": %(process)d,
+        '"message": "%(message)s"}'  # "filename": "%(pathname)s", "name": "%(funcName)s", "lineno": %(lineno)d,
+    )
+
     format = (
         '{"asctime": "%(asctime)s", "process": %(process)d, "levelname": "%(levelname)s", '
         '"filename": "%(pathname)s", "name": "%(funcName)s", "lineno": %(lineno)d, "message": "%(message)s"}'
     )
     FORMATS = {
-        logging.DEBUG: format,
-        logging.INFO: format,
+        logging.DEBUG: simple_format,
+        logging.INFO: simple_format,
         logging.WARNING: format,
         logging.ERROR: format,
         logging.CRITICAL: format,
