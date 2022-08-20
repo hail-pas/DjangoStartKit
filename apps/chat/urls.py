@@ -13,7 +13,7 @@ urlpatterns = router.urls
 
 urlpatterns += [
     path("", views.index, name="index"),
-    path("<str:phone>/<str:device_code>", views.room, name="room"),
+    path("online/<str:phone>/<str:device_code>/<str:chat_type>/<str:receiver_id>", views.chat_online),
 ]
 
 websocket_url_prefix = "websocket."

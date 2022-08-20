@@ -9,11 +9,17 @@
 <textarea id="chat-log" cols="100" rows="20"></textarea><br>
 <input id="chat-message-input" type="text" size="100"><br>
 <input id="chat-message-submit" type="button" value="Send">
+{{ profile_info|json_script:"profile_info" }}
 {{ device_code|json_script:"device_code" }}
 {{ token|json_script:"token" }}
+{{ chat_type|json_script:"chat_type" }}
+{{ receiver_id|json_script:"receiver_id" }}
 <script>
+    const profile_info = JSON.parse(document.getElementById('profile_info').textContent);
     const deviceCode = JSON.parse(document.getElementById('device_code').textContent);
     const token = JSON.parse(document.getElementById('token').textContent);
+    const chatType = JSON.parse(document.getElementById('chat_type').textContent)
+    const receiverId = JSON.parse(document.getElementById('receiver_id').textContent)
     const chatSocket = new WebSocket(
         'ws://'
         + window.location.host
@@ -32,14 +38,16 @@
         e.data.text().then(res => {
             data = JSON.parse(res);
             console.log("data: ", data);
-            document.querySelector('#chat-log').value += (
-                data.payload.sender.id
-                + ':'
-                + data.payload.sender.nickname
-                + '\n'
-                + '      '
-                + data.payload.value + '\n'
-            );
+            if (data.sender.id !== "df-lanka") {
+                document.querySelector('#chat-log').value += (
+                    data.sender.id
+                    + ':'
+                    + data.sender.nickname
+                    + '\n'
+                    + '      '
+                    + data.payload.value + '\n'
+                );
+            }
         })
     };
 
@@ -57,12 +65,17 @@
     document.querySelector('#chat-message-submit').onclick = function (e) {
         const messageInputDom = document.querySelector('#chat-message-input');
         const message = messageInputDom.value;
-        const sendingData = {
-            'type': 'text',
-            'value': message
-        };
-        chatSocket.send(JSON.stringify(sendingData));
-        console.log("sending", sendingData)
+        const sendingData = message;
+        chatSocket.send(JSON.stringify({
+            "chat_type": chatType,
+            "receiver_id": receiverId,
+            "type": "text",
+            "payload":
+                {
+                    "value": message
+                }
+        }));
+        console.log("sending", JSON.stringify(sendingData))
         messageInputDom.value = '';
     };
 </script>

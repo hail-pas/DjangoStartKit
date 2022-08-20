@@ -2,7 +2,7 @@ import logging
 from typing import Set, Union
 
 from storages.redis import AsyncRedisUtil, keys
-from apps.chat.models import Dialog, UploadedFile, GroupMembership
+from apps.chat.models import Group, Dialog, UploadedFile, GroupMembership
 from apps.chat.consumers import defines
 from apps.chat.consumers.mixins import ServerReply
 from apps.chat.consumers.db_operations import (
@@ -53,7 +53,7 @@ class BaseHandler:
             chat_instance = await get_chat_instance(chat_type, consumer.profile.pk, receiver_id)
             if not chat_instance:
                 await consumer.send_error(
-                    code=defines.ServiceCode.ReceiverNotExists, message=defines.ServiceMessage.UnSupportedType
+                    code=defines.ServiceCode.ReceiverNotExists, message=defines.ServiceMessage.ReceiverNotExists
                 )
                 logger.warning(f"Receiver doesnt exists: {chat_type}")
                 return
@@ -67,31 +67,32 @@ class BaseHandler:
         await getattr(self, f"handle_{message_type.value}")(consumer, chat_type, receiver, content, **kwargs)
 
     @staticmethod
-    async def group_save_and_send(consumer, receiver, chat_type, message_type, value, file_id, payload):
-        await save_group_message(
-            group_id=receiver.group_id,
-            profile_id=receiver.profile_id,
+    async def group_save_and_send(consumer, receiver: Group, chat_type, message_type, value, payload, file_id=None):
+        message = await save_group_message(
+            group_id=receiver.id,
+            profile_id=consumer.profile.id,
             type_=message_type.value,
             value=value,
             file_id=file_id,
         )
         await consumer.channel_layer.group_send(
-            defines.ChatContextFormatKey.Group % receiver.id,
+            defines.ChatContextFormatKey.Group.value % receiver.id,
             {
                 "type": "group.message",
                 "payload": consumer.gen_reply(
-                    context=defines.ChatContextFormatKey.Group % receiver.id,
-                    chat_type=chat_type,
+                    context=defines.ChatContextFormatKey.Group.value % receiver.id,
+                    chat_type=chat_type.value,
                     sender_info=consumer.gen_sender_info(),
-                    type_=message_type,
+                    type_=message_type.value,
                     payload=payload,
                 ),
             },
         )
+        await consumer.send_message_sent(message_id=message.id)
 
     @staticmethod
-    async def dialog_save_and_send(consumer, receiver_id, chat_type, message_type, value, file_id, payload):
-        await save_dialog_message(
+    async def dialog_save_and_send(consumer, receiver_id, chat_type, message_type, value, payload, file_id=None):
+        message = await save_dialog_message(
             sender_id=consumer.profile.id,
             receiver_id=receiver_id,
             type_=message_type.value,
@@ -110,19 +111,21 @@ class BaseHandler:
                         "type": "group.message",
                         "payload": consumer.gen_reply(
                             context=channel_name,
-                            chat_type=chat_type,
+                            chat_type=chat_type.value,
                             sender_info=consumer.gen_sender_info(),
-                            type_=message_type,
+                            type_=message_type.value,
                             payload=payload,
                         ),
                     },
                 )
 
+        await consumer.send_message_sent(message_id=message.id)
+
     async def payload_value_handle(
         self,
         consumer: ServerReply,
         chat_type: defines.ChatType,
-        receiver: Union[Dialog, GroupMembership],
+        receiver: Union[Dialog, Group],
         message_type,
         content: dict,
         **kwargs,
@@ -137,7 +140,7 @@ class BaseHandler:
             raise defines.ServiceException(
                 code=defines.ServiceCode.ValueInvalid, message=defines.ServiceMessage.ValueInvalid
             )
-        payload = defines.PayloadText(code=defines.ServiceCode.Success, value=value)
+        payload = defines.PayloadText(code=defines.ServiceCode.Success.value, value=value)
         if chat_type == defines.ChatType.Group:
             await self.group_save_and_send(consumer, receiver, chat_type, message_type, value, payload=payload)
         elif chat_type == defines.ChatType.Dialog:
@@ -164,7 +167,9 @@ class BaseHandler:
             raise defines.ServiceException(
                 code=defines.ServiceCode.UnSupportedType, message=defines.ServiceMessage.UnSupportedType % "payload"
             )
-        payload = defines.PayloadLocation(code=defines.ServiceCode.Success, longitude=longitude, latitude=latitude)
+        payload = defines.PayloadLocation(
+            code=defines.ServiceCode.Success.value, longitude=longitude, latitude=latitude
+        )
         if chat_type == defines.ChatType.Group:
             await self.group_save_and_send(
                 consumer,
@@ -229,7 +234,7 @@ class BaseHandler:
 
         value = file_instance.file.url
         payload = defines.PayLoadFile(
-            code=defines.ServiceCode.Success,
+            code=defines.ServiceCode.Success.value,
             id=file_id,
             url=value,
             name=file_instance.name,

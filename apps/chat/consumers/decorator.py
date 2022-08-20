@@ -1,6 +1,9 @@
+import logging
 import functools
 
 from apps.chat.consumers import defines
+
+logger = logging.getLogger("chat.decorators")
 
 
 def authenticate_required():
@@ -8,6 +11,7 @@ def authenticate_required():
         @functools.wraps(func)
         async def wrapped(self, *args, **kwargs):
             if not self.scope["user"].is_authenticated:
+                logger.warning("connection rejected with unauthorized reason")
                 await self.interrupt(defines.ServiceCode.Unauthorized)
             return await func(self, *args, **kwargs)
 

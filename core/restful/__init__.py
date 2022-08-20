@@ -89,7 +89,7 @@ class JSONFormatter(logging.Formatter):
     FORMATS = {
         logging.DEBUG: simple_format,
         logging.INFO: simple_format,
-        logging.WARNING: format,
+        logging.WARNING: simple_format,
         logging.ERROR: format,
         logging.CRITICAL: format,
     }

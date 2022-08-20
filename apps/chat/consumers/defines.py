@@ -201,6 +201,8 @@ class ServiceReplyData(TypedDict):
             PayloadMessageNewUnRead,
         ]
     ]
+    # TODO: 增加消息时间
+    # time: str
 
 
 @enum.unique

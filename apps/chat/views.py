@@ -1,21 +1,35 @@
 from django.shortcuts import render
 from rest_framework.permissions import AllowAny
-from rest_framework_jwt.serializers import jwt_payload_handler, jwt_encode_handler
+from rest_framework_jwt.serializers import jwt_encode_handler, jwt_payload_handler
 
-from apps.account.models import Profile
 from apps.chat import models, serializers
 from common.drf.mixins import RestModelViewSet
+from apps.account.models import Profile
 
 
 def index(request):
     return render(request, "index.html")
 
 
-def room(request, phone, device_code):
+def chat_online(request, phone, device_code, chat_type, receiver_id):
     user = Profile.objects.filter(phone=phone).first()
     if user:
         payload = jwt_payload_handler(user)
-        return render(request, "room.html", {"device_code": device_code, "token": jwt_encode_handler(payload)})
+        if chat_type == "Dialog":
+            receiver = Profile.objects.filter(phone=receiver_id)
+            if not receiver:
+                return render(request, "index.html")
+            receiver_id = receiver.id
+        return render(
+            request,
+            "chat_online.html",
+            {
+                "device_code": device_code,
+                "token": jwt_encode_handler(payload),
+                "chat_type": chat_type,
+                "receiver_id": receiver_id,
+            },
+        )
     else:
         return render(request, "index.html")
 

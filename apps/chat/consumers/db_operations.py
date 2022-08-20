@@ -1,4 +1,4 @@
-from typing import Any, Set, Tuple, Union, Optional, Awaitable
+from typing import Any, Set, List, Tuple, Union, Optional, Awaitable
 
 from channels.db import database_sync_to_async
 from django.core.exceptions import ValidationError
@@ -18,14 +18,14 @@ ChatReceiverModel = {defines.ChatType.Group: Group.objects.get, defines.ChatType
 
 @database_sync_to_async
 def get_chat_instance(
-    chat_type: defines.ChatType, profile_id: int, reveiver_id: int
+    chat_type: defines.ChatType, profile_id: int, receiver_id: int
 ) -> Awaitable[Optional[Union[GroupMembership, Dialog]]]:
-    return ChatTypeInstanceModel[chat_type](profile_id, reveiver_id)  # noqa
+    return ChatTypeInstanceModel[chat_type](profile_id, receiver_id)  # noqa
 
 
 @database_sync_to_async
-def get_receiver(chat_type: defines.ChatType, reveiver_id: int) -> Awaitable[Union[Profile, Group]]:
-    return ChatReceiverModel[chat_type](pk=reveiver_id)
+def get_receiver(chat_type: defines.ChatType, receiver_id: int) -> Awaitable[Union[Profile, Group]]:
+    return ChatReceiverModel[chat_type](pk=receiver_id)
 
 
 @database_sync_to_async
@@ -40,6 +40,11 @@ def save_dialog_message(sender_id, receiver_id, type_, value, file_id=None) -> A
     return DialogMessage.objects.create(
         sender_id=sender_id, receiver_id=receiver_id, type=type_, value=value, file_id=file_id
     )
+
+
+@database_sync_to_async
+def get_group_ids_with_profile_pk(profile_id) -> Awaitable[List]:
+    return GroupMembership.objects.filter(profile_id=profile_id).values_list("group_id")
 
 
 @database_sync_to_async
