@@ -89,9 +89,11 @@ class MessageType(StrEnumMore):
     picture = ("picture", "图片")
     video = ("video", "视频")
     audio = ("audio", "音频")
-    link = ("link", "链接")
+    # link = ("link", "链接") # 特殊的文本
     file = ("file", "文件")  # other File
     location = ("location", "定位")
+    share = ("share", "分享")  # 分享好友、群组
+    # sticker = ("sticker", "表情包")
 
 
 # ==================================================

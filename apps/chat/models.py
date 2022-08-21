@@ -83,15 +83,7 @@ class GroupMessage(ProfileFieldMixin):
         default=enums.MessageType.text.value,
         help_text="消息类型",
     )
-    value = models.TextField(help_text="消息体", verbose_name="消息体")
-    file = models.ForeignKey(
-        UploadedFile,
-        related_name="group_message",
-        on_delete=models.DO_NOTHING,
-        verbose_name="文件",
-        blank=True,
-        null=True,
-    )
+    value = models.JSONField(help_text="消息体", verbose_name="消息体")
     create_time = models.DateTimeField("创建时间", auto_now_add=True, help_text="创建时间", editable=False, db_index=True)
 
     class Meta:
@@ -146,6 +138,9 @@ class Dialog(BaseModel, StatusFieldMixin):
 
 
 class DialogMessage(models.Model):
+    dialog = models.ForeignKey(
+        to=Dialog, verbose_name="好友关系", help_text="好友关系", on_delete=models.CASCADE, related_name="messages"
+    )
     sender = models.ForeignKey(
         to=Profile, verbose_name="用户", help_text="用户", on_delete=models.CASCADE, related_name="sent_message"
     )
@@ -159,15 +154,7 @@ class DialogMessage(models.Model):
         default=enums.MessageType.text.value,
         help_text="消息类型",
     )
-    value = models.TextField(help_text="消息体", verbose_name="消息体")
-    file = models.ForeignKey(
-        UploadedFile,
-        related_name="dialog_message",
-        on_delete=models.DO_NOTHING,
-        verbose_name="文件",
-        blank=True,
-        null=True,
-    )
+    value = models.JSONField(help_text="消息体", verbose_name="消息体")
     create_time = models.DateTimeField("创建时间", auto_now_add=True, help_text="创建时间", editable=False, db_index=True)
     read = models.BooleanField(verbose_name="是否已读", default=False, help_text="是否已读")
 

@@ -16,7 +16,7 @@ def chat_online(request, phone, device_code, chat_type, receiver_id):
     if user:
         payload = jwt_payload_handler(user)
         if chat_type == "Dialog":
-            receiver = Profile.objects.filter(phone=receiver_id)
+            receiver = Profile.objects.filter(phone=receiver_id).first()
             if not receiver:
                 return render(request, "index.html")
             receiver_id = receiver.id

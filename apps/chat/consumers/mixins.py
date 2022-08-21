@@ -1,18 +1,30 @@
 import logging
 from abc import ABC
-from typing import Union, Optional
+from typing import Any, Union, Optional
+from datetime import datetime
 
 import ujson
 from channels.exceptions import StopConsumer
 from channels_redis.core import RedisChannelLayer
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
+from common.utils import COMMON_TIME_STRING
 from storages.redis import AsyncRedisUtil, keys
 from apps.chat.models import Group
 from apps.account.models import Profile
 from apps.chat.consumers import defines
+from apps.chat.consumers.defines import (
+    reply,
+    device,
+    service,
+    chat_type,
+    exceptions,
+    message_type,
+    message_content,
+    channels_message,
+)
 from apps.chat.consumers.decorator import authenticate_required
-from apps.chat.consumers.db_operations import get_group_ids_with_profile_pk
+from apps.chat.consumers.db_operations import get_system_sender
 
 logger = logging.getLogger("consumer.mixins")
 
@@ -26,8 +38,8 @@ class AsyncUJsonWebsocketConsumer(AsyncJsonWebsocketConsumer):
     async def encode_json(cls, content):
         return ujson.dumps(content)
 
-    async def interrupt(self, code: defines.ServiceCode):
-        logger.debug("interrupting.....")
+    async def interrupt(self, code: service.Code):
+        logger.warning(f"disconnect with code: {code.value}")
         await self.disconnect(code.value)
         raise StopConsumer()
 
@@ -40,8 +52,8 @@ class ConnectManageConsumer(AsyncUJsonWebsocketConsumer):
     """
 
     profile: Profile
-    device_code: defines.DeviceCode
-    receiver: Union[Profile, Group, defines.SenderInfo]
+    device_code: device.DeviceCode
+    receiver: Union[Profile, Group, message_content.SenderInfo]
     channel_layer: RedisChannelLayer
     channel_name: str
 
@@ -50,16 +62,16 @@ class ConnectManageConsumer(AsyncUJsonWebsocketConsumer):
         profile = self.scope["user"]
         self.profile = profile
         device_code = self.scope["url_route"]["kwargs"]["device_code"]
-        if device_code not in [defines.DeviceCode.mobile.value, defines.DeviceCode.web.value]:
+        if device_code not in [device.DeviceCode.mobile.value, device.DeviceCode.web.value]:
             logger.warning(f"{profile.id} connect with unknown device_code: {device_code}")
-            await self.interrupt(code=defines.ServiceCode.DeviceRestrict)
-        self.device_code = defines.DeviceCode(device_code)
-        if await AsyncRedisUtil.r.get(
-            keys.RedisCacheKey.ProfileConnectionKey.format(profile_id=self.profile.id, device_code=device_code)
-        ):
-            # 已建立连接
-            logger.warning(f"{profile.id} connect with duplicate device_code: {device_code}")
-            await self.interrupt(code=defines.ServiceCode.DeviceRestrict)
+            await self.interrupt(code=service.Code.DeviceRestrict)
+        self.device_code = device.DeviceCode(device_code)
+        # if await AsyncRedisUtil.r.get(
+        #     keys.RedisCacheKey.ProfileConnectionKey.format(profile_id=self.profile.id, device_code=device_code)
+        # ):
+        #     # 已建立连接
+        #     logger.warning(f"{profile.id} connect with duplicate device_code: {device_code}")
+        #     await self.interrupt(code=service.Code.DeviceRestrict)
 
     async def post_accept(self):
         # 设置在线
@@ -75,13 +87,13 @@ class ConnectManageConsumer(AsyncUJsonWebsocketConsumer):
             expire=65,
         )
         # 加入系统群组
-        await self.channel_layer.group_add(defines.ChatContextFormatKey.SystemCenter.value, self.channel_name)
+        await self.channel_layer.group_add(chat_type.ChatTypeContextFormatKey.SystemCenter.value, self.channel_name)
         # 加入用户的群组
         for group_id in await AsyncRedisUtil.r.smembers(
             keys.RedisCacheKey.ProfileGroupSet.format(profile_id=self.profile.id), encoding="utf-8"
         ):
             await self.channel_layer.group_add(
-                defines.ChatContextFormatKey.Group.value % int(group_id), self.channel_name
+                chat_type.ChatContextFormatKey.Group.value % int(group_id), self.channel_name
             )
         logger.info(f"User {self.profile.id} connected with device_code: {self.device_code}")
 
@@ -91,20 +103,21 @@ class ConnectManageConsumer(AsyncUJsonWebsocketConsumer):
         await self.post_accept()
 
     async def disconnect(self, close_code):
-        if close_code not in [defines.ServiceCode.Unauthorized.value, defines.ServiceCode.DeviceRestrict.value]:
+        if close_code not in [service.Code.Unauthorized.value, service.Code.DeviceRestrict.value]:
             # 用户离线
             logger.info(
-                f"User {self.profile.pk} device {self.device_code.value} disconnected, removing channel {self.channel_name}"
+                f"User {self.profile.pk} device {self.device_code.value} disconnected, "
+                f"removing channel {self.channel_name}"
             )
             # 离开系统群组
-            await self.channel_layer.group_discard(defines.ChatContextFormatKey.SystemCenter.value, self.channel_name)
+            await self.channel_layer.group_discard(chat_type.ChatContextFormatKey.SystemCenter.value, self.channel_name)
 
             # 离开用户群组
             for group_id in await AsyncRedisUtil.r.smembers(
                 keys.RedisCacheKey.ProfileGroupSet.format(profile_id=self.profile.id), encoding="utf-8"
             ):
                 await self.channel_layer.group_discard(
-                    defines.ChatContextFormatKey.Group.value % int(group_id), self.channel_name
+                    chat_type.ChatContextFormatKey.Group.value % int(group_id), self.channel_name
                 )
             # 删除连接信息
             await AsyncRedisUtil.r.delete(
@@ -125,173 +138,160 @@ class ReplyMixin(ConnectManageConsumer, ABC):
     """
 
     # Receive message from the group
-    async def group_message(self, message: defines.ChannelsMessageData):
+    async def group_message(self, message: channels_message.ChannelsMessageData):
         # Send message to WebSocket
         logger.debug(f"message is: {message}")
-        await self.send(bytes_data=ujson.dumps(message["payload"]).encode())
-
-    def gen_reply_bytes(self, context, chat_type, sender_info, type_, payload=None):
-        return ujson.dumps(self.gen_reply(context, chat_type, sender_info, type_, payload)).encode()
+        await self.send(bytes_data=ujson.dumps(message["content"]).encode())
 
     @staticmethod
-    def gen_reply(context, chat_type, sender_info, type_, payload=None):
-        reply_data = defines.ServiceReplyData(
-            context=context, chat_type=chat_type, sender=sender_info, type=type_, payload=payload,
+    def gen_reply(
+        code: service.Code,
+        message_type: message_type.MessageType,
+        chat_type: chat_type.ChatType,
+        sender_info: message_content.SenderInfo,
+        context: str,
+        time: datetime,
+        content=None,
+    ):
+        reply_data = reply.ServiceReplyData(
+            code=code.value,  # noqa
+            message_type=message_type.value,
+            chat_type=chat_type.value,
+            sender=sender_info,
+            context=context,
+            time=time.strftime(COMMON_TIME_STRING),
+            content=content,
         )
         logger.debug(f"reply data is: {reply_data}")
         return reply_data
 
-    def gen_sender_info(self, is_system: bool = False) -> defines.SenderInfo:
+    def gen_reply_bytes(
+        self,
+        code: service.Code,
+        message_type: message_type.MessageType,
+        chat_type: chat_type.ChatType,
+        sender_info: message_content.SenderInfo,
+        context: str,
+        time: datetime,
+        content: Any = None,
+    ):
+        return ujson.dumps(self.gen_reply(code, message_type, chat_type, sender_info, context, time, content)).encode()
+
+    async def send_error(self, code: service.Code, message: Optional[str]):
+        await self.send(
+            bytes_data=self.gen_reply_bytes(
+                code=code,
+                message_type=message_type.MessageType.Error,
+                chat_type=chat_type.ChatType.SystemCenter,
+                sender_info=await get_system_sender(),
+                context=chat_type.ChatTypeContextFormatKey.SystemCenter.value,
+                time=datetime.now(),
+                content=message,
+            )
+        )
+
+    async def gen_sender_info(self, is_system: bool = False) -> message_content.SenderInfo:
         if is_system:
-            return defines.SystemInfo
-        avatar = ""
+            return await get_system_sender()
+        avatar = None
         # 数据库的信息更新不会同步到 consumer 中的 profile
         # 不缓存直接获取 或者 使用 redis
         if self.profile.avatar:
             avatar = self.profile.avatar.url
-        return defines.SenderInfo(id=str(self.profile.id), avatar=avatar, nickname=self.profile.nickname)
+        return message_content.SenderInfo(id=str(self.profile.id), avatar=avatar, nickname=self.profile.nickname)
 
-    @staticmethod
-    def gen_error_payload(code: defines.ServiceCode, message: Optional[str]):
-        return defines.PayloadError(code=code, message=message)
-
-    async def send_error(self, code: defines.ServiceCode, message: Optional[str]):
+    async def send_text(
+        self,
+        chat_type: chat_type.ChatType,
+        sender_info: message_content.SenderInfo,
+        context: str,
+        time: datetime,
+        content: Any = None,
+    ):
         await self.send(
             bytes_data=self.gen_reply_bytes(
-                context=defines.ChatContextFormatKey.SystemCenter.value,
-                chat_type=defines.ChatType.SystemCenter.value,
-                sender_info=defines.SystemInfo,
-                type_=defines.MessageType.Error.value,
-                payload=self.gen_error_payload(code, message),
-            )
-        )
-
-    @staticmethod
-    def gen_text_payload(text: str):
-        return defines.PayloadText(code=defines.ServiceCode.Success, value=text)
-
-    async def send_text(self, context, chat_type, sender_info, text: str):
-        await self.send(
-            bytes_data=self.gen_reply_bytes(
-                context, chat_type, sender_info, defines.MessageType.Text.value, self.gen_text_payload(text)
+                code=service.Code.Success,
+                message_type=message_type.MessageType.Text,
+                chat_type=chat_type,
+                sender_info=sender_info,
+                context=context,
+                time=time,
+                content=content,
             )
         )
 
     async def send_file(
         self,
-        context,
-        chat_type,
-        sender_info: defines.SenderInfo,
-        type_: Union[defines.MessageType.Picture],
+        message_type: message_type.MessageType,
+        chat_type: chat_type.ChatType,
+        sender_info: message_content.SenderInfo,
+        context: str,
+        time: datetime,
         id_: int,
         url: str,
-        name: str,
+        label: Optional[str],
         size: int,
         extension: str,
     ):
         await self.send(
             bytes_data=self.gen_reply_bytes(
-                context,
-                chat_type,
-                sender_info,
-                type_,
-                defines.PayLoadFile(
-                    code=defines.ServiceCode.Success.value, id=id_, url=url, name=name, size=size, extension=extension
+                code=service.Code.Success,
+                message_type=message_type,
+                chat_type=chat_type,
+                sender_info=sender_info,
+                context=context,
+                time=time,
+                content=message_content.FileContent(id=id_, url=url, label=label, size=size, extension=extension),
+            )
+        )
+
+    async def send_event_message(self, message_type: message_type.MessageType):
+        """
+        Online、Offline、Join、Typing、StopTyping
+        """
+        await self.send(
+            bytes_data=self.gen_reply_bytes(
+                code=service.Code.Success,
+                message_type=message_type,
+                chat_type=chat_type.ChatType.SystemCenter,
+                sender_info=await get_system_sender(),
+                context=chat_type.ChatTypeContextFormatKey.SystemCenter.value,
+                time=datetime.now(),
+            )
+        )
+
+    async def send_message_status(
+        self,
+        message_type: message_type.MessageType,
+        user_info: message_content.UserIdentifier,
+        chat_instance_id: int,
+        message_id: int,
+    ):
+        await self.send(
+            bytes_data=self.gen_reply_bytes(
+                code=service.Code.Success,
+                message_type=message_type,
+                chat_type=chat_type.ChatType.SystemCenter,
+                sender_info=await get_system_sender(),
+                context=chat_type.ChatTypeContextFormatKey.SystemCenter.value,
+                time=datetime.now(),
+                content=message_content.MessageIDContent(
+                    user_info=user_info, chat_instance_id=chat_instance_id, message_id=message_id
                 ),
             )
         )
 
-    async def send_online(self, user_info: defines.BaseIdentifierInfo):
+    async def send_message_unread_count(self, chat_instance_id: int, message_id: int, count: int):
         await self.send(
             bytes_data=self.gen_reply_bytes(
-                defines.ChatContextFormatKey.SystemCenter.value,
-                defines.ChatType.SystemCenter.value,
-                defines.SystemInfo,
-                defines.MessageType.Online.value,
-                defines.PayloadOnline(code=defines.ServiceCode.Success.value, user_info=user_info),
-            )
-        )
-
-    async def send_offline(self, user_info: defines.BaseIdentifierInfo):
-        await self.send(
-            bytes_data=self.gen_reply_bytes(
-                defines.ChatContextFormatKey.SystemCenter.value,
-                defines.ChatType.SystemCenter.value,
-                defines.SystemInfo,
-                defines.MessageType.Offline.value,
-                defines.PayloadOffline(code=defines.ServiceCode.Success.value, user_info=user_info),
-            )
-        )
-
-    async def send_join(self, user_info: defines.BaseIdentifierInfo):
-        await self.send(
-            bytes_data=self.gen_reply_bytes(
-                defines.ChatContextFormatKey.SystemCenter.value,
-                defines.ChatType.SystemCenter.value,
-                defines.SystemInfo,
-                defines.MessageType.Join.value,
-                defines.PayloadJoin(code=defines.ServiceCode.Success.value, user_info=user_info),
-            )
-        )
-
-    async def send_typing(self, user_info: defines.BaseIdentifierInfo):
-        await self.send(
-            bytes_data=self.gen_reply_bytes(
-                defines.ChatContextFormatKey.SystemCenter.value,
-                defines.ChatType.SystemCenter.value,
-                defines.SystemInfo,
-                defines.MessageType.Typing.value,
-                defines.PayloadTyping(code=defines.ServiceCode.Success.value, user_info=user_info),
-            )
-        )
-
-    async def send_stop_typing(self, user_info: defines.BaseIdentifierInfo):
-        await self.send(
-            bytes_data=self.gen_reply_bytes(
-                defines.ChatContextFormatKey.SystemCenter.value,
-                defines.ChatType.SystemCenter.value,
-                defines.SystemInfo,
-                defines.MessageType.StopTyping.value,
-                defines.PayloadStopTyping(code=defines.ServiceCode.Success.value, user_info=user_info),
-            )
-        )
-
-    async def send_message_read(self, message_id: int, user_info: defines.BaseIdentifierInfo):
-        await self.send(
-            bytes_data=self.gen_reply_bytes(
-                defines.ChatContextFormatKey.SystemCenter.value,
-                defines.ChatType.SystemCenter.value,
-                defines.SystemInfo,
-                defines.MessageType.MessageRead.value,
-                defines.PayloadMessageRead(
-                    code=defines.ServiceCode.Success.value, message_id=message_id, user_info=user_info
-                ),
-            )
-        )
-
-    async def send_message_sent(self, message_id: int):
-        await self.send(
-            bytes_data=self.gen_reply_bytes(
-                defines.ChatContextFormatKey.SystemCenter.value,
-                defines.ChatType.SystemCenter.value,
-                defines.SystemInfo,
-                defines.MessageType.MessageSent.value,
-                defines.PayloadMessageSent(code=defines.ServiceCode.Success.value, message_id=message_id,),
-            )
-        )
-
-    async def send_new_un_read_count(self, connection_info: defines.ConnectionInfo, count: int, message_id: int):
-        await self.send(
-            bytes_data=self.gen_reply_bytes(
-                defines.ChatContextFormatKey.SystemCenter,
-                defines.ChatType.SystemCenter.value,
-                defines.SystemInfo,
-                defines.MessageType.MessageNewUnRead.value,
-                defines.PayloadMessageNewUnRead(
-                    code=defines.ServiceCode.Success.value,
-                    connection_info=connection_info,
-                    count=count,
-                    message_id=message_id,
+                code=service.Code.Success,
+                message_type=message_type.MessageType.MessageNewUnRead,
+                chat_type=chat_type.ChatType.SystemCenter,
+                sender_info=await get_system_sender(),
+                context=chat_type.ChatTypeContextFormatKey.SystemCenter.value,
+                time=datetime.now(),
+                content=message_content.MessageUnreadCount(
+                    chat_instance_id=chat_instance_id, message_id=message_id, count=count
                 ),
             )
         )
@@ -308,7 +308,7 @@ class ServerReply(ReplyMixin, ABC):
         await self.pre_handle(content, **kwargs)
         try:
             await self.handler.handle(self, content, **kwargs)
-        except defines.ServiceException as e:
+        except exceptions.ServiceException as e:
             await self.send_error(code=e.code, message=e.message)
         except Exception as e:
             logger.exception(e)

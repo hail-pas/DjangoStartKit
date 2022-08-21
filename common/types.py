@@ -98,3 +98,16 @@ class ContentTypeEnum(enum.Enum):
     APPlICATION_JSON = "application/json"
     MULTIPART_FORM_DATA = "multipart/form-data"
     APPlICATION_JSON_X_FORM_URLENCODE = "application/x-www-form-urlencoded"
+
+
+def extend_enum(*inherited_enums):
+    def wrapper(added_enum):
+        joined = {}
+        for inherited_enum in inherited_enums:
+            for item in inherited_enum:
+                joined[item.name] = item.value
+            for item in added_enum:
+                joined[item.name] = item.value
+        return enum.Enum(added_enum.__name__, joined)
+
+    return wrapper
