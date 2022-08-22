@@ -1,4 +1,4 @@
-from typing import Any, Union, Optional
+from typing import Optional
 
 from django.db import models
 from django.utils import timezone
@@ -9,14 +9,7 @@ from django.db.models import Q
 from apps import enums
 from common.utils import file_upload_to
 from storages.mysql import BaseModel, LabelFieldMixin, StatusFieldMixin, OrderWeightFieldMixin
-from apps.account.models import Profile
-
-
-class ProfileFieldMixin(models.Model):
-    profile = models.ForeignKey(to=Profile, verbose_name="用户", help_text="用户", on_delete=models.CASCADE)
-
-    class Meta:
-        abstract = True
+from apps.account.models import Profile, ProfileFieldMixin
 
 
 class UploadedFile(ProfileFieldMixin, LabelFieldMixin):

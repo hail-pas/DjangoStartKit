@@ -426,3 +426,10 @@ class System(LabelFieldMixin, RemarkFieldMixin, BaseModel):
     class Meta:
         verbose_name = "系统"
         verbose_name_plural = verbose_name
+
+
+class ProfileFieldMixin(models.Model):
+    profile = models.ForeignKey(to=Profile, verbose_name="用户", help_text="用户", on_delete=models.CASCADE)
+
+    class Meta:
+        abstract = True
