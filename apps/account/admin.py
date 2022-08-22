@@ -6,6 +6,8 @@ from django.db.models import fields
 from django.contrib.admin.sites import AlreadyRegistered
 
 from conf.config import local_configs
+from storages.redis import AsyncRedisUtil, keys
+from apps.chat.models import GroupMembership
 from apps.account.models import Profile
 
 admin.site.site_title = admin.site.site_header = local_configs.PROJECT.NAME + local_configs.PROJECT.ENVIRONMENT
@@ -78,6 +80,10 @@ for model in app_models:  # noqa
             if isinstance(obj, Profile) and not change:
                 obj.set_password(obj.password)
             obj.save()
+            if isinstance(obj, GroupMembership) and not change:
+                AsyncRedisUtil.sadd(
+                    keys.RedisCacheKey.ProfileGroupSet.format(profile_id=obj.profile_id), [obj.group_id],
+                )
 
     try:  # noqa
         admin.site.register(model, XXXAdmin)
