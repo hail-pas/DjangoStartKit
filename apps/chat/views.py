@@ -1,3 +1,4 @@
+import ujson
 from django.shortcuts import render
 from rest_framework.permissions import AllowAny
 from rest_framework_jwt.serializers import jwt_encode_handler, jwt_payload_handler
@@ -24,6 +25,7 @@ def chat_online(request, phone, device_code, chat_type, receiver_id):
             request,
             "chat_online.html",
             {
+                "profile_info": {"id": str(user.id), "nickname": user.nickname, "avatar": ""},
                 "device_code": device_code,
                 "token": jwt_encode_handler(payload),
                 "chat_type": chat_type,

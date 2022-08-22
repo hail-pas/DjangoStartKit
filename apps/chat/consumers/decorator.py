@@ -3,7 +3,7 @@ import functools
 
 from apps.chat.consumers import defines
 
-logger = logging.getLogger("chat.decorators")
+logger = logging.getLogger("chat.consumers.decorators")
 
 
 def authenticate_required():

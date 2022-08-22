@@ -11,10 +11,12 @@ class Code(enum.IntEnum):
 
     # 业务code
     UnSupportedType = 40002
-    ReceiverNotExists = 40003
-    ValueInvalid = 40005
-    InvalidMessageReadId = 40006
-    FileDoesNotExist = 40007
+    RelationShipNotExists = 40003
+    ReceiverNotExists = 40004
+    FileDoesNotExist = 40005
+
+    # other
+    ForbiddenAction = 50000
 
 
 @enum.unique
@@ -23,9 +25,8 @@ class Message(str, enum.Enum):
     DeviceRestrict = "设备登录限制"
 
     UnSupportedType = "不支持的%s类型"
+    RelationShipNotExists = "%s关系未建立，无法发送消息"
     ReceiverNotExists = "接收方不存在"
-    ValueInvalid = "消息不符合规范"
-    InvalidMessageReadId = "已读消息ID无效"
     FileDoesNotExist = "文件不存在"
 
     # other

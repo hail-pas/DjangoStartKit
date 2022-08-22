@@ -384,14 +384,18 @@ def filter_dict(dict_obj: dict, callback: Callable[[Any, Any], dict]):
     return new_dict
 
 
-def flatten_list(_2d_list: List):
+def flatten_list(element):
     flat_list = []
-    for element in _2d_list:
-        if type(element) is list:
-            for item in element:
-                flat_list.append(item)
+
+    def _flatten_list(e):
+        if type(e) in [list, set, tuple, QuerySet]:
+            for item in e:
+                _flatten_list(item)
         else:
-            flat_list.append(element)
+            flat_list.append(e)
+
+    _flatten_list(element)
+
     return flat_list
 
 

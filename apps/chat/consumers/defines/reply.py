@@ -22,5 +22,5 @@ class ServiceReplyData(TypedDict):
     context: str
     time: str
     content: Optional[
-        Union[str, ContentTextType, FileContent, LocationContent, ShareContent, MessageIDContent, MessageUnreadCount,]
+        Union[str, ContentTextType, FileContent, LocationContent, ShareContent, MessageIDContent, MessageUnreadCount]
     ]

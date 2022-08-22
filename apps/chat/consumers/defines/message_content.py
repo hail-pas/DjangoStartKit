@@ -63,12 +63,7 @@ class LocationContent(TypedDict):
     latitude: float
 
 
-class ShareContent(TypedDict):
-    id
-
-
 class MessageIdentifier(TypedDict):
-    chat_instance_id: int
     message_id: int
 
 

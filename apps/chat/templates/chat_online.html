@@ -38,14 +38,14 @@
         e.data.text().then(res => {
             data = JSON.parse(res);
             console.log("data: ", data);
-            if (data.sender.id !== "df-lanka") {
+            if (data.sender.id !== "df-lanka" && data.sender.id !== profile_info.id) {
                 document.querySelector('#chat-log').value += (
                     data.sender.id
                     + ':'
                     + data.sender.nickname
                     + '\n'
                     + '      '
-                    + data.payload.value + '\n'
+                    + data.content[0].value + '\n'
                 );
             }
         })
@@ -67,14 +67,26 @@
         const message = messageInputDom.value;
         const sendingData = message;
         chatSocket.send(JSON.stringify({
-            "chat_type": chatType,
-            "receiver_id": receiverId,
-            "type": "text",
-            "payload":
-                {
-                    "value": message
-                }
+            "chat_type": "Group",
+            "receiver_id": 1,
+            "message_type": "text",
+            "content":
+                [
+                    {
+                        "tag": "text",
+                        "value": message
+                    }
+
+                ]
         }));
+        document.querySelector('#chat-log').value += (
+            profile_info.id
+            + ':'
+            + profile_info.nickname
+            + '\n'
+            + '      '
+            + message + '\n'
+        );
         console.log("sending", JSON.stringify(sendingData))
         messageInputDom.value = '';
     };
