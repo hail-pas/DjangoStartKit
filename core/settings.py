@@ -105,7 +105,7 @@ DATABASES = local_configs.DATABASES
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {"hosts": [(local_configs.REDIS.HOST, local_configs.REDIS.PORT)],},
+        "CONFIG": {"hosts": [(local_configs.REDIS.HOST, local_configs.REDIS.PORT)]},
     },
 }
 

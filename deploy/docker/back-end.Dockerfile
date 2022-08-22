@@ -1,3 +1,4 @@
+# docker build --build-arg BASE_IMAGE="" ENVIRONMENT=""
 ARG BASE_IMAGE=DjangoStartKit:base
 # optional environment: development、test、production
 ARG ENVIRONMENT
@@ -12,5 +13,5 @@ ENV environment ${ENVIRONMENT}
 RUN poetry install
 RUN python manage.py collectstatic --noinput
 EXPOSE 8000
-CMD ["gunicorn", "--config", "conf/gunicorn/config.py", "--log-config", "conf/gunicorn/logging.conf", "core.wsgi:application"]
-# docker build --build-arg BASE_IMAGE="" ENVIRONMENT=""
+#CMD ["gunicorn", "--config", "conf/gunicorn/config.py", "--log-config", "conf/gunicorn/logging.conf", "core.wsgi:application"]
+CMD ["daphne", "--bind", "0.0.0.0", "--port", "8000", "core.ssgi:application"]
