@@ -18,7 +18,7 @@ CONFIG_FILE_PREFIX = (
 
 class HostAndPort(BaseModel):
     HOST: str
-    PORT: str
+    PORT: int
 
 
 class RelationalDb(HostAndPort):

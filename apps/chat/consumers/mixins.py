@@ -74,7 +74,7 @@ class ConnectManageConsumer(AsyncUJsonWebsocketConsumer):
                 profile_id=self.profile.id, device_code=self.device_code.value
             ),
             self.channel_name,
-            expire=65,
+            expire=61,
         )
         # 加入系统群组
         await self.channel_layer.group_add(
@@ -116,7 +116,7 @@ class ConnectManageConsumer(AsyncUJsonWebsocketConsumer):
                 keys.RedisCacheKey.ProfileGroupSet.format(profile_id=self.profile.id), encoding="utf-8"
             ):
                 await self.channel_layer.group_discard(
-                    defines.chat_type.ChatContextFormatKey.Group.value % int(group_id), self.channel_name
+                    defines.chat_type.ChatTypeContextFormatKey.Group.value % int(group_id), self.channel_name
                 )
             # 删除连接信息
             await AsyncRedisUtil.r.delete(

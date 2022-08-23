@@ -13,4 +13,5 @@ RUN python manage.py collectstatic --noinput
 RUN python manage.py migrate
 EXPOSE 8000
 #CMD ["gunicorn", "--config", "conf/gunicorn/config.py", "--log-config", "conf/gunicorn/logging.conf", "core.wsgi:application"]
-CMD ["daphne", "--bind", "0.0.0.0", "--port", "8000", "core.ssgi:application"]
+#CMD ["daphne", "--bind", "0.0.0.0", "--port", "8000", "core.ssgi:application"]
+CMD ["python", "main.py"]
