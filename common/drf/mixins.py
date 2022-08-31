@@ -171,3 +171,10 @@ class RestModelViewSet(
     """
 
     pass
+
+
+class SerializerDictMixin:
+    serializer_class_dict = {}
+
+    def get_serializer_class(self):
+        return self.serializer_class_dict.get(self.action, self.serializer_class)  # noqa
