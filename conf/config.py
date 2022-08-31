@@ -1,6 +1,6 @@
 import os
 import multiprocessing
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Literal
 from pathlib import Path
 from functools import lru_cache
 
@@ -78,16 +78,27 @@ class Jwt(BaseModel):
 
 
 class Aes(BaseModel):
-    SECRET: str
+    SECRET: Optional[str]
 
 
-class K8s(BaseModel):
-    HOST: str
+class K8s(HostAndPort):
     NAMESPACE: str
     IMAGE: str
     PVC_NAME: str
     CONFIG_FILE: Optional[str] = ""
     CONFIG_MAP_NAME: Optional[str] = ""
+
+
+class ThirdApiConfig(HostAndPort):
+    protocol: Literal["https", "http", "rpc"] = "https"
+    timeout: int = 6
+
+
+class ThirdApiConfigs(BaseModel):
+    # ZCGL: ThirdApiConfig
+    # KZHD: ThirdApiConfig
+    # add third api config here
+    pass
 
 
 class LocalConfig(BaseSettings):
@@ -101,17 +112,19 @@ class LocalConfig(BaseSettings):
 
     RELATIONAL_DB: RelationalDb
 
-    REDIS: Redis
+    REDIS: Optional[Redis]
 
     JWT: Jwt
 
-    AES: Aes
+    AES: Optional[Aes]
 
-    HBASE: Hbase
+    HBASE: Optional[Hbase]
 
-    KAFKA: Kafka  # noqa
+    KAFKA: Optional[Kafka]  # noqa
 
-    K8S: K8s
+    K8S: Optional[K8s]
+
+    THIRD_API_CONFIGS: ThirdApiConfigs
 
     # ApiInfo
 

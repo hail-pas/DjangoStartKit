@@ -133,7 +133,7 @@ class BaseModelMeta(type):
             )
 
         properties = {
-            "code": openapi.Schema(type=openapi.TYPE_INTEGER, default=100200, description="业务状态码"),
+            "code": openapi.Schema(type=openapi.TYPE_INTEGER, default=0, description="业务状态码"),
             "success": openapi.Schema(type=openapi.TYPE_BOOLEAN, default=True, description="是否成功"),
             "message": openapi.Schema(type=openapi.TYPE_STRING, default="", description="提示信息"),
             "data": data_schema,

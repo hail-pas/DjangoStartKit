@@ -16,7 +16,7 @@ class EnumsView(APIView):
                 description="返回Json或数组格式的Enum码表",
                 examples={
                     "application/json": RestResponse.ok(
-                        data={"ResponseCodeEnum": {"100200": "成功", "100999": "失败"}}
+                        data={"ResponseCodeEnum": {"0": "成功", "200001": "失败"}}
                     ).dict()
                 },
             )
