@@ -27,32 +27,6 @@ COMMON_TIME_STRING = "%Y-%m-%d %H:%M:%S"
 COMMON_DATE_STRING = "%Y-%m-%d"
 
 
-def join_params(
-    params: dict,
-    key: str = None,
-    filter_none: bool = True,
-    exclude_keys: List = None,
-    sep: str = "&",
-    reverse: bool = False,
-    key_alias: str = "key",
-):
-    """
-    字典排序拼接参数
-    """
-    tmp = []
-    for p in sorted(params, reverse=reverse):
-        value = params[p]
-        if filter_none and value in [None, ""]:
-            continue
-        if exclude_keys and p in exclude_keys:
-            continue
-        tmp.append("{0}={1}".format(p, value))
-    if key:
-        tmp.append("{0}={1}".format(key_alias, key))
-    ret = sep.join(tmp)
-    return ret
-
-
 def generate_random_string(length: int, all_digits: bool = False, excludes: List = None):
     """
     生成任意长度字符串
@@ -407,3 +381,85 @@ def underscore_to_camelcase(value):
 
     c = camelcase()
     return "".join(next(c)(x) if x else "_" for x in value.split("_"))
+
+
+def generate_order_no(scene_code):
+    """
+    生成订单号
+    """
+    dt = time.strftime("%Y%m%d%H%M%S", time.localtime())
+    ms = int(time.time() * 1000) % 1000
+    return "{}{}{}{}".format(scene_code, dt, ms, generate_random_string(6, True))
+
+
+def join_params(
+    params: Union[dict, list], initial=False, filter_none: bool = True, sep: str = "&", exclude_keys: List = None
+):
+    temp = []
+
+    if type(params) in [dict]:
+        if not initial:
+            temp.append("{")
+        for i, k in enumerate(sorted(params)):
+            if exclude_keys and k in exclude_keys:
+                continue
+            v = params[k]
+            if filter_none and v is None:
+                continue
+            if type(v) in [dict, list]:
+                temp.append("{}=".format(k))
+                temp.extend(join_params(v))
+                if i != len(params) - 1:
+                    temp.append(sep)
+            else:
+                temp.append("{}={}".format(k, v))
+                if i != len(params) - 1:
+                    temp.append(sep)
+        if not initial:
+            temp.append("}")
+    elif type(params) in [list]:
+        temp.append("[")
+        for i, v in enumerate(sorted(params)):
+            if filter_none and v is None:
+                continue
+            if type(v) in [dict, list]:
+                temp.extend(join_params(v))
+                if i != len(params) - 1:
+                    temp.append("|")
+            else:
+                temp.append(str(v))
+                if i != len(params) - 1:
+                    temp.append("|")
+        temp.append("]")
+
+    return temp
+
+
+class ClassPropertyDescriptor(object):
+    def __init__(self, fget, fset=None):  # noqa
+        self.fget = fget  # noqa
+        self.fset = fset  # noqa
+
+    def __get__(self, obj, klass=None):
+        if klass is None:
+            klass = type(obj)
+        return self.fget.__get__(obj, klass)()
+
+    def __set__(self, obj, value):
+        if not self.fset:
+            raise AttributeError("can't set attribute")
+        type_ = type(obj)
+        return self.fset.__get__(obj, type_)(value)
+
+    def setter(self, func):
+        if not isinstance(func, (classmethod, staticmethod)):
+            func = classmethod(func)
+        self.fset = func  # noqa
+        return self
+
+
+def classproperty(func):
+    if not isinstance(func, (classmethod, staticmethod)):
+        func = classmethod(func)
+
+    return ClassPropertyDescriptor(func)

@@ -12,7 +12,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 
 from apps.enums import ResponseCodeEnum
 from common.types import PlainSchema
-from common.utils import COMMON_TIME_STRING, mapper, resp_serialize
+from common.utils import COMMON_TIME_STRING, mapper, classproperty, resp_serialize
 
 logger = logging.getLogger(__name__)
 
@@ -186,6 +186,6 @@ class RestResponse(JsonResponse):
     def dict(self):
         return self.result
 
-    @classmethod
-    def success_schema(cls):
+    @classproperty
+    def success_schema(cls):  # noqa
         return _Resp.to_schema(None)

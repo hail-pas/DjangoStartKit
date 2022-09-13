@@ -1,6 +1,6 @@
 import os
 import multiprocessing
-from typing import Any, Dict, Optional, Literal
+from typing import Any, Dict, Literal, Optional
 from pathlib import Path
 from functools import lru_cache
 

@@ -15,9 +15,7 @@ class EnumsView(APIView):
             status.HTTP_200_OK: openapi.Response(  # noqa
                 description="返回Json或数组格式的Enum码表",
                 examples={
-                    "application/json": RestResponse.ok(
-                        data={"ResponseCodeEnum": {"0": "成功", "200001": "失败"}}
-                    ).dict()
+                    "application/json": RestResponse.ok(data={"ResponseCodeEnum": {"0": "成功", "200001": "失败"}}).dict()
                 },
             )
         },
