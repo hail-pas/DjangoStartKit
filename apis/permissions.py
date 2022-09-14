@@ -24,6 +24,7 @@ class AuthorizedServicePermission(BasePermission):
         if not all([identifier, timestamp, sign_str]):
             return False
         # caller = ThirdService.objects.filter(identifier=identifier).first()
+        # 替换成对应的授权调用方实例
         caller = None
         if not caller:
             return False
