@@ -13,6 +13,7 @@ from rest_framework.relations import PKOnlyObject
 from rest_framework.serializers import ALL_FIELDS, ModelSerializer
 from rest_framework_jwt.serializers import JSONWebTokenSerializer, jwt_encode_handler, jwt_payload_handler
 
+from storages import enums
 from common.utils import COMMON_TIME_STRING, format_str_to_millseconds
 
 
@@ -210,6 +211,7 @@ class CustomJSONWebTokenSerializer(JSONWebTokenSerializer):
                     raise serializers.ValidationError(msg)
 
                 payload = jwt_payload_handler(user)
+                payload["scene"] = attrs.get("scene", enums.SceneRole.user.value)
 
                 return {"token": jwt_encode_handler(payload), "user": user}
             else:

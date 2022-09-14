@@ -3,7 +3,7 @@ from common.django.paths import API_DICT
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 
-from apps.account.models import SystemResource
+from storages.mysql.models import SystemResource
 
 if __name__ == '__main__':
     """
@@ -15,7 +15,7 @@ if __name__ == '__main__':
         raise RuntimeError("未定义系统资源对象")
     for codename, name in API_DICT.items():
         print("%50s %s" % (codename, name))
-        perms = Permission.objects.update_or_create(
+        perms, created = Permission.objects.update_or_create(
             content_type=content_type,
             codename=codename,
             defaults={

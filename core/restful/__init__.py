@@ -15,7 +15,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.authentication import SessionAuthentication
 
 from common.utils import model_to_dict
-from apps.responses import RestResponse, _Resp  # noqa
+from apis.responses import RestResponse, _Resp  # noqa
 from common.schemas import PageParam
 
 DRF_GENERATE_METHODS = [

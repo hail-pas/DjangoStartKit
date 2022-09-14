@@ -2,7 +2,7 @@ from drf_yasg import openapi
 from drf_yasg.inspectors import SwaggerAutoSchema
 
 from core.restful import CustomAutoSchema, CustomOpenAPISchemaGenerator
-from apps.permissions import URIBasedPermission
+from apis.permissions import URIBasedPermission
 
 
 class ViewPathAutoSchema(CustomAutoSchema):
@@ -20,6 +20,9 @@ class ViewPathAutoSchema(CustomAutoSchema):
             return "%"
 
         method_name = getattr(view, "action", method.lower())
+        if method_name == "self":
+            # self 接口只需要登录权限
+            return "%"
         _view_path = f"{self.view.__module__}.{self.view.__class__.__name__}.{method_name}"
         _description = super().get_description(path, method)
         if not _description:

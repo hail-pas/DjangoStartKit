@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM python:3.9.12
 ADD ./ /code
 WORKDIR /code
 RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo 'Asia/Shanghai' >/etc/timezone

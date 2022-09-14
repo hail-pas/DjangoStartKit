@@ -6,7 +6,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, serializers
 
 from core.restful import HideInspector, NoPagingAutoSchema
-from apps.responses import _Resp  # noqa
+from apis.responses import _Resp  # noqa
 
 
 def custom_swagger_auto_schema(**kwargs):

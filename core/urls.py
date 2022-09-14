@@ -24,7 +24,7 @@ from django.conf.urls import url
 from django.conf.urls.static import static
 from channels.security.websocket import AllowedHostsOriginValidator
 
-from apps.chat.urls import websocket_urlpatterns as chat_websocket_urlpatterns
+from apis.chat.urls import websocket_urlpatterns as chat_websocket_urlpatterns
 from core.middlewares import ChannelsAuthenticationMiddlewareJWT
 
 urlpatterns = [
@@ -33,10 +33,10 @@ urlpatterns = [
     # captcha
     path("captcha/", include("captcha.urls")),
     # api
-    path("auth/", include("apps.auth.urls")),
-    path("info/", include("apps.info.urls")),
-    path("account/", include("apps.account.urls")),
-    path("chat/", include("apps.chat.urls")),
+    path("auth/", include("apis.auth.urls")),
+    path("info/", include("apis.info.urls")),
+    path("account/", include("apis.account.urls")),
+    path("chat/", include("apis.chat.urls")),
 ]
 
 # Static
@@ -64,7 +64,7 @@ if settings.DEBUG:
                 lambda url_pattern: True
                 if isinstance(url_pattern, URLResolver)
                 and not isinstance(url_pattern.urlconf_module, list)
-                and url_pattern.urlconf_module.__name__.startswith("apps.")
+                and url_pattern.urlconf_module.__name__.startswith("apis.")
                 else False,
                 urlpatterns,
             ),

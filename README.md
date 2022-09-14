@@ -11,7 +11,7 @@
 
 # 目录结构
 
-|-- apps<br>
+|-- apis<br>
 |       |-- 子App API<br>
 |-- command<br>
 |       |-- 命令行工具（MySQL、Redis、Hbase、K8S任务创建）<br>
@@ -23,24 +23,29 @@
 |       |-- 主App目录<br>
 |-- deploy<br>
 |       |-- 部署相关（Dockerfile、K8S yaml）<br>
+|-- logs<br>
+|       |-- 错误日志收集 <br>
+|-- scripts<br>
+|       |-- 初始化/发版等脚本 <br>
 |-- storages<br>
 |       |-- 存储相关(Hbase、Redis、Oss、Mysql)<br>
 |-- tasks<br>
 |       |-- 异步、定时任务实现目录<br>
 |-- third_apis<br>
-|       |-- 对接三方http接口<br>
-|- command.py 命令行工具<br>
+|       |-- 对接第三方接口<br>
+|- command.py 命令行工具<br> -- Deprecated, 已整合进 django-manage 命令中
 |- Makefile<br>
 |- manage.py<br>
 |- poetry.toml 依赖定义文件<br>
 |- project.lock 依赖管理文件<br>
 |- README.md<br>
+|- start.sh<br>
 
 # 快速启动
 
 ```shell script
 # 复制配置并填充
-cp conf/envs/.env.template conf/envs/${environment}.env
+cp conf/content/template.yaml conf/content/${environment}.yaml
 
 # 创建虚拟环境
 python -m venv .venv
@@ -48,7 +53,7 @@ source .venv/bin/activate
 
 # 安装依赖
 pip install poetry
-poetry update
+poetry update -vvv
 
 # 创建数据库
 python command.py mysql createdb
@@ -69,9 +74,9 @@ poetry add target-pack[==version]
 ## 安装依赖:
 
 ```shell
-# python 3.9
+# python 3.9.12
 pip install poetry   # 安装 poetry 依赖管理工具
-poetry update  # 等价于 poetry lock && poetry install
+poetry update -vvv # 等价于 poetry lock && poetry install
 ```
 
 # 代码管理 Makefile/git
@@ -81,20 +86,18 @@ poetry update  # 等价于 poetry lock && poetry install
 make up
 # 安装依赖
 make deps
-# 检查代码
-make chcek
-# 格式化, 需要忽略的不规范格式化使用注释 #noqa
+# 格式化, 提交前执行
 make style
 ```
 
 # Response 格式化
 
 使用统一的 Response 类<br>
-将分页响应信息单独提出来: apps.responses._Page_info<br>
-分页参数统一化: <br>        常规 page 分页 - apps.common.schemas.PageParam, <br>       hbase分页 - apps.common.schemas.HbasePageParam
+将分页响应信息单独提出来: apis.responses._Page_info<br>
+分页参数统一化: <br>        常规 page 分页 - apis.common.schemas.PageParam, <br>       hbase分页 - apis.common.schemas.HbasePageParam
 
 ```python
-from apps.responses import RestResponse
+from apis.responses import RestResponse
 
 
 def view_func(self, *args, **kwargs):
@@ -104,17 +107,20 @@ def view_func(self, *args, **kwargs):
 # CURD 接口
 
 使用重写之后的viewMixin, 返回的统一响应体结构，list接口增加指定字段返回
-所有 choices 候选集数据都定义在 apps.enums 文件下
+所有 choices 候选集数据都定义在 apis.enums 文件下
 
 ```python
+import storages.mysql.models.account
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny
 
-from apps.account import models, serializers
-from common.drf.mixins import RestModelViewSet
+from storages.mysql import models
+from apis.account import serializers
+from common.drf.mixins import RestModelViewSet, SerializerClassDictMixin
 
 
 class ProfileViewSet(
+    SerializerClassDictMixin,
     RestModelViewSet,
 ):
     """账号接口
@@ -125,11 +131,10 @@ class ProfileViewSet(
     filter_fields = ('roles',)
     parser_classes = (JSONParser,)
     permission_classes = (AllowAny,)
-
-    def get_serializer_class(self):
-        if self.action == 'list':
-            return serializers.ProfileListSerializer
-        return self.serializer_class
+    
+    serializer_class_dict = {
+        "list": serializers.ProfileListSerializer
+    }
 
 ```
 
@@ -144,9 +149,9 @@ from drf_yasg import openapi
 from rest_framework import status
 from rest_framework.decorators import api_view
 
-from apps.enums import get_enum_content
-from apps.info import schemas
-from apps.responses import RestResponse
+from storages.enums import get_enum_content
+from apis.info import schemas
+from apis.responses import RestResponse
 from common.swagger import custom_swagger_auto_schema
 
 
@@ -207,7 +212,7 @@ class AntiTamperQueryData(BaseModel):
 from storages.redis.keys import RedisCacheKey
 from storages.redis import RedisUtil
 
-RedisUtil.set(RedisCacheKey.redis_lock.format("lock_target"))
+RedisUtil.r.set(RedisCacheKey.redis_lock.format("lock_target"))
 ```
 
 # 定时任务

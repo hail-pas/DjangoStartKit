@@ -30,15 +30,12 @@ class CustomModelBackend(ModelBackend):
     def has_api_perm(self, user_obj, request, view):  # noqa
         if user_obj.is_active and user_obj.is_superuser:
             return True
+        action = getattr(view, "action", request.method.lower())
+        if user_obj.is_authenticated and action == "self":
+            return True
         return (
             user_obj.is_active
             and self.get_user_related_permissions(user_obj.id)
-            .filter(
-                codename=(
-                    f"{view.__module__}."
-                    f"{view.__class__.__name__}."
-                    f"{getattr(view, 'action', request.method.lower())}"
-                ),
-            )
+            .filter(codename=(f"{view.__module__}." f"{view.__class__.__name__}." f"{action}"),)
             .exists()
         )

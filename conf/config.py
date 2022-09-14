@@ -18,7 +18,7 @@ CONFIG_FILE_PREFIX = (
 
 class HostAndPort(BaseModel):
     HOST: str
-    PORT: int
+    PORT: Optional[int]
 
 
 class RelationalDb(HostAndPort):
@@ -28,6 +28,7 @@ class RelationalDb(HostAndPort):
 
 
 class Redis(HostAndPort):
+    USERNAME: Optional[str] = None
     PASSWORD: Optional[str] = None
     DB: int = 0
 
@@ -46,6 +47,7 @@ class Project(BaseModel):
     LANGUAGE_CODE: str = "zh-hans"
     TIME_ZONE: str = "Asia/Shanghai"
     USE_TZ: str = False
+    BASE_DIR = BASE_DIR
 
     @validator("ENVIRONMENT", allow_reuse=True)
     def check_if_environment_in(cls, v):  # noqa
@@ -92,13 +94,20 @@ class K8s(HostAndPort):
 class ThirdApiConfig(HostAndPort):
     protocol: Literal["https", "http", "rpc"] = "https"
     timeout: int = 6
+    extras: Optional[dict]
+
+
+class UroraConfig(BaseModel):  # noqa
+    """
+    极光
+    """
+
+    app_key: str
+    master_secret: str
 
 
 class ThirdApiConfigs(BaseModel):
-    # ZCGL: ThirdApiConfig
-    # KZHD: ThirdApiConfig
-    # add third api config here
-    pass
+    URORA: UroraConfig  # noqa
 
 
 class LocalConfig(BaseSettings):
@@ -124,7 +133,7 @@ class LocalConfig(BaseSettings):
 
     K8S: Optional[K8s]
 
-    THIRD_API_CONFIGS: ThirdApiConfigs
+    THIRD_API_CONFIGS: Optional[ThirdApiConfigs]
 
     # ApiInfo
 

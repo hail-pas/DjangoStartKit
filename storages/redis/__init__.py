@@ -2,14 +2,13 @@ import asyncio
 
 import redis as s_redis
 import aioredis
-from asgiref.sync import sync_to_async
 
 from conf.config import local_configs
 
 
 class RedisUtil:
     """
-    同步Redis操作
+    同步Redis操作, 使用 r 可以调用redis报api
     """
 
     _host = None
@@ -24,6 +23,7 @@ class RedisUtil:
         cls,
         host=local_configs.REDIS.HOST,
         port=local_configs.REDIS.PORT,
+        username=local_configs.REDIS.USERNAME,
         password=local_configs.REDIS.PASSWORD,
         db=local_configs.REDIS.DB,
         **kwargs,
@@ -32,7 +32,7 @@ class RedisUtil:
         cls._port = port
         cls._password = password
         cls._extra_kwargs = kwargs
-        cls._pool = s_redis.ConnectionPool(host=host, port=port, password=password, db=db, **kwargs)
+        cls._pool = s_redis.ConnectionPool(host=host, port=port, username=username, password=password, db=db, **kwargs)
         cls.r = s_redis.Redis(connection_pool=cls._pool)  # type:s_redis.Redis
 
     @classmethod
@@ -166,11 +166,18 @@ class AsyncRedisUtil:
         cls,
         host=local_configs.REDIS.HOST,
         port=local_configs.REDIS.PORT,
+        username=local_configs.REDIS.USERNAME,
         password=local_configs.REDIS.PASSWORD,
         db=local_configs.REDIS.DB,
         **kwargs,
     ):
-        cls._pool = await aioredis.create_redis_pool(f"redis://{host}:{port}", password=password, db=db, **kwargs)
+        # redis://user:secret@localhost:6379/0?foo=bar&qux=baz
+        auth_string = ""
+        if username and password:
+            auth_string = f"{username}:{password}@"
+        cls._pool = await aioredis.create_redis_pool(
+            f"redis://{auth_string}{host}:{port}", password=password, db=db, **kwargs
+        )
         cls.r = cls._pool
         return cls._pool
 

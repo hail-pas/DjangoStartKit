@@ -7,7 +7,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from common import messages
 from core.restful import CustomPagination
-from apps.responses import RestResponse
+from apis.responses import RestResponse
 
 
 class CustomGenericViewSet(GenericViewSet):
@@ -173,7 +173,7 @@ class RestModelViewSet(
     pass
 
 
-class SerializerDictMixin:
+class SerializerClassDictMixin:
     serializer_class_dict = {}
 
     def get_serializer_class(self):

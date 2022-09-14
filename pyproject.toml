@@ -5,17 +5,17 @@ description = "Django Start Kit"
 authors = ["phoenix <hypofiasco@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "3.9.12"
 mysqlclient = "2.0.3"
-python-dotenv = "^0.12.0"
+python-dotenv = "0.12.0"
 redis = "3.5.3"
 happybase = "1.2.0"
-ujson = "^2.0"
+ujson = "2.0"
 httpx = "0.18.1"
-requests = "^2.25.1"
+requests = "2.25.1"
 pycryptodomex = "3.10.1"
-pyopenssl = "20.0.1"
-passlib = "^1.7"
+pyopenssl = "22.0.0"
+passlib = "1.7"
 email-validator = "^1.0.5"
 django = "3.2.9"
 djangorestframework = "3.12.4"
@@ -37,7 +37,7 @@ channels = "3.0.4"
 channels-redis = "3.4.1"
 asgiref = "3.3.4"
 uvicorn = "0.18.2"
-#websockets = "10.3"
+websockets = "10.3"
 
 [tool.poetry.dev-dependencies]
 # poetry install --no-dev
@@ -56,4 +56,4 @@ url = "https://mirrors.aliyun.com/pypi/simple/"
 # shell
 # >>> poetry cache clear . --all
 # >>> rm poetry.lock
-# >>> poetry install
+# >>> poetry install -vvv

@@ -19,7 +19,7 @@ from rest_framework_jwt.authentication import (
 )
 
 from common.types import ContentTypeEnum, RequestMethodEnum
-from apps.responses import RestResponse
+from apis.responses import RestResponse
 
 
 class RequestProcessMiddleware:

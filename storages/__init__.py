@@ -1,3 +1,3 @@
 """
-存储相关： Redis、Hbase、Oss
+存储相关： Redis、Hbase、RelationDB、Oss
 """
