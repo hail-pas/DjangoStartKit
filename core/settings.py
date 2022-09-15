@@ -213,6 +213,11 @@ JWT_AUTH = {
 # AES
 AES_SECRET = local_configs.AES.SECRET
 
+if not os.path.exists(BASE_DIR.as_posix() + "/logs/error.log"):
+    if not os.path.exists(BASE_DIR.as_posix() + "/logs/"):
+        os.makedirs(BASE_DIR.as_posix() + "/logs/")
+    os.system(f'touch {BASE_DIR.as_posix() + "/logs/error.log"}')
+
 # Logging
 LOGGING = {
     "version": 1,

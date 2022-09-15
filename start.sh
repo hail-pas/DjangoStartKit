@@ -1,1 +1,1 @@
-python core/run.py
+python core/main.py

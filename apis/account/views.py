@@ -11,9 +11,9 @@ from rest_framework.permissions import IsAuthenticated
 from common import messages
 from apis.account import serializers
 from apis.responses import RestResponse
-from common.swagger import custom_swagger_auto_schema
 from storages.mysql import models
 from apis.permissions import URIBasedPermission
+from common.decorators import custom_swagger_auto_schema
 from common.drf.mixins import RestModelViewSet, RestListModelMixin, CustomGenericViewSet, RestRetrieveModelMixin
 
 
@@ -70,12 +70,7 @@ class ProfileViewSet(RestModelViewSet,):
         instance.save(update_fields=["is_active", "delete_time", "operator"])
 
     @custom_swagger_auto_schema(
-        request_body=no_body,
-        responses={
-            status.HTTP_200_OK: openapi.Response(  # noqa
-                description="", examples={"application/json": RestResponse.ok(message="修改成功").dict()},
-            )
-        },
+        request_body=no_body, responses={status.HTTP_200_OK: RestResponse.success_schema},
     )
     @action(methods=["post"], detail=True)
     def reset_password(self, request, *args, **kwargs):
@@ -89,7 +84,7 @@ class ProfileViewSet(RestModelViewSet,):
         profile.save()
         return RestResponse.ok(message="修改成功")
 
-    @custom_swagger_auto_schema(query_serializer=None)
+    @custom_swagger_auto_schema(query_serializer=None, responses={status.HTTP_200_OK: serializers.ProfileSerializer})
     @action(methods=["get"], detail=False, permission_classes=(IsAuthenticated,))
     def self(self, request, *args, **kwargs):
         """
@@ -105,7 +100,7 @@ class RoleViewSet(RestModelViewSet,):
     """
 
     serializer_class = serializers.RoleSerializer
-    queryset = models.Role.objects.all()
+    queryset = models.Role.objects.filter(delete_time__isnull=True, preserved=False)
     search_fields = ("name",)
     # filter_fields = ("",)
     parser_classes = (JSONParser,)
@@ -130,7 +125,7 @@ class SystemResourceViewSet(RestListModelMixin, RestRetrieveModelMixin, CustomGe
     """
 
     serializer_class = serializers.SystemResourceSerializer
-    queryset = models.SystemResource.objects.all()
+    queryset = models.SystemResource.objects.filter(delete_time__isnull=True)
     filter_fields = ("parent", "type", "enabled")
     parser_classes = (JSONParser,)
     permission_classes = (IsAuthenticated, URIBasedPermission)

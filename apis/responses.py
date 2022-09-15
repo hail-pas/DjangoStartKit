@@ -11,8 +11,9 @@ from rest_framework import serializers
 from django.core.serializers.json import DjangoJSONEncoder
 
 from common.types import PlainSchema
-from common.utils import COMMON_TIME_STRING, mapper, classproperty, resp_serialize
+from common.utils import COMMON_TIME_STRING, mapper, resp_serialize
 from storages.enums import ResponseCodeEnum
+from common.decorators import classproperty
 
 logger = logging.getLogger(__name__)
 

@@ -1,15 +1,12 @@
 import os
-import sys
 import time
 import uuid
 import random
 import string
 import logging
-import threading
-from typing import Any, List, Union, Callable, Optional
+from typing import Any, List, Union, Callable, Hashable, Optional
 from asyncio import sleep
 from datetime import datetime
-from functools import wraps
 from itertools import chain
 from contextlib import contextmanager
 from collections import namedtuple
@@ -29,7 +26,7 @@ COMMON_DATE_STRING = "%Y-%m-%d"
 
 def generate_random_string(length: int, all_digits: bool = False, excludes: List = None):
     """
-    生成任意长度字符串
+    生成任意长度随机字符串
     """
     if excludes is None:
         excludes = []
@@ -56,72 +53,15 @@ def get_client_ip(request: HttpRequest):
     return client_ip
 
 
-def partial(func, *args):
-    def new_func(*func_args):
-        return func(*(args + func_args))
-
-    new_func.func = func
-    new_func.args = args
-    return new_func
-
-
 # datetime util
 def datetime_now():
+    """
+    根据 settings 配置获取当前时间
+    """
     if os.environ.get("USE_TZ") == "True":
         return datetime.now(tz=pytz.utc)
     else:
         return datetime.now(pytz.timezone(os.environ.get("TIMEZONE") or "UTC"))
-
-
-def timelimit(timeout: Union[int, float, str]):
-    """
-    A decorator to limit a function to `timeout` seconds, raising `TimeoutError`
-    if it takes longer.
-        >>> import time
-        >>> def meaningoflife():
-        ...     time.sleep(.2)
-        ...     return 42
-        >>>
-        >>> timelimit(.1)(meaningoflife)()
-        Traceback (most recent call last):
-            ...
-        RuntimeError: took too long
-        >>> timelimit(1)(meaningoflife)()
-        42
-    _Caveat:_ The function isn't stopped after `timeout` seconds but continues
-    executing in a separate thread. (There seems to be no way to kill a thread.)
-    inspired by <http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/473878>
-    """
-
-    def _1(function):
-        @wraps(function)
-        def _2(*args, **kw):
-            class Dispatch(threading.Thread):
-                def __init__(self):
-                    threading.Thread.__init__(self)
-                    self.result = None
-                    self.error = None
-
-                    self.setDaemon(True)
-                    self.start()
-
-                def run(self):
-                    try:
-                        self.result = function(*args, **kw)
-                    except Exception:
-                        self.error = sys.exc_info()
-
-            c = Dispatch()
-            c.join(timeout)
-            if c.is_alive():
-                raise RuntimeError("took too long")
-            if c.error:
-                raise c.error[1]
-            return c.result
-
-        return _2
-
-    return _1
 
 
 def commify(n: Optional[Union[int, float, str]]):
@@ -179,10 +119,13 @@ RedisLock = namedtuple("RedisLock", ["lock"])
 
 
 def get_random_host_and_port(servers: List[str]):
+    """
+    host:port 列表取机取一条
+    """
     if not servers:
         return "", ""
-    thrift_server = servers[random.randint(0, len(servers) - 1)]
-    return thrift_server.split(":")
+    _server = servers[random.randint(0, len(servers) - 1)]
+    return _server.split(":")
 
 
 def make_redis_lock(get_redis: Callable[[], Redis], timeout: int = 60):
@@ -244,9 +187,6 @@ redis_lock = make_redis_lock(get_sync_redis)
 def mapper(func, ob):
     """
     map func for list or dict
-    :param func:
-    :param ob:
-    :return:
     """
     if isinstance(ob, list):
         for i in ob:
@@ -262,6 +202,9 @@ def mapper(func, ob):
 
 
 def resp_serialize(v):
+    """
+    响应序列化函数
+    """
     if isinstance(v, QuerySet):
         return list(v)
 
@@ -273,15 +216,7 @@ def resp_serialize(v):
 
 def model_to_dict(instance, fields=None, exclude=None):
     """
-    Return a dict containing the data in ``instance`` suitable for passing as
-    a Form's ``initial`` keyword argument.
-
-    ``fields`` is an optional list of field names. If provided, return only the
-    named.
-
-    ``exclude`` is an optional list of field names. If provided, exclude the
-    named from the returned dict, even if they are listed in the ``fields``
-    argument.
+    model instance to dict
     """
     opts = instance._meta
     data = {}
@@ -297,6 +232,9 @@ def model_to_dict(instance, fields=None, exclude=None):
 
 
 def merge_dict(dict1: dict, dict2: dict = None, reverse: bool = False):
+    """
+    合并字典
+    """
     try:
         if not dict2:
             merged = dict1
@@ -350,7 +288,10 @@ def file_upload_to(instance, filename):
     return "/".join(filter(None, [name, instance.__str__(), gen_uuid(), filename]))
 
 
-def filter_dict(dict_obj: dict, callback: Callable[[Any, Any], dict]):
+def filter_dict(dict_obj: dict, callback: Callable[[Hashable, Any], dict]):
+    """
+    适用于字典的filter
+    """
     new_dict = {}
     for (key, value) in dict_obj.items():
         if callback(key, value):
@@ -359,6 +300,9 @@ def filter_dict(dict_obj: dict, callback: Callable[[Any, Any], dict]):
 
 
 def flatten_list(element):
+    """
+    Iterable 递归展开成一级列表
+    """
     flat_list = []
 
     def _flatten_list(e):
@@ -374,13 +318,17 @@ def flatten_list(element):
 
 
 def underscore_to_camelcase(value):
+    """
+    蛇形字符串 转 驼峰字符串
+    """
+
     def camelcase():
         yield str.lower
         while True:
             yield str.capitalize
 
     c = camelcase()
-    return "".join(next(c)(x) if x else "_" for x in value.split("_"))
+    return "".join(next(c)(x) if x else "_" for x in value.split("_"))  # noqa
 
 
 def generate_order_no(scene_code):
@@ -395,6 +343,9 @@ def generate_order_no(scene_code):
 def join_params(
     params: Union[dict, list], initial=False, filter_none: bool = True, sep: str = "&", exclude_keys: List = None
 ):
+    """
+    参数拼接，用于签名请求
+    """
     temp = []
 
     if type(params) in [dict]:
@@ -433,33 +384,3 @@ def join_params(
         temp.append("]")
 
     return temp
-
-
-class ClassPropertyDescriptor(object):
-    def __init__(self, fget, fset=None):  # noqa
-        self.fget = fget  # noqa
-        self.fset = fset  # noqa
-
-    def __get__(self, obj, klass=None):
-        if klass is None:
-            klass = type(obj)
-        return self.fget.__get__(obj, klass)()
-
-    def __set__(self, obj, value):
-        if not self.fset:
-            raise AttributeError("can't set attribute")
-        type_ = type(obj)
-        return self.fset.__get__(obj, type_)(value)
-
-    def setter(self, func):
-        if not isinstance(func, (classmethod, staticmethod)):
-            func = classmethod(func)
-        self.fset = func  # noqa
-        return self
-
-
-def classproperty(func):
-    if not isinstance(func, (classmethod, staticmethod)):
-        func = classmethod(func)
-
-    return ClassPropertyDescriptor(func)

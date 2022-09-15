@@ -8,8 +8,8 @@ from conf.config import local_configs
 
 src = local_configs.PROJECT.BASE_DIR
 
-DIRS = ["apis", "command", "common", "core", "conf", "deploy", "tasks", "storages", "third_apis", "scripts"]
-FILES = [".gitignore", "manage.py", "command.py", "pyproject.toml", "start.sh", "README.md", "Makefile"]
+DIRS = ["apis", "common", "core", "conf", "deploy", "tasks", "storages", "third_apis", "scripts"]
+FILES = [".gitignore", "manage.py", "pyproject.toml", "README.md", "Makefile", "start.sh"]
 
 
 class Command(BaseCommand):
@@ -61,11 +61,20 @@ class Command(BaseCommand):
                 return
             all_need = os.listdir(src_path)
             for need in all_need:
+                if "__pycache__" in str(need) or ".DS_Store" in str(need):
+                    continue
                 if not is_sub and need not in FILES + DIRS:
                     continue
                 current_src_path = src_path.joinpath(need)  # noqa
+
                 src_path_finds = re.findall(".*?DjangoStartKit/(?P<appendix>.*)", str(current_src_path))
                 src_appendix = src_path_finds[0] if src_path_finds else ""
+                if (
+                    src_appendix.endswith("development.yaml")
+                    or src_appendix.endswith("test.yaml")
+                    or src_appendix.endswith("production.yaml")
+                ):
+                    continue
                 dest_path = dest.joinpath(src_appendix)
 
                 if current_src_path.is_file():
@@ -76,7 +85,7 @@ class Command(BaseCommand):
                                 dest_file.write(line)
 
                         dest_file.close()
-                        print("copied to ", dest_path, end="\n")
+                        # print("copied to ", dest_path, end="\n")
 
                 elif current_src_path.is_dir():
                     if is_sub or need in DIRS:

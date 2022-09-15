@@ -1,4 +1,4 @@
-checkfiles = core/ apis/ command/ common/ conf/ deploy/ storages/ tasks/ third_apis command.py
+checkfiles = core/ apis/ common/ conf/ deploy/ storages/ tasks/ third_apis/
 black_opts = -l 120 -t py38
 py_warn = PYTHONDEVMODE=1
 flake8config = .flake8

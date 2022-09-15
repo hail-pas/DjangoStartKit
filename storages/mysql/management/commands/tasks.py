@@ -3,7 +3,6 @@ import pathlib
 import importlib
 from typing import Dict
 
-import typer
 from django.core.management import BaseCommand
 
 from tasks import Task, TaskType

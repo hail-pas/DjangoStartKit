@@ -13,6 +13,7 @@ from rest_framework.relations import PKOnlyObject
 from rest_framework.serializers import ALL_FIELDS, ModelSerializer
 from rest_framework_jwt.serializers import JSONWebTokenSerializer, jwt_encode_handler, jwt_payload_handler
 
+from common import messages
 from storages import enums
 from common.utils import COMMON_TIME_STRING, format_str_to_millseconds
 
@@ -207,15 +208,18 @@ class CustomJSONWebTokenSerializer(JSONWebTokenSerializer):
 
             if user:
                 if not user.is_active:
-                    msg = "该用户已被禁用"
+                    msg = messages.AccountDisabled
                     raise serializers.ValidationError(msg)
 
                 payload = jwt_payload_handler(user)
-                payload["scene"] = attrs.get("scene", enums.SceneRole.user.value)
+                scene = attrs.get("scene")
+                if scene not in enums.SceneRole.values() + user.role_names:
+                    raise serializers.ValidationError(messages.UserSceneCheckFailed)
+                payload["scene"] = scene
 
                 return {"token": jwt_encode_handler(payload), "user": user}
             else:
-                msg = "账号或密码错误"
+                msg = messages.UserOrPasswordError
                 raise serializers.ValidationError(msg)
         else:
             msg = _('Must include "{username_field}" and "password".')

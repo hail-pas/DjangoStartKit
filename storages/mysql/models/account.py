@@ -13,7 +13,7 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.contrib.contenttypes.models import ContentType
 
 from storages import enums
-from common.utils import file_upload_to
+from common.utils import flatten_list, file_upload_to
 from common.django.perms import _user_has_api_perm  # noqa
 from storages.mysql.base import BaseModel, LabelFieldMixin, RemarkFieldMixin, StatusFieldMixin
 
@@ -46,7 +46,10 @@ class BaseUserManager(Manager):
         return get_random_string(length, allowed_chars)
 
     def get_by_natural_key(self, username):
-        return self.get(**{self.model.USERNAME_FIELD: username})
+        user = self.filter(**{self.model.USERNAME_FIELD: username}).prefetch_related("roles").first()
+        if not user:
+            raise self.model.DoesNotExist()
+        return user
 
 
 class ProfileManager(BaseUserManager):
@@ -359,6 +362,9 @@ class Role(RemarkFieldMixin, BaseModel):
     system_resources = models.ManyToManyField(
         to=SystemResource, related_name="roles", help_text="系统资源", verbose_name="系统资源", blank=True,
     )
+    preserved = models.BooleanField(
+        verbose_name="是否系统保留角色", help_text=f"是否系统保留角色: {enums.SceneRole.values()}", default=False
+    )
     # data_filters = models.ManyToManyField(
     #     to=DataFilter, related_name="roles", help_text="数据限制", verbose_name="数据限制", blank=True,
     # )
@@ -395,7 +401,7 @@ class Profile(BaseModel, AbstractUser):
 
     @property
     def role_names(self):
-        return self.roles.values_list("name").all()
+        return flatten_list(self.roles.values_list("name").all())
 
     def has_api_perm(self, request, view):
         if self.is_active and self.is_superuser:

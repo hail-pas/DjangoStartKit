@@ -15,3 +15,7 @@ AccountWithPhoneExisted = "使用该手机号的用户已存在"
 RoleWithUsers = "{} 角色下还存在关联用户，禁止删除"
 
 FieldNonExists = "字段不存在"
+
+UserSceneCheckFailed = "账号角色校验不通过"
+
+Forbidden = "{}无访问权限"

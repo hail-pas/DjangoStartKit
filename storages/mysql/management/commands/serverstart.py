@@ -9,7 +9,7 @@ shell = partial(subprocess.run, shell=True)
 
 
 class Command(BaseCommand):
-    help = """start.sh启动服务器"""
+    help = """shell 启动 core.main 服务器"""
 
     def add_arguments(self, parser):
         pass

@@ -12,9 +12,7 @@
 # 目录结构
 
 |-- apis<br>
-|       |-- 子App API<br>
-|-- command<br>
-|       |-- 命令行工具（MySQL、Redis、Hbase、K8S任务创建）<br>
+|       |-- 模块 API<br>
 |-- common<br>
 |       |-- 通用模块（自定义swagger装饰器、类型、加解密函数）<br>
 |-- conf<br>
@@ -28,18 +26,16 @@
 |-- scripts<br>
 |       |-- 初始化/发版等脚本 <br>
 |-- storages<br>
-|       |-- 存储相关(Hbase、Redis、Oss、Mysql)<br>
+|       |-- 存储相关(Hbase、Redis、Oss、Mysql) 以及 自定义 manage.py 命令<br>
 |-- tasks<br>
 |       |-- 异步、定时任务实现目录<br>
 |-- third_apis<br>
 |       |-- 对接第三方接口<br>
-|- command.py 命令行工具<br> -- Deprecated, 已整合进 django-manage 命令中
 |- Makefile<br>
 |- manage.py<br>
 |- poetry.toml 依赖定义文件<br>
 |- project.lock 依赖管理文件<br>
 |- README.md<br>
-|- start.sh<br>
 
 # 快速启动
 
@@ -56,7 +52,7 @@ pip install poetry
 poetry update -vvv
 
 # 创建数据库
-python command.py mysql createdb
+python manage.py mysql createdb
 python manage.py migrate
 ```
 
@@ -152,7 +148,7 @@ from rest_framework.decorators import api_view
 from storages.enums import get_enum_content
 from apis.info import schemas
 from apis.responses import RestResponse
-from common.swagger import custom_swagger_auto_schema
+from common.decorators import custom_swagger_auto_schema
 
 
 @custom_swagger_auto_schema(

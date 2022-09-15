@@ -1,6 +1,6 @@
 from django.utils import timezone
 from captcha.models import CaptchaStore
-from rest_framework import views
+from rest_framework import views, status
 from captcha.helpers import captcha_image_url
 from django.contrib.auth import logout
 from rest_framework.parsers import JSONParser
@@ -10,7 +10,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from common import messages
 from apis.auth import schemas, serializers
 from apis.responses import RestResponse
-from common.swagger import custom_swagger_auto_schema
+from common.decorators import custom_swagger_auto_schema
 from apis.account.serializers import ProfileSerializer, get_profile_system_resource
 from storages.mysql.models.account import Profile, SystemResource
 
@@ -75,7 +75,9 @@ class ChangePasswordView(ObtainJSONWebToken):
     permission_classes = (IsAuthenticated,)
     parser_classes = (JSONParser,)
 
-    @custom_swagger_auto_schema(request_body=schemas.ChangePasswordSerializer)
+    @custom_swagger_auto_schema(
+        request_body=schemas.ChangePasswordSerializer, responses={status.HTTP_200_OK: RestResponse.success_schema}
+    )
     def post(self, request, *args, **kwargs):
         profile = request.user  # type: Profile
 

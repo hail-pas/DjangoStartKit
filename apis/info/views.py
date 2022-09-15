@@ -4,8 +4,8 @@ from rest_framework.views import APIView
 
 from apis.info import schemas
 from apis.responses import RestResponse
-from common.swagger import custom_swagger_auto_schema
 from storages.enums import get_enum_content
+from common.decorators import custom_swagger_auto_schema
 
 
 class EnumsView(APIView):

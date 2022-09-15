@@ -1,10 +1,13 @@
 from rest_framework import serializers
 
+from storages import enums
 from common.types import PlainSchema
 from common.drf.serializers import CustomJSONWebTokenSerializer
 
 
 class LoginSerializer(CustomJSONWebTokenSerializer):  # noqa
+    scene = serializers.CharField(required=False, default=enums.SceneRole.user.value, help_text="登录场景")
+
     # captcha = serializers.CharField(min_length=4, max_length=4, required=True,
     #                                 error_messages={
     #                                     "max_length": "图片验证码格式错误",
@@ -29,7 +32,6 @@ class LoginSerializer(CustomJSONWebTokenSerializer):  # noqa
     #     # 防止验证码重放, 通过验证后删除
     #     image_code.delete()
     #     return captcha
-    pass
 
 
 class ChangePasswordSerializer(PlainSchema):

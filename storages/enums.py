@@ -72,7 +72,7 @@ class GenderEnum(StrEnumMore):
 
 class SceneRole(StrEnumMore):
     """
-    用户token标识角色
+    用户token预置角色
     """
 
     anonymous = ("anonymous", "匿名用户")

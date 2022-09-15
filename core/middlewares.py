@@ -1,23 +1,26 @@
 from urllib.parse import parse_qs
 
+import jwt
 import ujson
 from channels.db import database_sync_to_async
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest
 from rest_framework import status, exceptions
 from channels.middleware import BaseMiddleware
 from django.contrib.auth import get_user_model
-from django.utils.encoding import smart_text
 from rest_framework.request import Request
+from rest_framework.response import Response
 from django.utils.translation import ugettext as _
+from rest_framework.renderers import JSONRenderer
 from rest_framework.exceptions import ErrorDetail, ValidationError, AuthenticationFailed
-from rest_framework_jwt.settings import api_settings
-from rest_framework.authentication import get_authorization_header
+from django.contrib.auth.models import AnonymousUser
 from rest_framework_jwt.authentication import (
     JSONWebTokenAuthentication,
     jwt_decode_handler,
     jwt_get_username_from_payload,
 )
 
+from common import messages
+from storages import enums
 from common.types import ContentTypeEnum, RequestMethodEnum
 from apis.responses import RestResponse
 
@@ -113,8 +116,10 @@ class RequestProcessMiddleware:
 
 class ResponseProcessMiddleware:
     """
-
+    响应处理，>= 400 的 http 状态码只返回特定的
     """
+
+    ESCAPE_HTTP_STATUS_CODE = [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN]
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -130,19 +135,25 @@ class ResponseProcessMiddleware:
     def process_template_response(self, request, response):  # noqa
         # 处理 exception response
         if response.status_code >= status.HTTP_400_BAD_REQUEST:
-            # 401 直接返回
-            if response.status_code in [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN]:
+            # 直接返回的状态码
+            if response.status_code in self.ESCAPE_HTTP_STATUS_CODE:
                 return response
             data = response.data
             if isinstance(data, dict):
-                error_field, error_value = list(data.items())[0]
-                if error_value and isinstance(error_value, list):
-                    error_value = error_value[0]
-                msg = error_value
-                # if error_field not in ["non_field_errors", "detail"]:
-                #     msg = f"错误字段: {error_field}-{error_value}"
-                #     # msg = f"{error_value}"
-                response.data = RestResponse.fail(message=msg, data=data).dict()
+                if response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR:
+                    # ServiceException
+                    response.data = RestResponse(
+                        code=data["detail"].code, message=data["detail"], data=data, success=False
+                    ).dict()
+                else:
+                    error_field, error_value = list(data.items())[0]
+                    if error_value and isinstance(error_value, list):
+                        error_value = error_value[0]
+                    msg = error_value
+                    # if error_field not in ["non_field_errors", "detail"]:
+                    #     msg = f"错误字段: {error_field}-{error_value}"
+                    #     # msg = f"{error_value}"
+                    response.data = RestResponse.fail(message=msg, data=data).dict()
 
             elif isinstance(data, str):
                 response.data = RestResponse.fail(message=data).dict()
@@ -166,23 +177,61 @@ class CustomJSONWebTokenAuthentication(JSONWebTokenAuthentication):
 
     www_authenticate_realm = "api"
 
-    def get_jwt_value(self, request):
-        auth = get_authorization_header(request).split()
-        auth_header_prefix = api_settings.JWT_AUTH_HEADER_PREFIX.lower()
-
-        if not auth:
-            if api_settings.JWT_AUTH_COOKIE:
-                return request.COOKIES.get(api_settings.JWT_AUTH_COOKIE)
+    def authenticate(self, request):
+        """
+        Returns a two-tuple of `User` and token if a valid signature has been
+        supplied using JWT-based authentication.  Otherwise returns `None`.
+        """
+        jwt_value = self.get_jwt_value(request)
+        if jwt_value is None:
             return None
 
-        if smart_text(auth[0].lower()) != auth_header_prefix:
-            return None
+        try:
+            payload = jwt_decode_handler(jwt_value)
+        except jwt.ExpiredSignature:
+            msg = _("Signature has expired.")
+            raise exceptions.AuthenticationFailed(msg)
+        except jwt.DecodeError:
+            msg = _("Error decoding signature.")
+            raise exceptions.AuthenticationFailed(msg)
+        except jwt.InvalidTokenError:
+            raise exceptions.AuthenticationFailed()
 
-        if len(auth) == 1:
-            msg = _("Invalid Authorization header. No credentials provided.")
+        user = self.authenticate_credentials(payload)
+
+        return user, jwt_value, payload
+
+    def authenticate_credentials(self, payload):
+        """
+        Returns an active user that matches the payload's user id and email.
+        """
+        User = get_user_model()
+        username = jwt_get_username_from_payload(payload)
+
+        if not username:
+            msg = _("Invalid payload.")
             raise exceptions.AuthenticationFailed(msg)
 
-        return auth[1]
+        try:
+            user = User.objects.get_by_natural_key(username)
+        except User.DoesNotExist:
+            msg = _("Invalid signature.")
+            raise exceptions.AuthenticationFailed(msg)
+
+        if not user.is_active:
+            msg = _("User account is disabled.")
+            raise exceptions.AuthenticationFailed(msg)
+
+        return user
+
+
+def middleware_response(status, data: dict):  # noqa
+    response = Response(data=data, status=status)
+    response.accepted_renderer = JSONRenderer()
+    response.accepted_media_type = "application/json"
+    response.renderer_context = {}
+    response.render()
+    return response
 
 
 class AuthenticationMiddlewareJWT:
@@ -194,10 +243,30 @@ class AuthenticationMiddlewareJWT:
         try:
             parsed = CustomJSONWebTokenAuthentication().authenticate(Request(request))
             if parsed:
-                (user, user_jwt) = parsed
+                (user, _, payload) = parsed
                 request._user = user
+                request.user = user
+                request.scene = payload.get("scene")
+                if (user.is_staff or user.is_superuser) and not (
+                    request.path.startswith("/admin") or request.path.startswith("/static/admin")
+                ):  # disable admin user
+                    return middleware_response(
+                        status=status.HTTP_403_FORBIDDEN,
+                        data={"message": messages.Forbidden.format("admin用户对非admin接口")},
+                    )
+
+                if (
+                    # and request.scene not in enums.SceneRole.anonymous.value
+                    request.scene
+                    not in user.role_names + enums.SceneRole.values()  # 预置角色和自定义角色
+                ):
+                    return middleware_response(
+                        status=status.HTTP_401_UNAUTHORIZED, data={"message": messages.UserSceneCheckFailed}
+                    )
         except AuthenticationFailed:
-            return HttpResponse(status=status.HTTP_401_UNAUTHORIZED)
+            request._user = AnonymousUser()
+            # return HttpResponse(status=status.HTTP_401_UNAUTHORIZED)
+            request.scene = enums.SceneRole.anonymous.value
 
         response = self.get_response(request)
 

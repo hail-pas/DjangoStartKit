@@ -19,14 +19,14 @@ class CustomGenericViewSet(GenericViewSet):
             # queryset just for schema generation metadata
             return self.queryset.none()
         # eval_string内使用
-        from django.db.models import Q  # noqa
-
+        # from django.db.models import Q  # noqa
+        #
         queryset = super().get_queryset()
-        profile = self.request.user
-        q_filters = profile.roles.all().values_list("data_filters__eval_string", flat=True)
-        q_filter_eval_string = " | ".join(filter(bool, q_filters))  # 取或
-        if q_filter_eval_string:
-            return queryset.filter(eval(q_filter_eval_string))
+        # profile = self.request.user
+        # q_filters = profile.roles.all().values_list("data_filters__eval_string", flat=True)
+        # q_filter_eval_string = " | ".join(filter(bool, q_filters))  # 取或
+        # if q_filter_eval_string:
+        #     return queryset.filter(eval(q_filter_eval_string))
         return queryset
 
 
@@ -69,13 +69,6 @@ class RestListModelMixin:
             simple_list = list(set(self.serializer_class().fields.keys()).intersection(set(simple_list)))  # noqa
 
         queryset = self.filter_queryset(self.get_queryset())  # noqa
-
-        profile = request.user
-
-        if not simple_list and not profile.is_anonymous:
-            simple_list = profile.display_fields_config.get(
-                self.serializer_class().Meta.model._meta.label_lower
-            )  # noqa
 
         if simple_list:
             if "id" not in simple_list:
