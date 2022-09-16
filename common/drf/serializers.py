@@ -15,6 +15,7 @@ from rest_framework_jwt.serializers import JSONWebTokenSerializer, jwt_encode_ha
 
 from common import messages
 from storages import enums
+from conf.config import local_configs
 from common.utils import COMMON_TIME_STRING, format_str_to_millseconds
 
 
@@ -215,6 +216,11 @@ class CustomJSONWebTokenSerializer(JSONWebTokenSerializer):
                 scene = attrs.get("scene")
                 if scene not in enums.SceneRole.values() + user.role_names:
                     raise serializers.ValidationError(messages.UserSceneCheckFailed)
+                system = attrs.get("system")
+                # TODO: 校验用户登录系统合法性
+                if not system:
+                    system = local_configs.PROJECT.NAME
+                payload["system"] = system
                 payload["scene"] = scene
 
                 return {"token": jwt_encode_handler(payload), "user": user}

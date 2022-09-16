@@ -8,6 +8,10 @@ from functools import partial as raw_partial
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, serializers
+from django.forms.utils import pretty_name
+from rest_framework.decorators import MethodMapper
+
+from common.utils import underscore_to_camelcase
 
 
 def partial(func, *args):
@@ -147,5 +151,39 @@ def custom_swagger_auto_schema(**kwargs):
         view_method.query_serializer = kwargs.get("query_serializer", None)
         view_method.body_serializer = kwargs.get("request_body", None)
         return view_method
+
+    return decorator
+
+
+def camelCaseAction(methods=None, detail=None, url_path=None, url_name=None, **kwargs):
+    """
+    生成驼峰路径的action
+    """
+    methods = ["get"] if (methods is None) else methods
+    methods = [method.lower() for method in methods]
+
+    assert detail is not None, "@action() missing required argument: 'detail'"
+
+    # name and suffix are mutually exclusive
+    if "name" in kwargs and "suffix" in kwargs:
+        raise TypeError("`name` and `suffix` are mutually exclusive arguments.")
+
+    def decorator(func):
+        func.mapping = MethodMapper(func, methods)
+
+        func.detail = detail
+        func.url_path = url_path if url_path else underscore_to_camelcase(func.__name__)
+        func.url_name = url_name if url_name else func.__name__.replace("_", "-")
+
+        # These kwargs will end up being passed to `ViewSet.as_view()` within
+        # the router, which eventually delegates to Django's CBV `View`,
+        # which assigns them as instance attributes for each request.
+        func.kwargs = kwargs
+
+        if "name" not in kwargs and "suffix" not in kwargs:
+            func.kwargs["name"] = pretty_name(func.__name__)
+        func.kwargs["description"] = func.__doc__ or None
+
+        return func
 
     return decorator

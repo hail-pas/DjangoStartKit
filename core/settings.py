@@ -57,7 +57,6 @@ INSTALLED_APPS = [
     "storages.mysql",
     "apis.account",
     "apis.info",
-    "apis.chat",
 ]
 
 MIDDLEWARE = [
@@ -79,6 +78,12 @@ MIDDLEWARE = [
 ROOT_URLCONF = "core.urls"
 AUTH_USER_MODEL = "mysql.Profile"
 AUTHENTICATION_BACKENDS = ["core.authenticate.CustomModelBackend"]
+
+URI_PERMISSION_AUTHENTICATE_EXEMPT = {
+    "modules": [],
+    "classes": [],
+    "actions": ["self"],
+}
 
 TEMPLATES = [
     {
