@@ -45,83 +45,81 @@ class BaseModelMeta(type):
         """
         meta_class: "BaseModel.Meta" = attrs.get("Meta", None)
         if not meta_class:
-            raise RuntimeError(f"Must define the meta class of HBase Model - {name} with table_name field")
+            raise RuntimeError(f"Must define the meta class of HBase Model - {name}")
         abstract = getattr(meta_class, "abstract", False)
-        for _, attr in attrs.items():
-            if _.startswith("_") or _ == "Meta" or isinstance(attr, classmethod):
+        has_columns = False
+        for attr_name, attr in attrs.items():
+            if (
+                attr_name.startswith("_")
+                or attr_name == "Meta"
+                or isinstance(attr, classmethod)
+                or isinstance(attr, Callable)
+            ):
                 continue
-            assert isinstance(attr, (list, tuple)) and len(attr) == 2, f"{_} 必须使用('column_name', 'verbose_name')"
-            assert isinstance(attr[0], (str, bytes)) and isinstance(
-                attr[1], str
-            ), f"{_} 使用 str 或 bytes 类型指定 column_name, 使用 str 指定 verbose_name"  # noqa
+
+            if attr_name == "Columns" and attr:
+                # 检测 Columns 属性
+                if not isinstance(attr, dict):
+                    raise RuntimeError(f"Must define Columns field with dict format of HBase Model - {name}")
+
+                for column_name, display in attr.items():
+                    if not isinstance(column_name, bytes):
+                        raise RuntimeError(
+                            f"Must define Columns field key with byte format of HBase Model - {name}, key {column_name} got {type(column_name)}"
+                        )
+                    if not isinstance(display, str):
+                        raise RuntimeError(
+                            f"Must define Columns field value with string format of HBase Model - {name}, value {display} got {type(display)}"
+                        )
+
+                has_columns = True
+
+        if not has_columns:
+            raise RuntimeError(f"Must define Columns field of HBase Model - {name}")
+
         if not abstract:
             table_name = getattr(meta_class, "table_name", None)
             if not table_name:
                 raise RuntimeError(f"Must specify table_name of HBase Model - {name} in Meta class")
             attrs["_table_name"] = table_name
-            column_family_name = getattr(meta_class, "column_family_name", None)
+            family_name = getattr(meta_class, "family_name", None)
             # if not column_family_name:
             #     raise RuntimeError(f"Must specify column_family_name of HBase Model - {name} in Meta class")
-            attrs["_column_family_name"] = column_family_name
-            bytes_to_str_map = {}
-            fields_map = {}
-            hex_fields = getattr(meta_class, "hex_fields", [])  # type: list
-            json_fields = getattr(meta_class, "json_fields", [])  # type: list
-            json_fields_mapper = getattr(meta_class, "json_fields_mapper", {})  # type: dict
-            for k, v in attrs.items():
-                if k.startswith("_") or k == "Meta" or isinstance(v, classmethod):
-                    continue
-                if isinstance(v[0], bytes):
-                    # 指定为bytes类型则直接使用
-                    bytes_to_str_map[v[0]] = k
-                    fields_map[k] = v[1]
-                else:
-                    # 组装 column_family_name 和 column_name
-                    if not column_family_name:
-                        raise RuntimeError(f"Must specify column_family_name of HBase Model - {name} in Meta class")
-                    bytes_to_str_map[f"{column_family_name}:{v[0]}".encode()] = k
+            attrs["_family_name"] = family_name
+            hex_columns = getattr(meta_class, "hex_columns", [])  # type: list
+            json_columns = getattr(meta_class, "json_columns", [])  # type: list
+            json_column_mapper = getattr(meta_class, "json_column_mapper", {})  # type: dict
             for base in bases:
-                _parent_bytes_to_str_map = getattr(base, "_bytes_to_str_map", None)
-                _parent_hex_fields = getattr(base, "_hex_fields", None)
-                _parent_json_fields = getattr(base, "_json_fields", None)
-                _parent_json_fields_mapper = getattr(base, "_json_fields_mapper", None)
-                _parent_fields_map = getattr(base, "_fields_map")
-                if _parent_bytes_to_str_map:
-                    bytes_to_str_map.update(_parent_bytes_to_str_map)
-                    fields_map.update(_parent_fields_map)
-                if _parent_hex_fields:
-                    hex_fields.extend(_parent_hex_fields)
-                if _parent_json_fields:
-                    json_fields.extend(_parent_json_fields)
-                if _parent_json_fields_mapper:
-                    json_fields_mapper.update(_parent_json_fields_mapper)
+                _parent_hex_columns = getattr(base, "_hex_columns", None)
+                _parent_json_columns = getattr(base, "_json_columns", None)
+                _parent_json_column_mapper = getattr(base, "_json_column_mapper", None)
+                if _parent_hex_columns:
+                    hex_columns.extend(_parent_hex_columns)
+                if _parent_json_columns:
+                    json_columns.extend(_parent_json_columns)
+                if _parent_json_column_mapper:
+                    json_column_mapper.update(_parent_json_column_mapper)
 
-            attrs["_hex_fields"] = hex_fields
-            attrs["_json_fields"] = json_fields
-            attrs["_json_fields_mapper"] = json_fields_mapper
-
-            if not bytes_to_str_map:
-                raise RuntimeError(f"Must define one column at least of HBase Model - {name}")
-            attrs["_bytes_to_str_map"] = bytes_to_str_map
-            attrs["_str_to_bytes_map"] = {v: k for k, v in bytes_to_str_map.items()}
-            attrs["_fields_map"] = fields_map
+            attrs["_hex_columns"] = hex_columns
+            attrs["_json_columns"] = json_columns
+            attrs["_json_column_mapper"] = json_column_mapper
         return super().__new__(mcs, name, bases, attrs)
 
     @property
     @lru_cache
     def response_model(cls, is_list: bool = True):
         properties = {}
-        json_fields_mapper = cls._json_fields_mapper  # noqa
-        for k, _ in cls._str_to_bytes_map.items():  # noqa
-            if k in cls._json_fields and k in json_fields_mapper:  # noqa
+        json_column_mapper = cls.__json_column_mapper  # noqa
+        for k, display in cls.Columns.items():  # noqa
+            if k in cls._json_columns and k in json_fields_mapper:  # noqa
                 in_properties = {}
-                for (in_k, desc) in json_fields_mapper.get(k):
+                for (in_k, desc) in json_column_mapper.get(k, (None, []))[1]:
                     in_properties[in_k] = openapi.Schema(type=openapi.TYPE_STRING, default="", description=desc)
                 properties[k] = openapi.Schema(
                     type=openapi.TYPE_OBJECT, properties=in_properties, description=f"{k}字段结构"
                 )
             else:
-                properties[k] = openapi.Schema(type=openapi.TYPE_STRING, default="", description=getattr(cls, k)[1])
+                properties[k] = openapi.Schema(type=openapi.TYPE_STRING, default="", description=display)
 
         data_schema = openapi.Schema(
             type=openapi.TYPE_OBJECT, properties=properties, description=f"{cls.__name__}单数据响应体结构"
@@ -170,25 +168,22 @@ class BaseModel(metaclass=BaseModelMeta):
 
     _pool = None
     _table_name = None
-    _column_family_name = None
-    _bytes_to_str_map = None
-    _str_to_bytes_map = None
-    _hex_fields = []
-    _json_fields = []
-    _json_fields_mapper = {}
-    _fields_map = None
+    _family_name = None
+    _hex_columns = []
+    _json_columns = []
+    _json_column_mapper = {}
 
     class Meta:
         abstract = True
         table_name = None
 
     @classmethod
-    def value_decode(cls, field_name, value):
+    def value_decode(cls, column_name, value):
         if isinstance(value, bytes):
             try:
-                if field_name in cls._hex_fields:
+                if column_name in cls._hex_columns:
                     value = binascii.hexlify(value).decode()
-                elif field_name in cls._json_fields:
+                elif column_name in cls._json_columns:
                     value = loads(value.decode())
                 else:
                     value = value.decode()
@@ -197,7 +192,7 @@ class BaseModel(metaclass=BaseModelMeta):
         return value
 
     @classmethod
-    def field_range_map(cls):
+    def column_range_map(cls):
         raise NotImplementedError
         # 左闭右闭
         # map = {
@@ -215,18 +210,18 @@ class BaseModel(metaclass=BaseModelMeta):
     @classmethod
     def data_clean(cls, data: Union[List, Dict]):
         if isinstance(data, dict):
-            return cls.field_clean(data)
+            return cls.column_clean(data)
         elif isinstance(data, (tuple, list)):
             result = []
             for d in data:
                 if isinstance(d, dict):
-                    result.append(cls.field_clean(d))
+                    result.append(cls.column_clean(d))
             return result
         else:
             raise RuntimeError(f"Not Supported Data Type - {type(data)}")
 
     @classmethod
-    def field_clean(
+    def column_clean(
         cls,
         single_data: dict,
         place_holder: str = "-",
@@ -239,7 +234,7 @@ class BaseModel(metaclass=BaseModelMeta):
         result = {}
         for k, v in single_data.items():
             result[k] = v
-            defined_range = cls.field_range_map().get(k)
+            defined_range = cls.column_range_map().get(k)
             try:
                 if defined_range and not defined_range[0] <= float(v) <= defined_range[1]:
                     result[k] = place_holder
@@ -255,16 +250,14 @@ class BaseModel(metaclass=BaseModelMeta):
     def serialize(cls, retrieved_data: Union[list, dict]):
         if isinstance(retrieved_data, dict):
             item = {}
-            for k, v in cls._bytes_to_str_map.items():
-                value = retrieved_data.get(k)
-                item[k.decode("utf-8")] = cls.value_decode(v, value)
+            for k, v in retrieved_data.items():
+                item[k.decode("utf-8")] = cls.value_decode(k, v)
             return item
         result = []
         for row_key, hbase_data in retrieved_data:
             item = {"row_key": row_key.decode()}
-            for k, v in cls._bytes_to_str_map.items():
-                value = hbase_data.get(k)
-                item[k.decode("utf-8")] = cls.value_decode(v, value)
+            for k, v in hbase_data.items():
+                item[k.decode("utf-8")] = cls.value_decode(k, v)
             result.append(Map(item))
         return result
 
@@ -287,10 +280,6 @@ class BaseModel(metaclass=BaseModelMeta):
     ):
         if cls._pool is None:
             cls._pool = hbase_connection_pool()
-        if columns:
-            columns = [field if isinstance(field, bytes) else cls._str_to_bytes_map[field] for field in columns]
-        else:
-            columns = list(cls._bytes_to_str_map.keys())
         with cls._pool.connection() as conn:
             if specify_table_name:
                 table = conn.table(specify_table_name)  # type: Table
@@ -324,10 +313,6 @@ class BaseModel(metaclass=BaseModelMeta):
     ):
         if cls._pool is None:
             cls._pool = hbase_connection_pool()
-        if columns:
-            columns = [field if isinstance(field, bytes) else cls._str_to_bytes_map[field] for field in columns]
-        else:
-            columns = list(cls._bytes_to_str_map.keys())
         with cls._pool.connection() as conn:
             if specify_table_name:
                 table = conn.table(specify_table_name)  # type: Table
@@ -352,10 +337,6 @@ class BaseModel(metaclass=BaseModelMeta):
     ):
         if cls._pool is None:
             cls._pool = hbase_connection_pool()
-        if columns:
-            columns = [field if isinstance(field, bytes) else cls._str_to_bytes_map[field] for field in columns]
-        else:
-            columns = list(cls._bytes_to_str_map.keys())
         with cls._pool.connection() as conn:
             if specify_table_name:
                 table = conn.table(specify_table_name)  # type: Table
