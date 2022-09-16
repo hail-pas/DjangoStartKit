@@ -4,6 +4,7 @@ from contextlib import contextmanager
 from django.db import models, transaction
 from django.utils import timezone
 from django.db.models import Manager
+from polymorphic.managers import PolymorphicManager
 from django.db.transaction import get_connection
 from django.db.models.fields.files import FieldFile
 
@@ -22,17 +23,19 @@ def lock_table(model):
             cursor.close()
 
 
-class DeletedFieldManager(Manager):
+class SoftDeletedManager(Manager):
     """
     deleted 软删除
     """
 
-    def get_queryset(self):
-        return super().get_queryset().filter(delete_time__isnull=True)
+    def filter_deleted_false(self, *args, **kwargs):
+        defaults = {"delete_time__isnull": True}
+        defaults.update(kwargs)
+        return self.get_queryset().filter(*args, **defaults)
 
 
 class BaseModel(models.Model):
-    objects = Manager()
+    objects = SoftDeletedManager()
 
     create_time = models.DateTimeField("创建时间", auto_now_add=True, help_text="创建时间", editable=False)
     update_time = models.DateTimeField("更新时间", auto_now=True, help_text="更新时间", editable=False)
@@ -45,6 +48,21 @@ class BaseModel(models.Model):
         if update_fields:
             kwargs["update_fields"] = set(update_fields + ["update_time"])
         return super().save(*args, **kwargs)
+
+    class Meta:
+        abstract = True
+        ordering = ["-id"]  # 默认倒序
+
+
+class PolySoftDeletedManager(PolymorphicManager):
+    def filter_deleted_false(self, *args, **kwargs):
+        defaults = {"delete_time__isnull": True}
+        defaults.update(kwargs)
+        return self.get_queryset().filter(*args, **defaults)
+
+
+class PolyBaseModel(BaseModel):
+    objects = PolySoftDeletedManager()
 
     class Meta:
         abstract = True

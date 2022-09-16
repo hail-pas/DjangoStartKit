@@ -183,12 +183,20 @@ class CustomSwaggerAutoSchema(SwaggerAutoSchema):
                 name="simple_list",
                 in_=IN_QUERY,
                 description=f"英文逗号分隔, 指定返回字段: "
-                f"{', '.join([i.name for i in self.view.get_serializer_class().Meta.model._meta.fields])}",
-                # noqa
+                f"{', '.join([i.name for i in self.view.get_serializer_class().Meta.model._meta.fields])}",  # noqa
                 required=False,
                 type=TYPE_STRING,
             )
-            return [simple_list_param] + params
+            ordering_list_param = Parameter(
+                name="ordering",
+                in_=IN_QUERY,
+                description=f"英文逗号分隔, 用于排序的字段: "
+                f"{', '.join([i.name for i in self.view.get_serializer_class().Meta.model._meta.fields])};"  # noqa
+                "id 表示以 id 升序排序，-id 表示 以 id 降序排序",
+                required=False,
+                type=TYPE_STRING,
+            )
+            return [simple_list_param, ordering_list_param] + params
         return params
 
 

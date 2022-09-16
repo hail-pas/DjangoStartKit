@@ -5,17 +5,17 @@ from django.db import models
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.db.models import Manager
+from polymorphic.models import PolymorphicModel
 from django.utils.crypto import get_random_string
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import Permission, GroupManager, _user_has_perm, _user_has_module_perms  # noqa
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
-from django.contrib.contenttypes.models import ContentType
 
 from storages import enums
 from common.utils import flatten_list, file_upload_to
 from common.django.perms import _user_has_api_perm  # noqa
-from storages.mysql.base import BaseModel, LabelFieldMixin, RemarkFieldMixin, StatusFieldMixin
+from storages.mysql.base import BaseModel, PolyBaseModel, LabelFieldMixin, RemarkFieldMixin, PolySoftDeletedManager
 
 from django.contrib.auth.models import _user_get_permissions  # noqa; noqa
 
@@ -52,7 +52,7 @@ class BaseUserManager(Manager):
         return user
 
 
-class ProfileManager(BaseUserManager):
+class ProfileManager(BaseUserManager, PolySoftDeletedManager):
     def create_user(self, username, phone, password, **extra_fields):
         user = self.model(username=username, phone=phone, **extra_fields)
         user.set_password(password)
@@ -382,7 +382,7 @@ class Role(RemarkFieldMixin, BaseModel):
         verbose_name_plural = verbose_name
 
 
-class Profile(BaseModel, AbstractUser):
+class Profile(PolyBaseModel, AbstractUser, PolymorphicModel):
     """
     username、phone
     """

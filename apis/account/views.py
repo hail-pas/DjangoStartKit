@@ -22,7 +22,7 @@ class ProfileViewSet(RestModelViewSet,):
     """
 
     serializer_class = serializers.ProfileSerializer
-    queryset = models.Profile.objects.filter(delete_time__isnull=True, is_superuser=False)
+    queryset = models.Profile.objects.filter(is_superuser=False)
     search_fields = ("phone", "username")
     filter_fields = (
         "roles",
@@ -79,10 +79,9 @@ class ProfileViewSet(RestModelViewSet,):
         """
         profile = self.get_object()  # type: models.Profile
         profile.set_password(profile.phone)
-        profile.save()
-        profile.operator = request.user
-        profile.save()
-        return RestResponse.ok(message="修改成功")
+        profile.save(update_fields=["password"])
+        # profile.operator = request.user
+        return RestResponse.ok()
 
     @custom_swagger_auto_schema(query_serializer=None, responses={status.HTTP_200_OK: serializers.ProfileSerializer})
     @action(methods=["get"], detail=False, permission_classes=(IsAuthenticated,))
@@ -100,7 +99,7 @@ class RoleViewSet(RestModelViewSet,):
     """
 
     serializer_class = serializers.RoleSerializer
-    queryset = models.Role.objects.filter(delete_time__isnull=True, preserved=False)
+    queryset = models.Role.objects.filter(preserved=False)
     search_fields = ("name",)
     # filter_fields = ("",)
     parser_classes = (JSONParser,)
@@ -125,7 +124,7 @@ class SystemResourceViewSet(RestListModelMixin, RestRetrieveModelMixin, CustomGe
     """
 
     serializer_class = serializers.SystemResourceSerializer
-    queryset = models.SystemResource.objects.filter(delete_time__isnull=True)
+    queryset = models.SystemResource.objects.all()
     filter_fields = ("parent", "type", "enabled")
     parser_classes = (JSONParser,)
     permission_classes = (IsAuthenticated, URIBasedPermission)

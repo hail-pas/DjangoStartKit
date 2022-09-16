@@ -61,14 +61,26 @@ class RestListModelMixin:
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
 
     def list(self, request, *args, **kwargs):
-        simple_list = None
-        simple_list_param = request.GET.get("simple_list")
-        if simple_list_param:
-            simple_list = simple_list_param.split(",")
+        queryset: Queryset = self.filter_queryset(self.get_queryset())  # noqa
+
+        ordering = request.GET.get("ordering")
+        if ordering:
+            ordering = ordering.split(",")
+            ordering = [i.strip() for i in ordering]
+            ordering = list(set(self.serializer_class().fields.keys()).intersection(set(ordering)))  # noqa
+        else:
+            ordering = []
+
+        if ordering:
+            queryset = queryset.order_by(*ordering)
+
+        simple_list = request.GET.get("simple_list")
+        if simple_list:
+            simple_list = simple_list.split(",")
             simple_list = [i.strip() for i in simple_list]
             simple_list = list(set(self.serializer_class().fields.keys()).intersection(set(simple_list)))  # noqa
-
-        queryset = self.filter_queryset(self.get_queryset())  # noqa
+        else:
+            simple_list = []
 
         if simple_list:
             if "id" not in simple_list:
