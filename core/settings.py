@@ -80,6 +80,12 @@ ROOT_URLCONF = "core.urls"
 AUTH_USER_MODEL = "mysql.Profile"
 AUTHENTICATION_BACKENDS = ["core.authenticate.CustomModelBackend"]
 
+URI_PERMISSION_AUTHENTICATE_EXEMPT = {
+    "modules": [],
+    "classes": [],
+    "actions": ["self"],
+}
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",

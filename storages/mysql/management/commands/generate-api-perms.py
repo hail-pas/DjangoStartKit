@@ -1,4 +1,8 @@
+import logging
+
 from django.core.management import BaseCommand
+
+logger = logging.getLogger("manage.generate-api-perms")
 
 
 class Command(BaseCommand):
@@ -24,4 +28,4 @@ class Command(BaseCommand):
             perms, created = Permission.objects.update_or_create(
                 content_type=content_type, codename=codename, defaults={"name": name}
             )
-        print("Success")
+        logger.info("Success")

@@ -106,8 +106,6 @@ celerybeat.pid
 
 # Environments
 *.env
-conf/content/*.yaml
-~conf/content/template.yaml
 .venv
 env/
 venv/
@@ -147,3 +145,6 @@ media/
 local_*
 
 .DS_Store
+
+conf/content/*
+!conf/content/template.yaml

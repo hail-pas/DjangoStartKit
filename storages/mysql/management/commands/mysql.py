@@ -1,3 +1,4 @@
+import logging
 import pathlib
 import subprocess
 from functools import partial
@@ -6,6 +7,8 @@ from django.core.management.base import BaseCommand, CommandError
 
 from conf.enums import Environment
 from conf.config import local_configs as settings
+
+logger = logging.getLogger("manage.mysql")
 
 shell = partial(subprocess.run, shell=True)
 
@@ -43,7 +46,7 @@ class Command(BaseCommand):
             )
         elif action == "dropdb":  # noqa
             if settings.PROJECT.ENVIRONMENT == Environment.production.value:
-                print("Forbidden operation in Production Environment")
+                logger.error("Forbidden operation in Production Environment")
                 return
             shell(
                 "mysql -h {host} --port={port} -u{user} -p{password} -e "

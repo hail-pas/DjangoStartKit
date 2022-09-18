@@ -205,7 +205,7 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
 
 # ========================================================================
 """
-用户 - 用户组（组织、职位） - 角色（权限组） - 权限（权限互斥、依赖、包含）
+用户 - 角色（资源组） - 资源 （权限组）- 权限（权限互斥、依赖、包含）
 系统资源：菜单、按钮、接口； 资源拥有权限； 角色获得其关联系统资源的所有相关权限
     名称
     父级
@@ -222,6 +222,17 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
     可选择权限项（存储到用户的数据权限配置字典, 角色也可以存储数据权限配置字典）
     排序
     备注
+
+# 对象
+用户 - 角色 - 系统资源 - 权限 ： 多对多关系
+用户 - 权限 ： 多对多关系
+系统 ： 可选（用于子系统）
+# 对象描述
+系统资源类别：菜单、按钮、接口
+权限：基于接口粒度控制
+用户可拥有多个角色，每个角色拥有多个系统资源，系统资源关联多个权限
+
+
 """
 
 
@@ -427,6 +438,8 @@ class System(LabelFieldMixin, RemarkFieldMixin, BaseModel):
     system_resources = models.ManyToManyField(
         to=SystemResource, related_name="systems", help_text="系统资源", verbose_name="系统资源", blank=True,
     )
+    roles = models.ManyToManyField(to=Role, related_name="systems", help_text="角色", verbose_name="角色", blank=True)
+
     # data_filters = models.ManyToManyField(
     #     to=DataFilter, related_name="systems", help_text="数据限制", verbose_name="数据限制", blank=True,
     # )
