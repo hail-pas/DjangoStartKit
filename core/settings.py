@@ -52,7 +52,6 @@ INSTALLED_APPS = [
     "drf_yasg",  # >>> swagger
     "django_filters",  # >>> filter
     "captcha",
-    "channels",
     # apps
     "storages.mysql",
     "apis.account",
@@ -108,12 +107,6 @@ ASGI_APPLICATION = "core.asgi.application"
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = local_configs.DATABASES
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {"hosts": [(local_configs.REDIS.HOST, local_configs.REDIS.PORT)]},
-    },
-}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -214,9 +207,6 @@ JWT_AUTH = {
     "JWT_EXPIRATION_DELTA": timedelta(minutes=local_configs.JWT.EXPIRATION_DELTA_MINUTES),
     "JWT_REFRESH_EXPIRATION_DELTA": timedelta(minutes=local_configs.JWT.REFRESH_EXPIRATION_DELTA_DELTA_MINUTES),
 }
-
-# AES
-AES_SECRET = local_configs.AES.SECRET
 
 if not os.path.exists(BASE_DIR.as_posix() + "/logs/error.log"):
     if not os.path.exists(BASE_DIR.as_posix() + "/logs/"):
