@@ -21,6 +21,7 @@ from rest_framework_jwt.authentication import (
 
 from common import messages
 from storages import enums
+from conf.config import local_configs
 from common.types import ContentTypeEnum, RequestMethodEnum
 from apis.responses import RestResponse
 
@@ -247,6 +248,8 @@ class AuthenticationMiddlewareJWT:
                 request._user = user
                 request.user = user
                 request.scene = payload.get("scene")
+                request.system = payload.get("system")
+                # TODO: 校验用户请求系统的合法性
                 if (user.is_staff or user.is_superuser) and not (
                     request.path.startswith("/admin") or request.path.startswith("/static/admin")
                 ):  # disable admin user
@@ -267,6 +270,7 @@ class AuthenticationMiddlewareJWT:
             request._user = AnonymousUser()
             # return HttpResponse(status=status.HTTP_401_UNAUTHORIZED)
             request.scene = enums.SceneRole.anonymous.value
+            request.system = local_configs.PROJECT.NAME
 
         response = self.get_response(request)
 
