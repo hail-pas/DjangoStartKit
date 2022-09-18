@@ -1,9 +1,12 @@
+import logging
 import subprocess
 from functools import partial
 
 from django.core.management import BaseCommand
 
 from conf.config import local_configs as settings
+
+logger = logging.getLogger("manage.redis")
 
 shell = partial(subprocess.run, shell=True)
 

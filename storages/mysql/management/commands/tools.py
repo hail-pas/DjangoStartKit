@@ -1,5 +1,6 @@
 import os
 import re
+import logging
 import pathlib
 
 from django.core.management import BaseCommand
@@ -10,6 +11,8 @@ src = local_configs.PROJECT.BASE_DIR
 
 DIRS = ["apis", "common", "core", "conf", "deploy", "tasks", "storages", "third_apis", "scripts"]
 FILES = [".gitignore", "manage.py", "pyproject.toml", "README.md", "Makefile", "start.sh"]
+
+logger = logging.getLogger("manage.tools")
 
 
 class Command(BaseCommand):
@@ -41,17 +44,17 @@ class Command(BaseCommand):
     def copy_project(name: str, dest: str):
         dest = pathlib.Path(dest)  # noqa
         if not dest.exists():
-            print("路径不存在")
+            logger.warning("路径不存在")
             return
 
         if not dest.is_dir():
-            print("目标路径不是文件夹")
+            logger.warning("目标路径不是文件夹")
             return
 
         dest = dest.joinpath(name)
 
         if dest.exists():
-            print("目标路径下已存在和项目名同名的文件夹")
+            logger.warning("目标路径下已存在和项目名同名的文件夹")
             return
 
         dest.mkdir()
@@ -94,4 +97,4 @@ class Command(BaseCommand):
 
         copy_file_in_dir(src)
 
-        print("Successful")
+        logger.info("Successful")

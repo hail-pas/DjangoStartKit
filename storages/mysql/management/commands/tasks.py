@@ -1,4 +1,5 @@
 import os
+import logging
 import pathlib
 import importlib
 from typing import Dict
@@ -8,6 +9,8 @@ from django.core.management import BaseCommand
 from tasks import Task, TaskType
 from conf.config import local_configs
 from common.k8s_api import KubeSetting, KubernetesAPI
+
+logger = logging.getLogger("manage.tasks")
 
 task_map: Dict[str, Task] = {}  # noqa
 timed_task_folder = local_configs.PROJECT.BASE_DIR.joinpath(pathlib.Path("tasks/timed"))
@@ -57,26 +60,26 @@ class Command(BaseCommand):
             for job_name, _ in task_map.items():
                 try:
                     self.create_job(job_name)
-                    print(f"任务: {job_name} 创建成功")
+                    logger.info(f"任务: {job_name} 创建成功")
                 except Exception as e:
-                    print(f"任务: {job_name} 创建失败 >> {e}")
+                    logger.warning(f"任务: {job_name} 创建失败 >> {e}")
 
     @staticmethod
     def create_job(job_name: str):
         if not job_name:  # noqa
-            print("必须指定任务名字!")
+            logger.warning("必须指定任务名字!")
             return
         job = task_map.get(job_name)  # type: Task
 
         if job.type_ is TaskType.asynchronous:
-            print(f"非异步定时任务，无须创建。 {job}")
+            logger.warning(f"非异步定时任务，无须创建。 {job}")
             return
 
         name = f'timed-{job.function.__name__.replace("_", "-")}'  # noqa
         command = f'["python", {job.file_name}]'
         kube_setting = KubeSetting(name, command, schedule=job.cron)
         KubernetesAPI(config_file=local_configs.K8S.CONFIG_FILE).create_cron_job(kube_setting, **job.k8s_kwargs)
-        print(f"创建任务-{job_name}成功")
+        logger.info(f"创建任务-{job_name}成功")
 
     @staticmethod
     def show_all_jobs():
