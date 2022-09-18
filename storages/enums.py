@@ -93,18 +93,6 @@ class Status(StrEnumMore):
     disable = ("disable", "禁用")
 
 
-class MessageType(StrEnumMore):
-    text = ("text", "文本")
-    picture = ("picture", "图片")
-    video = ("video", "视频")
-    audio = ("audio", "音频")
-    # link = ("link", "链接") # 特殊的文本
-    file = ("file", "文件")  # other File
-    location = ("location", "定位")
-    share = ("share", "分享")  # 分享好友、群组
-    # sticker = ("sticker", "表情包")
-
-
 # ==================================================
 # 在该行上面新增 Enum 类
 # ==================================================
