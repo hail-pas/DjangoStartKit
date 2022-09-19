@@ -108,7 +108,8 @@ file_field = models.FileField(verbose_name="文件路径", blank=True, max_lengt
 class FileLinksPropertyMixin:
     @property
     def file_links(self):
-        return [
-            FieldFile(instance=self, field=file_field, name=path)
-            for path in flatten_list(self.pictures.all().values_list("path"))  # noqa
-        ]
+        files = []
+        for file in self.files.all():  # noqa
+            file["path"] = FieldFile(instance=self, field=file_field, name=file.path)
+            files.append(file)
+        return files
