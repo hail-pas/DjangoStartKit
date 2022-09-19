@@ -135,7 +135,7 @@ USE_TZ = local_configs.PROJECT.USE_TZ
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 REQUEST_SCHEME = local_configs.SERVER.REQUEST_SCHEME
 # staticfile将自动上传
-STATICFILES_STORAGE = "storages.oss.AliyunStaticStorage"
+# STATICFILES_STORAGE = "storages.oss.AliyunStaticStorage"
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 

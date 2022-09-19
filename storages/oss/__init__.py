@@ -6,10 +6,9 @@ from datetime import datetime
 from urllib.parse import urljoin
 
 import six
-from oss2 import Auth, Bucket, Service, BucketIterator, ObjectIterator, http, to_string
-from oss2.api import _UrlMaker
+from oss2 import BUCKET_ACL_PRIVATE, Auth, Bucket, Service, BucketIterator, ObjectIterator, http, to_string
 from django.conf import settings
-from oss2.exceptions import AccessDenied, NoSuchBucket, BucketNotEmpty
+from oss2.exceptions import AccessDenied, NoSuchBucket
 from django.core.files import File
 from django.utils.encoding import force_text, force_bytes
 from django.core.exceptions import SuspiciousOperation
@@ -69,10 +68,6 @@ class BucketOperationMixin(object):
     #     except NoSuchBucket:
     #         raise AliyunOperationError('bucket does not exist.')
     #
-    def _check_bucket_acl(self, bucket):  # noqa
-        if bucket.get_bucket_acl().acl != local_configs.OSS.BUCKET_ACL_TYPE:
-            bucket.put_bucket_acl(local_configs.OSS.BUCKET_ACL_TYPE)
-        return bucket
 
 
 @deconstructible
@@ -93,7 +88,6 @@ class AliyunBaseStorage(BucketOperationMixin, Storage):  # noqa
         cname=None,
         expire_time=None,
         location="",
-        base_url="",
     ):
         self.access_key_id = access_key_id if access_key_id else local_configs.OSS.ACCESS_KEY_ID
         self.access_key_secret = access_key_secret if access_key_secret else local_configs.OSS.ACCESS_KEY_SECRET
@@ -110,10 +104,6 @@ class AliyunBaseStorage(BucketOperationMixin, Storage):  # noqa
         self.service = Service(self.auth, self.endpoint)
         self.bucket = Bucket(self.auth, self.endpoint, self.bucket_name)
         self.location = location
-        self.base_url = base_url
-        self._make_url = _UrlMaker(
-            _normalize_endpoint(self.external_endpoint if self.external_endpoint else self.endpoint), is_cname=False
-        )
 
         try:
             if self.bucket_name not in self._list_bucket(self.service):
@@ -121,7 +111,14 @@ class AliyunBaseStorage(BucketOperationMixin, Storage):  # noqa
                 raise SuspiciousOperation("Bucket '%s' does not exist." % self.bucket_name)
             else:
                 # change bucket acl if not consists
-                self.bucket = self._check_bucket_acl(self._get_bucket(self.auth))
+                self.bucket = self._get_bucket(self.auth)
+                self.bucket_acl = self.bucket.get_bucket_acl().acl
+                if self.bucket_acl != local_configs.OSS.BUCKET_ACL_TYPE:
+                    raise SuspiciousOperation(
+                        "Acl '%s' of Bucket '%s' does not match config '%s'." % self.bucket_acl,
+                        self.bucket_name,
+                        local_configs.OSS.BUCKET_ACL_TYPE,
+                    )
         except AccessDenied:
             # 当启用了RAM访问策略，是不允许list和create bucket的
             self.bucket = self._get_bucket(self.auth)
@@ -214,11 +211,12 @@ class AliyunBaseStorage(BucketOperationMixin, Storage):  # noqa
 
     def url(self, name):
         name = self._normalize_name(self._clean_name(name))
-        # name = filepath_to_uri(name) # 这段会导致二次encode
-        key = to_string(name)
-        # 做这个转化，是因为下面的_make_url会用urllib.quote转码，转码不支持unicode，会报错，在python2环境下。
-        req = http.Request("GET", self._make_url(self.bucket_name, key))  # noqa
-        return self.auth._sign_url(req, self.bucket_name, key, expires=self.expire_time)  # noqa
+        _url = self.bucket.sign_url("GET", name, expires=self.expire_time)
+        if self.bucket_acl != BUCKET_ACL_PRIVATE:
+            idx = _url.find("?")
+            if idx > 0:
+                _url = _url[:idx].replace("%2F", "/")
+        return _url
 
     def read(self, name):
         pass

@@ -41,7 +41,7 @@ class Oss(BaseModel):
     BUCKET_NAME: str
     CNAME: Optional[str]  # 自定义域名绑定
     BUCKET_ACL_TYPE: Optional[str] = "private"
-    EXPIRE_TIME: int = 60 * 60 * 24
+    EXPIRE_TIME: int = 60
     MEDIA_LOCATION: Optional[str]
     STATIC_LOCATION: Optional[str]
 
