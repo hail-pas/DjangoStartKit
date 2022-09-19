@@ -33,6 +33,19 @@ class Redis(HostAndPort):
     DB: int = 0
 
 
+class Oss(BaseModel):
+    ACCESS_KEY_ID: str
+    ACCESS_KEY_SECRET: str
+    ENDPOINT: str
+    EXTERNAL_ENDPOINT: Optional[str]
+    BUCKET_NAME: str
+    CNAME: Optional[str]  # 自定义域名绑定
+    BUCKET_ACL_TYPE: Optional[str] = "private"
+    EXPIRE_TIME: int = 60 * 60 * 24
+    MEDIA_LOCATION: Optional[str]
+    STATIC_LOCATION: Optional[str]
+
+
 class Server(HostAndPort):
     WORKERS_NUM: int = multiprocessing.cpu_count() * int(os.getenv("WORKERS_PER_CORE", "2")) + 1
     WHITELIST: list = []
@@ -122,6 +135,8 @@ class LocalConfig(BaseSettings):
     RELATIONAL_DB: RelationalDb
 
     REDIS: Optional[Redis]
+
+    OSS: Optional[Oss]
 
     JWT: Jwt
 

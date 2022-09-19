@@ -261,9 +261,3 @@ class DateTimeToTimeStampField(DateTimeField):
 
         humanized_format = humanize_datetime.datetime_formats(input_formats)
         self.fail("invalid", format=humanized_format)
-
-
-class FileLinksFieldMixin(metaclass=serializers.SerializerMetaclass):
-    file_links = serializers.ListSerializer(
-        child=serializers.FileField(allow_null=True, label="文件链接", max_length=255, required=False), read_only=True
-    )

@@ -142,13 +142,16 @@ USE_TZ = local_configs.PROJECT.USE_TZ
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 REQUEST_SCHEME = local_configs.SERVER.REQUEST_SCHEME
+# staticfile将自动上传
+# STATICFILES_STORAGE = "storages.oss.AliyunStaticStorage"
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 DATETIME_FORMAT = "Y-m-d H:i:s"
 
 # Media files
-
+# mediafile将自动上传
+# DEFAULT_FILE_STORAGE = "storages.oss.AliyunMediaStorage"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
@@ -215,9 +218,6 @@ JWT_AUTH = {
     "JWT_EXPIRATION_DELTA": timedelta(minutes=local_configs.JWT.EXPIRATION_DELTA_MINUTES),
     "JWT_REFRESH_EXPIRATION_DELTA": timedelta(minutes=local_configs.JWT.REFRESH_EXPIRATION_DELTA_DELTA_MINUTES),
 }
-
-# AES
-AES_SECRET = local_configs.AES.SECRET
 
 if not os.path.exists(BASE_DIR.as_posix() + "/logs/error.log"):
     if not os.path.exists(BASE_DIR.as_posix() + "/logs/"):

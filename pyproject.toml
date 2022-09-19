@@ -26,6 +26,7 @@ pydantic = "1.8.2"
 djangorestframework-jwt = "1.11.0"
 django-simple-captcha = "0.5.14"
 typer = "0.3.2"
+msgpack = "1.0.4"
 pypinyin = "0.40.0"
 redisearch = "2.1.1"
 cachetools = "4.2.4"
@@ -39,6 +40,7 @@ asgiref = "3.3.4"
 uvicorn = "0.18.2"
 websockets = "10.3"
 django-polymorphic = "3.1.0"
+oss2 = "2.16.0"
 
 [tool.poetry.dev-dependencies]
 # poetry install --no-dev
