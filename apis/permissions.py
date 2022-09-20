@@ -5,6 +5,7 @@ from rest_framework.permissions import BasePermission
 
 from common.utils import join_params
 from common.encrypt import SignAuth
+from storages.mysql.models.third_service import ThirdService
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +28,7 @@ class AuthorizedServicePermission(
         if not all([identifier, timestamp, sign_str]):
             logger.warning("参数不全")
             return False
-        # caller =
-        caller = None
+        caller = ThirdService.objects.filter(identifier=identifier).first()
         if not caller:
             logger.warning("Identifier未找到")
             return False
