@@ -105,6 +105,12 @@ class MessageType(StrEnumMore):
     # sticker = ("sticker", "表情包")
 
 
+class Protocol(StrEnumMore):
+    https = ("https", "https")
+    http = ("http", "http")
+    rpc = ("rpc", "rpc")
+
+
 # ==================================================
 # 在该行上面新增 Enum 类
 # ==================================================
@@ -113,7 +119,7 @@ __enum_set__ = list(
     filter(
         lambda cls_name_and_cls: True
         if issubclass(cls_name_and_cls[1], (StrEnumMore, IntEnumMore))
-        and cls_name_and_cls[1] not in [StrEnumMore, IntEnumMore]
+           and cls_name_and_cls[1] not in [StrEnumMore, IntEnumMore]
         else False,
         inspect.getmembers(sys.modules[__name__], inspect.isclass),
     )
