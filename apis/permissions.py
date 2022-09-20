@@ -17,12 +17,10 @@ class URIBasedPermission(BasePermission):
         return bool(request.user and request.user.is_authenticated) and request.user.has_api_perm(request, view)
 
 
-class AuthorizedServicePermission(
-    BasePermission
-):
+class AuthorizedServicePermission(BasePermission):
     def has_permission(self, request, view):
         request.caller = None
-        identifier = request.headers.get('x-identifier')
+        identifier = request.headers.get("x-identifier")
         timestamp = request.headers.get("x-timestamp")
         sign_str = request.headers.get("x-sign")
         if not all([identifier, timestamp, sign_str]):
@@ -32,7 +30,7 @@ class AuthorizedServicePermission(
         if not caller:
             logger.warning("Identifier未找到")
             return False
-        if request.method.upper() in ['GET', 'DELETE']:
+        if request.method.upper() in ["GET", "DELETE"]:
             sign_data = request.GET.dict()
         else:
             sign_data = request.data.dict()

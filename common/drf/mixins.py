@@ -88,7 +88,7 @@ class RestListModelMixin:
             try:
                 queryset = queryset.values(*simple_list)  # 指定字段值
             except FieldError as e:
-                return RestResponse.fail(message=messages.FieldNonExists, data=repr(e))
+                return RestResponse.fail(message=messages.NonExists % "字段", data=repr(e))
 
         page = self.paginate_queryset(queryset)  # noqa
         if page is not None:

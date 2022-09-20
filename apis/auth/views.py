@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.utils import timezone
 from captcha.models import CaptchaStore
 from rest_framework import views, status
@@ -6,13 +7,16 @@ from django.contrib.auth import logout
 from rest_framework.parsers import JSONParser
 from rest_framework_jwt.views import ObtainJSONWebToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework_jwt.serializers import jwt_encode_handler, jwt_payload_handler
 
 from common import messages
 from apis.auth import schemas, serializers
 from apis.responses import RestResponse
+from apis.permissions import AuthorizedServicePermission
 from common.decorators import custom_swagger_auto_schema
 from apis.account.serializers import ProfileSerializer, get_profile_system_resource
 from storages.mysql.models.account import Profile, SystemResource
+from storages.mysql.models.third_service import ThirdService, ReferenceProfile
 
 
 class CaptchaView(views.APIView):
@@ -64,6 +68,38 @@ class LoginView(ObtainJSONWebToken):
                     ),
                 ),
             }
+        )
+
+
+class InnerTokenView(views.APIView):
+    """登录第三方系统"""
+
+    permission_classes = (AuthorizedServicePermission,)
+
+    @custom_swagger_auto_schema(query_serializer=schemas.InnerTokenIn,)
+    def post(self, request, *args, **kwargs):
+        referenced_id = request.param_data["referenced_id"]
+        phone = request.param_data["phone"]
+        scene = request.param_data["scene"]
+        caller = request.caller  # type: ThirdService
+        reference_profile = ReferenceProfile.objects.filter(
+            third_service=caller, referenced_id=referenced_id, scene=scene
+        ).first()
+        if reference_profile:
+            profile = reference_profile.user
+        else:
+            profile = Profile.objects.filter(phone=phone, is_official=True).first()
+            if not profile:
+                return RestResponse.fail(message=messages.NonExists % "用户")
+            with transaction.atomic():
+                ReferenceProfile.objects.create(
+                    third_service=caller, referenced_id=referenced_id, user=profile, scene=scene
+                )
+        payload = jwt_payload_handler(profile)
+        payload["scene"] = scene
+        token = jwt_encode_handler(payload)
+        return RestResponse.ok(
+            data={"token": token, "user": ProfileSerializer(instance=profile, context={"request": request}).data}
         )
 
 

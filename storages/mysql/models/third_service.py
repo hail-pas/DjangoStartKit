@@ -1,4 +1,5 @@
 from django.db import models
+
 from storages import enums
 from storages.mysql.base import BaseModel
 from storages.mysql.models import Profile
