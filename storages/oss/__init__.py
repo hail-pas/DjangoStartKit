@@ -209,13 +209,9 @@ class AliyunBaseStorage(BucketOperationMixin, Storage):  # noqa
 
         return list(dirs), files
 
-    def url(self, name):
+    def url(self, name, params=None):
         name = self._normalize_name(self._clean_name(name))
-        _url = self.bucket.sign_url("GET", name, expires=self.expire_time)
-        if self.bucket_acl != BUCKET_ACL_PRIVATE:
-            idx = _url.find("?")
-            if idx > 0:
-                _url = _url[:idx].replace("%2F", "/")
+        _url = self.bucket.sign_url("GET", name, params=params, expires=self.expire_time, slash_safe=True,)
         return _url
 
     def read(self, name):

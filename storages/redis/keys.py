@@ -18,3 +18,4 @@ class RedisCacheKey(str, Enum):
     ProfileGroupUnreadInfo = "Profile:UnRead:{profile_id}:{chat_unique_id}"
     RedisLockKey = "redis_lock_{}"
     AnalysisPrefix = RedisSearchIndex.AnalysisIndex.value + ":{}"
+    VerifyCodeKey = "Verify:{phone}:{scene}"  # 验证码 key
