@@ -209,12 +209,12 @@ class AliyunBaseStorage(BucketOperationMixin, Storage):  # noqa
 
         return list(dirs), files
 
-    def url(self, name):
+    def url(self, name, params=None):
         name = self._normalize_name(self._clean_name(name))
         _url = self.bucket.sign_url(
             "GET",
             name,
-            # params={"x-oss-process": "image/resize,h_100,m_lfit"},
+            params=params,
             expires=self.expire_time,
             slash_safe=True,
         )
