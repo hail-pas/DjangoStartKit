@@ -1,6 +1,7 @@
 import os
 import time
 import uuid
+import types
 import random
 import string
 import logging
@@ -16,7 +17,8 @@ from redis import Redis
 from django.http import HttpRequest
 from django.db.models import QuerySet
 
-from storages.redis import get_sync_redis
+from storages.redis import RedisUtil, get_sync_redis
+from storages.redis.keys import RedisCacheKey
 
 logger = logging.getLogger()
 
@@ -384,3 +386,33 @@ def join_params(
         temp.append("]")
 
     return temp
+
+
+def dynamic_model_serializer(model, parent_serializer_classes, fields):
+    meta_class = types.new_class("Meta")
+    setattr(meta_class, "model", model)
+    setattr(meta_class, "fields", fields)
+    result = types.new_class(model.__name__ + "DynamicSerializer", parent_serializer_classes, {})
+    setattr(result, "Meta", meta_class)
+    return result
+
+
+def verify_code(phone, code, scene):
+    """
+    验证码校验
+    """
+    key = RedisCacheKey.VerifyCodeKey.format(phone=phone, scene=scene)
+    stored_code = RedisUtil.get(key)
+    if stored_code == code:
+        RedisUtil.delete(key)
+        return True
+    return False
+
+
+def send_verify_code(phone, code, scene, ttl=600):
+    """
+    发送验证码
+    """
+    key = RedisCacheKey.VerifyCodeKey.format(phone=phone, scene=scene)
+    RedisUtil.set(key, code, ttl)
+    return True

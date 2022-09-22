@@ -38,3 +38,12 @@ class ChangePasswordSerializer(PlainSchema):
     old_password = serializers.CharField(required=True, help_text="旧密码")
     new_password = serializers.CharField(required=True, help_text="新密码", max_length=16, min_length=8)
     confirm_password = serializers.CharField(required=True, help_text="确认新密码", max_length=16, min_length=8)
+
+
+class ReferenceIdSerializer(PlainSchema):
+    referenced_id = serializers.CharField(max_length=32, required=True, help_text="关联id")
+
+
+class InnerTokenIn(ReferenceIdSerializer):
+    phone = serializers.CharField(max_length=11, required=True, help_text="手机号")
+    scene = serializers.CharField(max_length=32, help_text="登录场景", allow_null=True, required=False)

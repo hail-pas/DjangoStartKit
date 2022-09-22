@@ -166,12 +166,10 @@ class CustomModelSerializer(ModelSerializer):
             try:
                 attribute = field.get_attribute(instance)
             except SkipField:
-                continue
-            # simple_list enum 处理
-            except KeyError as e:
-                if self.simple_list and field.field_name not in self.simple_list:
+                property_attribute = getattr(instance, field.source)
+                if not property_attribute:
                     continue
-                raise e
+                attribute = property_attribute
 
             # We skip `to_representation` for `None` values so that fields do
             # not have to explicitly deal with that case.
