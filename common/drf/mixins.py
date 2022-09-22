@@ -1,11 +1,11 @@
-from rest_framework import status
-from django.core.exceptions import FieldError
+from rest_framework import status, serializers
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.settings import api_settings
 from rest_framework.viewsets import GenericViewSet
 from django_filters.rest_framework import DjangoFilterBackend
 
 from common import messages
+from common.utils import dynamic_model_serializer
 from core.restful import CustomPagination
 from apis.responses import RestResponse
 
@@ -60,49 +60,43 @@ class RestListModelMixin:
     pagination_class = CustomPagination
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
 
+    def get_dynamic_serializer(self, fields, *args, **kwargs):
+        serializer_class = self.get_serializer_class()  # noqa
+        serializer_class = dynamic_model_serializer(serializer_class.Meta.model, (serializer_class,), fields=fields)
+        kwargs.setdefault("context", self.get_serializer_context())  # noqa
+        return serializer_class(*args, **kwargs)
+
     def list(self, request, *args, **kwargs):
-        queryset: Queryset = self.filter_queryset(self.get_queryset())  # noqa
-
-        ordering = request.GET.get("ordering")
-        if ordering:
-            ordering = ordering.split(",")
-            ordering = [i.strip() for i in ordering]
-            ordering = list(set(self.serializer_class().fields.keys()).intersection(set(ordering)))  # noqa
-        else:
-            ordering = []
-
-        if ordering:
-            queryset = queryset.order_by(*ordering)
-
-        simple_list = request.GET.get("simple_list")
-        if simple_list:
-            simple_list = simple_list.split(",")
+        simple_list = None
+        simple_list_param = request.GET.get("simple_list")
+        if simple_list_param:
+            simple_list = simple_list_param.split(",")
             simple_list = [i.strip() for i in simple_list]
-            simple_list = list(set(self.serializer_class().fields.keys()).intersection(set(simple_list)))  # noqa
-        else:
-            simple_list = []
+            for simple_f in simple_list:
+                if simple_f in [i.name for i in self.get_serializer_class().Meta.model._meta.fields] or hasattr(  # noqa
+                    self.get_serializer_class().Meta.model, simple_f  # noqa
+                ):
+                    continue
+                raise serializers.ValidationError(messages.Invalid % f"参数{simple_f}")
+
+        queryset = self.filter_queryset(self.get_queryset())  # noqa
 
         if simple_list:
             if "id" not in simple_list:
                 simple_list.append("id")
-            try:
-                queryset = queryset.values(*simple_list)  # 指定字段值
-            except FieldError as e:
-                return RestResponse.fail(message=messages.NonExists % "字段", data=repr(e))
 
         page = self.paginate_queryset(queryset)  # noqa
         if page is not None:
             if simple_list:
-                return self.get_paginated_response(  # noqa
-                    self.get_serializer(page, simple_list=simple_list, many=True).data
-                )  # noqa
-            serializer = self.get_serializer(page, many=True)  # noqa
+                serializer = self.get_dynamic_serializer(simple_list, page, many=True)  # noqa
+            else:
+                serializer = self.get_serializer(page, many=True)  # noqa
             return self.get_paginated_response(serializer.data)  # noqa
 
         if simple_list:
-            return RestResponse(data=self.get_serializer(queryset, simple_list=simple_list, many=True).data)  # noqa
-
-        serializer = self.get_serializer(queryset, many=True)  # noqa
+            serializer = self.get_dynamic_serializer(simple_list, queryset, many=True)  # noqa
+        else:
+            serializer = self.get_serializer(queryset, many=True)  # noqa
         return RestResponse(data=serializer.data)
 
 
