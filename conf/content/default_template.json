@@ -1,0 +1,62 @@
+{
+  "RELATIONAL": {
+    "HOST": "localhost",
+    "PORT": 3306,
+    "USERNAME": "root",
+    "DB": "django-start-kit",
+    "PASSWORD": "pwd"
+  },
+  "REDIS": {
+    "HOST": "localhost",
+    "PORT": 6379,
+    "DB": 0,
+    "PASSWORD": "pwd"
+  },
+  "OSS": {
+    "ACCESS_KEY_ID": "",
+    "ACCESS_KEY_SECRET": "",
+    "ENDPOINT": "",
+    "BUCKET_NAME": "",
+    "BUCKET_ACL_TYPE": "private",
+    "EXPIRE_TIME": 300
+  },
+  "SERVER": {
+    "HOST": "0.0.0.0",
+    "PORT": 8000,
+    "WHITELIST": [
+    ],
+    "REQUEST_SCHEME": "https"
+  },
+  "PROJECT": {
+    "DEBUG": false,
+    "ENVIRONMENT": "Production",
+    "NAME": "DjangoStartKit",
+    "DESCRIPTION": "Django-start-kit",
+    "LANGUAGE_CODE": "zh-hans",
+    "TIME_ZONE": "Asia/Shanghai",
+    "USE_TZ": false
+  },
+  "HBASE": {
+    "SERVERS": [
+      "192.168.3.75:9090"
+    ]
+  },
+  "KAFKA": {
+    "SERVERS": [
+    ]
+  },
+  "JWT": {
+    "SECRET": "secret",
+    "AUTH_HEADER_PREFIX": "JWT",
+    "EXPIRATION_DELTA_MINUTES": 432000,
+    "REFRESH_EXPIRATION_DELTA_DELTA_MINUTES": 4320
+  },
+  "K8S": {
+    "CONFIG_FILE": "file_path",
+    "HOST": "localhost",
+    "NAMESPACE": "DjangoStartKit",
+    "IMAGE": "DjangoStartKit",
+    "PVC_NAME": "pvc_name",
+    "CONFIG_MAP_NAME": "config_map_name"
+  }
+}

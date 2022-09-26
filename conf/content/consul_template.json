@@ -1,0 +1,4 @@
+# {environment}_consul.yaml
+CONSUL:
+  ENDPOINT:
+  TIMEOUT:
