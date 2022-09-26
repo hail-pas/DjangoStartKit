@@ -38,6 +38,7 @@ asgiref = "3.3.4"
 uvicorn = "0.18.2"
 django-polymorphic = "3.1.0"
 oss2 = "2.16.0"
+consulate = { git = "https://github.com/hail-pas/consulate.git", branch = "master" }
 
 [tool.poetry.dev-dependencies]
 # poetry install --no-dev

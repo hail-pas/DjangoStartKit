@@ -93,6 +93,12 @@ class Status(StrEnumMore):
     disable = ("disable", "禁用")
 
 
+class Protocol(StrEnumMore):
+    https = ("https", "https")
+    http = ("http", "http")
+    rpc = ("rpc", "rpc")
+
+
 # ==================================================
 # 在该行上面新增 Enum 类
 # ==================================================

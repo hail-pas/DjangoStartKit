@@ -211,13 +211,7 @@ class AliyunBaseStorage(BucketOperationMixin, Storage):  # noqa
 
     def url(self, name, params=None):
         name = self._normalize_name(self._clean_name(name))
-        _url = self.bucket.sign_url(
-            "GET",
-            name,
-            params=params,
-            expires=self.expire_time,
-            slash_safe=True,
-        )
+        _url = self.bucket.sign_url("GET", name, params=params, expires=self.expire_time, slash_safe=True,)
         return _url
 
     def read(self, name):
