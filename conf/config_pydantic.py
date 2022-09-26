@@ -165,15 +165,15 @@ class LocalConfig(BaseSettings):
         return {
             "default": {
                 "ENGINE": "django.db.backends.mysql",
-                "NAME": self.RELATIONAL.DB,
-                "USER": self.RELATIONAL.USERNAME,
-                "PASSWORD": self.RELATIONAL.PASSWORD,
-                "HOST": self.RELATIONAL.HOST,
-                "PORT": self.RELATIONAL.PORT,
+                "NAME": self.RELATIONAL_DB.DB,
+                "USER": self.RELATIONAL_DB.USERNAME,
+                "PASSWORD": self.RELATIONAL_DB.PASSWORD,
+                "HOST": self.RELATIONAL_DB.HOST,
+                "PORT": self.RELATIONAL_DB.PORT,
                 "OPTIONS": {"charset": "utf8mb4", "use_unicode": True},
                 "TEST": {
                     "ENGINE": "sqlite3",
-                    "NAME": f"test-{self.RELATIONAL.DB}",
+                    "NAME": f"test-{self.RELATIONAL_DB.DB}",
                     "CHARSET": "utf8mb4",
                     "COLLATION": "utf8mb4_bin",
                 },

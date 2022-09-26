@@ -147,4 +147,5 @@ local_*
 .DS_Store
 
 conf/content/*
-!conf/content/template.yaml
+!conf/content/default_template.json
+!conf/content/consul_template.json
