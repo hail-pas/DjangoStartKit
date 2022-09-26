@@ -1,4 +1,12 @@
-# {environment}_consul.yaml
-CONSUL:
-  ENDPOINT:
-  TIMEOUT:
+{
+  "CONSUL": {
+    "HOST": "localhost",
+    "PORT": 8500,
+    "TIMEOUT": 60,
+    "SCHEME": "http",
+    "TOKEN": null,
+    "DATACENTER": null,
+    "ADAPTER": null
+  },
+  "CONFIG_KEY_PREFIX": "/config"
+}
