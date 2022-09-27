@@ -7,9 +7,9 @@ networks:
 
 services:
   pg-db:
-    image: postgres:14
+    image: postgres:9.6
     volumes:
-      - /Users/panhongqi/Downloads/test/microService/data/postgres/:/var/lib/postgresql/data
+      - /Users/panhongqi/Downloads/test/microService/data/postgres9.6/:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=kong
       - POSTGRES_DB=kong
