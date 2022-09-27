@@ -20,13 +20,13 @@ services:
     networks:
       - kong-net
     restart: on-failure
-    # stdin_open: true
-    # tty: true
-    # healthcheck:
-    #   test: [ "CMD", "pg_isready", "-U", "kong" ]
-    #   interval: 5s
-    #   timeout: 5s
-    #   retries: 5
+    stdin_open: true
+    tty: true
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "kong" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   consul-server:
     image: consul
