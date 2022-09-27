@@ -1,0 +1,165 @@
+version: "3.9"
+networks:
+  kong-net:
+    external:
+      name: kong-net
+
+
+services:
+  pg-db:
+    image: postgres:14
+    volumes:
+      - /Users/panhongqi/Downloads/test/microService/data/postgres/:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=kong
+      - POSTGRES_DB=kong
+      - POSTGRES_PASSWORD=kongpass
+    ports:
+      - "5555:5432"
+    container_name: pg-db
+    networks:
+      - kong-net
+    restart: on-failure
+    # stdin_open: true
+    # tty: true
+    # healthcheck:
+    #   test: [ "CMD", "pg_isready", "-U", "kong" ]
+    #   interval: 5s
+    #   timeout: 5s
+    #   retries: 5
+
+  consul-server:
+    image: consul
+    container_name: consul-server
+    volumes:
+      - /Users/panhongqi/Downloads/test/microService/data/consul-server/:/var/lib/consul/data
+    ports:
+      - "8500:8500"
+      - "8600:8600/udp"
+    command: consul agent -server -ui -node=server-1 -bootstrap-expect=3 -client=0.0.0.0 -datacenter=datacenter-1 --data-dir /var/lib/consul/data
+    networks:
+      - kong-net
+
+  consul-client1:
+    image: consul
+    container_name: consul-client1
+    volumes:
+      - /Users/panhongqi/Downloads/test/microService/data/consul-client1/:/var/lib/consul/data
+    command: consul agent -server -node=consul-client1 -client=0.0.0.0 -datacenter=datacenter-1 --join consul-server --data-dir /var/lib/consul/data
+    depends_on:
+      - consul-server
+    networks:
+      - kong-net
+
+  consul-client2:
+    image: consul
+    container_name: consul-client2
+    volumes:
+      - /Users/panhongqi/Downloads/test/microService/data/consul-client2/:/var/lib/consul/data
+    command: consul agent -server -node=consul-client2 -client=0.0.0.0 -datacenter=datacenter-1 --join consul-server --data-dir /var/lib/consul/data
+    depends_on:
+      - consul-server
+    networks:
+      - kong-net
+
+  consul-client3:
+    image: consul
+    container_name: consul-client3
+    volumes:
+      - /Users/panhongqi/Downloads/test/microService/data/consul-client3/:/var/lib/consul/data
+    command: consul agent -server -node=consul-client3 -client=0.0.0.0 -datacenter=datacenter-1 --join consul-server --data-dir /var/lib/consul/data
+    depends_on:
+      - consul-server
+    networks:
+      - kong-net
+
+  kong-migrations:
+    image: kong:latest
+    container_name: kong-migrations
+    command: kong migrations bootstrap
+    depends_on:
+      - pg-db
+    environment:
+      - KONG_DATABASE=postgres
+      - KONG_PG_HOST=pg-db
+      # - KONG_PG_DB=kong
+      # - KONG_PG_USER=kong
+      - KONG_PG_PASSWORD=kongpass
+    networks:
+      - kong-net
+
+  kong-migrations-up:
+    image: kong:latest
+    container_name: kong-migrations-up
+    command: kong migrations up && kong migrations finish
+    depends_on:
+      - pg-db
+    environment:
+      - KONG_DATABASE=postgres
+      - KONG_PG_HOST=pg-db
+      # - KONG_PG_DB=kong
+      # - KONG_PG_USER=kong
+      - KONG_PG_PASSWORD=kongpass
+    networks:
+      - kong-net
+    restart: on-failure
+
+  kong-gateway:
+    image: kong:latest
+    container_name: kong-gateway
+    environment:
+      - KONG_DATABASE=postgres
+      - KONG_PG_HOST=pg-db
+      - KONG_PG_USER=kong
+      - KONG_PG_PASSWORD=kongpass
+      - KONG_PROXY_ACCESS_LOG=/dev/stdout
+      - KONG_ADMIN_ACCESS_LOG=/dev/stdout
+      - KONG_PROXY_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_LISTEN=0.0.0.0:8001
+      - KONG_ADMIN_GUI_URL=http://localhost:8002
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+      - "8002:8002"
+      - "8003:8003"
+      - "8004:8004"
+      - "8443:8443"
+      - "8444:8444"
+      - "8445:8445"
+    depends_on:
+      - pg-db
+      - consul-server
+      - consul-client1
+      - consul-client2
+      - consul-client3
+      - kong-migrations
+      - kong-migrations-up
+    networks:
+      - kong-net
+    healthcheck:
+      test: [ "CMD", "kong", "health" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    restart: on-failure
+
+  konga:
+    image: pantsel/konga:latest
+    container_name: konga
+    networks:
+      - kong-net
+    environment:
+      - TOKEN_SECRET=CTAOaflRLr2Vs7etgbjHWGkMIuQKwv61
+      - DB_ADAPTER=postgres
+      - DB_DATABASE=kong
+      - DB_HOST=pg-db
+      - DB_USER=kong
+      - DB_PASSWORD=kongpass
+      - NODE_ENV=development
+    ports:
+      - "1337:1337"
+    depends_on:
+      - pg-db
+      - kong-gateway
+    restart: on-failure
