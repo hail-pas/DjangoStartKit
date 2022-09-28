@@ -1,4 +1,5 @@
 import sys
+import enum
 import inspect
 import threading
 from typing import Union
@@ -187,3 +188,16 @@ def camelCaseAction(methods=None, detail=None, url_path=None, url_name=None, **k
         return func
 
     return decorator
+
+
+def extend_enum(*inherited_enums):
+    def wrapper(added_enum):
+        joined = {}
+        for inherited_enum in inherited_enums:
+            for item in inherited_enum:
+                joined[item.name] = item.value
+            for item in added_enum:
+                joined[item.name] = item.value
+        return enum.Enum(added_enum.__name__, joined)
+
+    return wrapper
