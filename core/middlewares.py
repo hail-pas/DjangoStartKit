@@ -2,7 +2,7 @@ from urllib.parse import parse_qs
 
 import jwt
 import ujson
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponse
 from rest_framework import status, exceptions
 from django.contrib.auth import get_user_model
 from rest_framework.request import Request
@@ -264,11 +264,15 @@ class AuthenticationMiddlewareJWT:
                     return middleware_response(
                         status=status.HTTP_401_UNAUTHORIZED, data={"message": messages.UserSceneCheckFailed}
                     )
+            else:
+                request._user = AnonymousUser()
+                request.scene = enums.SceneRole.anonymous.value
+                request.system = local_configs.PROJECT.NAME
         except AuthenticationFailed:
-            request._user = AnonymousUser()
-            # return HttpResponse(status=status.HTTP_401_UNAUTHORIZED)
-            request.scene = enums.SceneRole.anonymous.value
-            request.system = local_configs.PROJECT.NAME
+            # request._user = AnonymousUser()
+            return HttpResponse(status=status.HTTP_401_UNAUTHORIZED)
+            # request.scene = enums.SceneRole.anonymous.value
+            # request.system = local_configs.PROJECT.NAME
 
         response = self.get_response(request)
 
