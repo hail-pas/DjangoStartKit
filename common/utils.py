@@ -287,7 +287,10 @@ def gen_uuid():
 
 def file_upload_to(instance, filename):
     name = instance.__class__.__name__
-    return "/".join(filter(None, [name, instance.__str__(), gen_uuid(), filename]))
+    fields = [name, gen_uuid(), filename]
+    if instance.__str__():
+        fields = [fields[0], instance.__str__()[:16], *fields[1:]]
+    return "/".join(filter(None, fields))
 
 
 def filter_dict(dict_obj: dict, callback: Callable[[Hashable, Any], dict]):
