@@ -37,11 +37,11 @@ class Command(BaseCommand):
                 "mysql -h {host} --port={port} -u{user} -p{password} -e "
                 '"CREATE DATABASE IF NOT EXISTS \\`{name}\\` '
                 'default character set utf8mb4 collate utf8mb4_general_ci;"'.format(
-                    host=settings.RELATIONAL_DB.HOST,
-                    port=settings.RELATIONAL_DB.PORT,
-                    user=settings.RELATIONAL_DB.USER,
-                    password=settings.RELATIONAL_DB.PASSWORD,
-                    name=settings.RELATIONAL_DB.DB,
+                    host=settings.RELATIONAL.HOST,
+                    port=settings.RELATIONAL.PORT,
+                    user=settings.RELATIONAL.USERNAME,
+                    password=settings.RELATIONAL.PASSWORD,
+                    name=settings.RELATIONAL.DB,
                 )
             )
         elif action == "dropdb":  # noqa
@@ -51,19 +51,19 @@ class Command(BaseCommand):
             shell(
                 "mysql -h {host} --port={port} -u{user} -p{password} -e "
                 '"DROP DATABASE \\`{name}\\`;"'.format(
-                    host=settings.RELATIONAL_DB.HOST,
-                    port=settings.RELATIONAL_DB.PORT,
-                    user=settings.RELATIONAL_DB.USER,
-                    password=settings.RELATIONAL_DB.PASSWORD,
-                    name=settings.RELATIONAL_DB.DB,
+                    host=settings.RELATIONAL.HOST,
+                    port=settings.RELATIONAL.PORT,
+                    user=settings.RELATIONAL.USERNAME,
+                    password=settings.RELATIONAL.PASSWORD,
+                    name=settings.RELATIONAL.DB,
                 )
             )
         elif action == "shell":
             cmd = "mysql -h {host} --port={port} -u {user} -p{password}".format(
-                host=settings.RELATIONAL_DB.HOST,
-                port=settings.RELATIONAL_DB.PORT,
-                user=settings.RELATIONAL_DB.USER,
-                password=settings.RELATIONAL_DB.PASSWORD,
+                host=settings.RELATIONAL.HOST,
+                port=settings.RELATIONAL.PORT,
+                user=settings.RELATIONAL.USERNAME,
+                password=settings.RELATIONAL.PASSWORD,
             )
             shell(cmd)
         elif action == "execute-file":
@@ -72,11 +72,11 @@ class Command(BaseCommand):
                 raise CommandError("absolute path required")
 
             cmd = "mysql -h {host} --port={port} -u {user} -D {db_name} -p{password} <{file_path}".format(
-                host=settings.RELATIONAL_DB.HOST,
-                port=settings.RELATIONAL_DB.PORT,
-                user=settings.RELATIONAL_DB.USER,
-                password=settings.RELATIONAL_DB.PASSWORD,
-                db_name=settings.RELATIONAL_DB.DB,
+                host=settings.RELATIONAL.HOST,
+                port=settings.RELATIONAL.PORT,
+                user=settings.RELATIONAL.USERNAME,
+                password=settings.RELATIONAL.PASSWORD,
+                db_name=settings.RELATIONAL.DB,
                 file_path=file_path,
             )
             shell(cmd)

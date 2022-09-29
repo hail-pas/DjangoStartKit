@@ -90,8 +90,8 @@ class JSONFormatter(logging.Formatter):
         logging.DEBUG: simple_format,
         logging.INFO: simple_format,
         logging.WARNING: simple_format,
-        logging.ERROR: format,
-        logging.CRITICAL: format,
+        # logging.ERROR: format,
+        # logging.CRITICAL: format,
     }
 
     def format(self, record):
