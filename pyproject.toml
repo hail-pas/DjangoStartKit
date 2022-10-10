@@ -58,3 +58,5 @@ url = "https://mirrors.aliyun.com/pypi/simple/"
 # >>> poetry cache clear . --all
 # >>> rm poetry.lock
 # >>> poetry install -vvv
+# export requirements.tx
+# >>> poetry export -f requirements.txt --output requirements.txt --without-hashes
