@@ -9,7 +9,7 @@ services:
   pg-db:
     image: postgres:14
     volumes:
-      - /Users/panhongqi/Downloads/test/microService/data/postgres/:/var/lib/postgresql/data
+      - ~/test/microService/data/postgres/:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=kong
       - POSTGRES_DB=kong
@@ -33,8 +33,8 @@ services:
     image: consul
     container_name: consul-server
     volumes:
-      - /Users/panhongqi/Downloads/test/microService/data/consul-server/:/var/lib/consul/data
-      - /Users/panhongqi/Downloads/test/microService/data/consul-etc-d/:/etc/consul.d
+      - ~/test/microService/data/consul-server/:/var/lib/consul/data
+      - ~/test/microService/data/consul-etc-d/:/etc/consul.d
     ports:
       - "8500:8500"
       - "8600:8600/udp"
@@ -47,7 +47,7 @@ services:
     image: consul
     container_name: consul-client1
     volumes:
-      - /Users/panhongqi/Downloads/test/microService/data/consul-client1/:/var/lib/consul/data
+      - ~/test/microService/data/consul-client1/:/var/lib/consul/data
     command: consul agent -server -node=consul-client1 -client=0.0.0.0 -datacenter=datacenter-1 --join consul-server --data-dir /var/lib/consul/data
     depends_on:
       - consul-server
@@ -58,7 +58,7 @@ services:
     image: consul
     container_name: consul-client2
     volumes:
-      - /Users/panhongqi/Downloads/test/microService/data/consul-client2/:/var/lib/consul/data
+      - ~/test/microService/data/consul-client2/:/var/lib/consul/data
     command: consul agent -server -node=consul-client2 -client=0.0.0.0 -datacenter=datacenter-1 --join consul-server --data-dir /var/lib/consul/data
     depends_on:
       - consul-server
@@ -69,7 +69,7 @@ services:
     image: consul
     container_name: consul-client3
     volumes:
-      - /Users/panhongqi/Downloads/test/microService/data/consul-client3/:/var/lib/consul/data
+      - ~/test/microService/data/consul-client3/:/var/lib/consul/data
     command: consul agent -server -node=consul-client3 -client=0.0.0.0 -datacenter=datacenter-1 --join consul-server --data-dir /var/lib/consul/data
     depends_on:
       - consul-server
