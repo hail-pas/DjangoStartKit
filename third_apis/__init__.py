@@ -281,10 +281,7 @@ class Third(APIBaseConfig):
             logger.error(f"request failed: {e}")
             return response_cls(success=False, status_code=None, data=None)
         else:
-            logger.debug(raw_response.text)
-            return self.parse_response(
-                api,
-                {
+            request_context = {
                     "method": api.method,
                     "url": prefix + api.uri,
                     "headers": request_headers,
@@ -293,7 +290,12 @@ class Third(APIBaseConfig):
                     "json": request_json,
                     "cookies": request_cookies,
                     "kwargs": kwargs,
-                },
+            }
+            logger.debug({"request_context": request_context})
+            logger.debug({"raw_response": raw_response.text})
+            return self.parse_response(
+                api,
+                request_context,
                 raw_response,
                 response_cls,
             )
