@@ -12,6 +12,7 @@ spec:
       # - name: {{ pvc_name }}
       #   persistentVolumeClaim:
       #     claimName: {{ pvc_name }}
+      ttlSecondsAfterFinished: 86400  # job历史记录保留一天
       imagePullSecrets:
       - name: registrykey
       containers:
