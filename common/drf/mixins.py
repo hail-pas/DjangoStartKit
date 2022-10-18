@@ -67,6 +67,16 @@ class RestListModelMixin:
         return serializer_class(*args, **kwargs)
 
     def list(self, request, *args, **kwargs):
+        search_fields_param = request.GET.get("search_fields")
+        if search_fields_param:
+            search_fields_param = search_fields_param.split(",")
+            search_fields = []
+            for search_f in search_fields_param:
+                if search_f in [i.name for i in self.get_serializer_class().Meta.model._meta.fields]:
+                    search_fields.append(search_f)
+            if search_fields:
+                self.search_fields = search_fields
+
         simple_list = None
         simple_list_param = request.GET.get("simple_list")
         if simple_list_param:
