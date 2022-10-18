@@ -189,7 +189,14 @@ class CustomSwaggerAutoSchema(SwaggerAutoSchema):
                 required=False,
                 type=TYPE_STRING,
             )
-            return [simple_list_param] + params
+            search_fields_param = Parameter(
+                name="search_fields",
+                in_=IN_QUERY,
+                description=f"英文逗号分隔, 指定搜索匹配字段: " f"{', '.join(field_names)}",  # noqa
+                required=False,
+                type=TYPE_STRING,
+            )
+            return [simple_list_param, search_fields_param] + params
         return params
 
 
