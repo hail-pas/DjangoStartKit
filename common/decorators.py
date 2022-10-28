@@ -5,7 +5,6 @@ import threading
 from typing import Union
 from functools import wraps
 from functools import partial as raw_partial
-from common.types import PlainSchema
 
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -13,6 +12,7 @@ from rest_framework import status, serializers
 from django.forms.utils import pretty_name
 from rest_framework.decorators import MethodMapper
 
+from common.types import PlainSchema
 from common.utils import underscore_to_camelcase
 
 
@@ -123,12 +123,16 @@ def custom_swagger_auto_schema(**kwargs):
     def decorator(func):
         responses = kwargs.get("responses")
         if responses:
-            responses_200_ser = responses.get(str(status.HTTP_200_OK)) or responses.get(status.HTTP_200_OK) # noqa
-            if responses_200_ser and not isinstance(responses_200_ser, openapi.Schema) and not isinstance(responses_200_ser, openapi.Response):
+            responses_200_ser = responses.get(str(status.HTTP_200_OK)) or responses.get(status.HTTP_200_OK)  # noqa
+            if (
+                responses_200_ser
+                and not isinstance(responses_200_ser, openapi.Schema)
+                and not isinstance(responses_200_ser, openapi.Response)
+            ):
                 page_info = kwargs.get("page_info", False)
 
-                _is_serializer_class = inspect.isclass(responses_200_ser) and (issubclass(
-                    responses_200_ser, serializers.Serializer or issubclass(responses_200_ser, PlainSchema))
+                _is_serializer_class = inspect.isclass(responses_200_ser) and (
+                    issubclass(responses_200_ser, serializers.Serializer or issubclass(responses_200_ser, PlainSchema))
                 )
                 _is_serializer_instance = isinstance(responses_200_ser, serializers.Serializer)
                 _is_list_serializer_instance = isinstance(responses_200_ser, serializers.ListSerializer)

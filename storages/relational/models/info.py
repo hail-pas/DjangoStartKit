@@ -1,6 +1,6 @@
 from django.db import models
 
-from storages.mysql.base import BaseModel
+from storages.relational.base import BaseModel
 
 
 class Config(BaseModel):

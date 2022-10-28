@@ -4,9 +4,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework_jwt.serializers import jwt_encode_handler, jwt_payload_handler
 
 from apis.chat import serializers
-from storages.mysql import models
 from common.drf.mixins import RestModelViewSet
-from storages.mysql.models.account import Profile
+from storages.relational import models
+from storages.relational.models.account import Profile
 
 
 def index(request):

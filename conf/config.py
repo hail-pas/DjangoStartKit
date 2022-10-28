@@ -164,13 +164,13 @@ class LocalConfig(BaseSettings):
     def DATABASES(self) -> dict:
         return {
             "default": {
-                "ENGINE": "django.db.backends.mysql",
+                "ENGINE": "django.db.backends.postgresql",
                 "NAME": self.RELATIONAL.DB,
                 "USER": self.RELATIONAL.USERNAME,
                 "PASSWORD": self.RELATIONAL.PASSWORD,
                 "HOST": self.RELATIONAL.HOST,
                 "PORT": self.RELATIONAL.PORT,
-                "OPTIONS": {"charset": "utf8mb4", "use_unicode": True},
+                # "OPTIONS": {"charset": "utf8mb4", "use_unicode": True},
                 "TEST": {
                     "ENGINE": "sqlite3",
                     "NAME": f"test-{self.RELATIONAL.DB}",

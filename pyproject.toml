@@ -42,6 +42,7 @@ websockets = "10.3"
 django-polymorphic = "3.1.0"
 oss2 = "2.16.0"
 consulate = { git = "https://github.com/hail-pas/consulate.git", branch = "master" }
+psycopg2 = "2.9.5"
 
 [tool.poetry.dev-dependencies]
 # poetry install --no-dev

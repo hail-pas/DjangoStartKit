@@ -6,8 +6,8 @@ from django.db.models import Q
 
 from storages import enums
 from common.utils import file_upload_to
-from storages.mysql.base import BaseModel, LabelFieldMixin, StatusFieldMixin, OrderWeightFieldMixin
-from storages.mysql.models.account import Profile, ProfileFieldMixin
+from storages.relational.base import BaseModel, LabelFieldMixin, StatusFieldMixin, OrderWeightFieldMixin
+from storages.relational.models.account import Profile, ProfileFieldMixin
 
 
 class UploadedFile(ProfileFieldMixin, LabelFieldMixin):

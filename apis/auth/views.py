@@ -15,8 +15,8 @@ from apis.responses import RestResponse
 from apis.permissions import AuthorizedServicePermission
 from common.decorators import custom_swagger_auto_schema
 from apis.account.serializers import ProfileSerializer, get_profile_system_resource
-from storages.mysql.models.account import Profile, SystemResource
-from storages.mysql.models.third_service import ThirdService, ReferenceProfile
+from storages.relational.models.account import Profile, SystemResource
+from storages.relational.models.third_service import ThirdService, ReferenceProfile
 
 
 class CaptchaView(views.APIView):
@@ -28,7 +28,7 @@ class CaptchaView(views.APIView):
     permission_classes = (AllowAny,)
     parser_classes = (JSONParser,)
 
-    @custom_swagger_auto_schema(responses={"200": serializers.CaptchaResponse})
+    @custom_swagger_auto_schema(responses={"200": serializers.CaptchaResponse}, security=[])
     def get(self, request, *args, **kwargs):
         hash_key = CaptchaStore.generate_key()
         return RestResponse.ok(
@@ -43,7 +43,9 @@ class LoginView(ObtainJSONWebToken):
     permission_classes = (AllowAny,)
     parser_classes = (JSONParser,)
 
-    @custom_swagger_auto_schema(request_body=schemas.LoginSerializer, responses={"200": serializers.LoginResponse})
+    @custom_swagger_auto_schema(
+        request_body=schemas.LoginSerializer, responses={"200": serializers.LoginResponse}, security=[]
+    )
     def post(self, request, *args, **kwargs):
         profile = request.json_data["user"]
         if not profile:

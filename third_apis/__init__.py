@@ -282,23 +282,18 @@ class Third(APIBaseConfig):
             return response_cls(success=False, status_code=None, data=None)
         else:
             request_context = {
-                    "method": api.method,
-                    "url": prefix + api.uri,
-                    "headers": request_headers,
-                    "params": request_params,
-                    "data": request_data,
-                    "json": request_json,
-                    "cookies": request_cookies,
-                    "kwargs": kwargs,
+                "method": api.method,
+                "url": prefix + api.uri,
+                "headers": request_headers,
+                "params": request_params,
+                "data": request_data,
+                "json": request_json,
+                "cookies": request_cookies,
+                "kwargs": kwargs,
             }
             logger.debug({"request_context": request_context})
             logger.debug({"raw_response": raw_response.text})
-            return self.parse_response(
-                api,
-                request_context,
-                raw_response,
-                response_cls,
-            )
+            return self.parse_response(api, request_context, raw_response, response_cls,)
 
     def parse_response(self, api: API, request_context: dict, raw_response, response_cls=None):
         if not response_cls:

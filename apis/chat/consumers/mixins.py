@@ -11,7 +11,7 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from common.utils import COMMON_TIME_STRING
 from storages.redis import AsyncRedisUtil, keys
 from apis.chat.consumers import defines
-from storages.mysql.models import Group, Profile
+from storages.relational.models import Group, Profile
 from apis.chat.consumers.decorator import authenticate_required
 from apis.chat.consumers.db_operations import get_system_sender, get_group_ids_with_profile_pk
 

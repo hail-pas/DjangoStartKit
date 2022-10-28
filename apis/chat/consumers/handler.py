@@ -2,11 +2,11 @@ import logging
 import datetime
 from typing import Set, Optional
 
-import storages.mysql.models.chat
+import storages.relational.models.chat
 from storages.redis import AsyncRedisUtil, keys
 from apis.chat.consumers import defines
-from storages.mysql.models import UploadedFile
 from apis.chat.consumers.mixins import ServerReply
+from storages.relational.models import UploadedFile
 from apis.chat.consumers.db_operations import (
     get_receiver,
     save_message,

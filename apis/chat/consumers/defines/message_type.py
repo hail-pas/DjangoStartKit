@@ -2,7 +2,7 @@ import enum
 from typing import NewType
 
 from storages import enums
-from common.types import extend_enum
+from common.decorators import extend_enum
 
 """
 消息类型

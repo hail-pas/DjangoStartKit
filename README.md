@@ -470,11 +470,11 @@ storages
 ├── hbase
 │   ├── __init__.py
 │   └── models.py           # hbase model 定义
-├── mysql                   # 作为数据管理APP注册
+├── relational                   # 作为数据管理APP注册
 │   ├── __init__.py
 │   ├── admin.py            # 系统统一admin
 │   ├── apps.py
-│   ├── base.py             # mysql 通用model
+│   ├── base.py             # 通用model
 │   ├── management          # django manage,py 命令整合
 │   │   ├── __init__.py
 │   │   └── commands

@@ -4,7 +4,7 @@ from channels.db import database_sync_to_async
 
 from common.utils import flatten_list
 from apis.chat.consumers import defines
-from storages.mysql.models import (
+from storages.relational.models import (
     Group,
     Config,
     Dialog,

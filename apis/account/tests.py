@@ -4,7 +4,7 @@ import factory
 from django.test import TestCase
 from rest_framework.test import APIClient, APITestCase
 
-import storages.mysql.models.account
+import storages.relational.models.account
 from apis.account import models
 
 client = APIClient()
@@ -12,7 +12,7 @@ client = APIClient()
 
 class ProfileFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = storages.mysql.models.account.Profile
+        model = storages.relational.models.account.Profile
 
     # username = factory.Faker("user_name")
     # phone_number = factory.Faker('phone_number')

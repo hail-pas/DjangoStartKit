@@ -119,7 +119,7 @@ __enum_set__ = list(
     filter(
         lambda cls_name_and_cls: True
         if issubclass(cls_name_and_cls[1], (StrEnumMore, IntEnumMore))
-           and cls_name_and_cls[1] not in [StrEnumMore, IntEnumMore]
+        and cls_name_and_cls[1] not in [StrEnumMore, IntEnumMore]
         else False,
         inspect.getmembers(sys.modules[__name__], inspect.isclass),
     )

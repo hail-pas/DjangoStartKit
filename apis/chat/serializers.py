@@ -1,11 +1,11 @@
 import os
 from typing import Dict, Optional
 
-from storages.mysql import models
+from storages.relational import models
 from common.drf.serializers import CustomModelSerializer
 from apis.account.serializers import ProfileSimpleSerializer
-from storages.mysql.models.chat import UploadedFile
-from storages.mysql.models.account import Profile
+from storages.relational.models.chat import UploadedFile
+from storages.relational.models.account import Profile
 
 
 class GroupMessageSerializer(CustomModelSerializer):

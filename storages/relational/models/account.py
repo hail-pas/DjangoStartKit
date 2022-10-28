@@ -15,7 +15,7 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from storages import enums
 from common.utils import flatten_list, file_upload_to
 from common.django.perms import _user_has_api_perm  # noqa
-from storages.mysql.base import BaseModel, PolyBaseModel, LabelFieldMixin, RemarkFieldMixin, PolySoftDeletedManager
+from storages.relational.base import BaseModel, PolyBaseModel, LabelFieldMixin, RemarkFieldMixin, PolySoftDeletedManager
 
 from django.contrib.auth.models import _user_get_permissions  # noqa; noqa
 
@@ -425,8 +425,8 @@ class Profile(PolyBaseModel, AbstractUser, PolymorphicModel):
     @classmethod
     def filter_by_permission_code(cls, permission_code, *args, **kwargs):
         return cls.objects.filter(
-            models.Q(user_permissions__codename=permission_code) | models.Q(
-                roles__system_resources__permissions__codename=permission_code)
+            models.Q(user_permissions__codename=permission_code)
+            | models.Q(roles__system_resources__permissions__codename=permission_code)
         ).filter(*args, **kwargs)
 
     class Meta(AbstractUser.Meta):
