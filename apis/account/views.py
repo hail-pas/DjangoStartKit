@@ -24,7 +24,7 @@ class ProfileViewSet(RestModelViewSet,):
     serializer_class = serializers.ProfileSerializer
     queryset = models.Profile.objects.filter(is_superuser=False)
     search_fields = ("phone", "username")
-    filter_fields = (
+    filterset_fields = (
         "roles",
         "gender",
     )
@@ -101,7 +101,7 @@ class RoleViewSet(RestModelViewSet,):
     serializer_class = serializers.RoleSerializer
     queryset = models.Role.objects.filter(preserved=False)
     search_fields = ("name",)
-    # filter_fields = ("",)
+    # filterset_fields = ("",)
     parser_classes = (JSONParser,)
     permission_classes = (IsAuthenticated, URIBasedPermission)
 
@@ -125,7 +125,7 @@ class SystemResourceViewSet(RestListModelMixin, RestRetrieveModelMixin, CustomGe
 
     serializer_class = serializers.SystemResourceSerializer
     queryset = models.SystemResource.objects.all()
-    filter_fields = ("parent", "type", "enabled")
+    filterset_fields = ("parent", "type", "enabled")
     parser_classes = (JSONParser,)
     permission_classes = (IsAuthenticated, URIBasedPermission)
 

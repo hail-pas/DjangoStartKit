@@ -540,7 +540,7 @@ third_apis
 from third_apis import Third, API
 class GoogleAPI(Third):
     @abc.abstractmethod
-    def search(self, *args, **kwargs):
+    def search(self, *args, **kwargs)  -> DefaultResponse:
         pass
 
 google_apis = [
