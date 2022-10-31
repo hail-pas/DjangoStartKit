@@ -75,7 +75,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "core.urls"
-AUTH_USER_MODEL = "mysql.Profile"
+AUTH_USER_MODEL = "relational.Profile"
 AUTHENTICATION_BACKENDS = ["core.authenticate.CustomModelBackend"]
 
 URI_PERMISSION_AUTHENTICATE_EXEMPT = {
