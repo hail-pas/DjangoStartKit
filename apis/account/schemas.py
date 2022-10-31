@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from common.types import PlainSchema
-from storages.mysql import models
+from storages.relational import models
 
 
 class ProfileSelectSerializer(PlainSchema):

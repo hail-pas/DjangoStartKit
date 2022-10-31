@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from common import messages
 from apis.account import serializers
 from apis.responses import RestResponse
-from storages.mysql import models
+from storages.relational import models
 from apis.permissions import URIBasedPermission
 from common.decorators import custom_swagger_auto_schema
 from common.drf.mixins import RestModelViewSet, RestListModelMixin, CustomGenericViewSet, RestRetrieveModelMixin

@@ -4,7 +4,7 @@ from django.db.models import fields
 from django.contrib.admin.sites import AlreadyRegistered
 
 from conf.config import local_configs
-from storages.mysql.models.account import Profile
+from storages.relational.models.account import Profile
 
 admin.site.site_title = admin.site.site_header = local_configs.PROJECT.NAME + local_configs.PROJECT.ENVIRONMENT
 admin.site.index_title = "后台管理"

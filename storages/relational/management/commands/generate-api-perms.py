@@ -16,7 +16,7 @@ class Command(BaseCommand):
         from django.contrib.contenttypes.models import ContentType
 
         from common.django.paths import API_DICT
-        from storages.mysql.models import SystemResource
+        from storages.relational.models import SystemResource
 
         content_type = ContentType.objects.filter(
             app_label=SystemResource._meta.app_label, model=SystemResource._meta.model_name

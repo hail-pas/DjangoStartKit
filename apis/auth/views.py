@@ -15,8 +15,8 @@ from apis.responses import RestResponse
 from apis.permissions import AuthorizedServicePermission
 from common.decorators import custom_swagger_auto_schema
 from apis.account.serializers import ProfileSerializer, get_profile_system_resource
-from storages.mysql.models.account import Profile, SystemResource
-from storages.mysql.models.third_service import ThirdService, ReferenceProfile
+from storages.relational.models.account import Profile, SystemResource
+from storages.relational.models.third_service import ThirdService, ReferenceProfile
 
 
 class CaptchaView(views.APIView):

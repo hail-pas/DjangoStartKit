@@ -3,7 +3,7 @@ from rest_framework.validators import UniqueValidator
 
 from common import messages
 from storages import enums
-from storages.mysql import models
+from storages.relational import models
 from common.drf.serializers import CustomModelSerializer
 
 

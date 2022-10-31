@@ -5,7 +5,7 @@ from rest_framework.permissions import BasePermission
 
 from common.utils import join_params
 from common.encrypt import SignAuth
-from storages.mysql.models.third_service import ThirdService
+from storages.relational.models.third_service import ThirdService
 
 logger = logging.getLogger(__name__)
 

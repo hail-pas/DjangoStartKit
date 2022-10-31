@@ -15,7 +15,7 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from storages import enums
 from common.utils import flatten_list, file_upload_to
 from common.django.perms import _user_has_api_perm  # noqa
-from storages.mysql.base import BaseModel, PolyBaseModel, LabelFieldMixin, RemarkFieldMixin, PolySoftDeletedManager
+from storages.relational.base import BaseModel, PolyBaseModel, LabelFieldMixin, RemarkFieldMixin, PolySoftDeletedManager
 
 from django.contrib.auth.models import _user_get_permissions  # noqa; noqa
 

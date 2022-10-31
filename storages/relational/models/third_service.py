@@ -1,8 +1,8 @@
 from django.db import models
 
 from storages import enums
-from storages.mysql.base import BaseModel
-from storages.mysql.models import Profile
+from storages.relational.base import BaseModel
+from storages.relational.models import Profile
 
 
 class ThirdService(BaseModel):

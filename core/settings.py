@@ -53,7 +53,7 @@ INSTALLED_APPS = [
     "django_filters",  # >>> filter
     "captcha",
     # apps
-    "storages.mysql",
+    "storages.relational",
     "apis.account",
     "apis.info",
 ]
