@@ -4,6 +4,7 @@ import jwt
 import ujson
 from channels.db import database_sync_to_async
 from django.http import HttpRequest, HttpResponse
+from drf_yasg.utils import no_body
 from rest_framework import status, exceptions
 from channels.middleware import BaseMiddleware
 from django.contrib.auth import get_user_model
@@ -86,9 +87,12 @@ class RequestProcessMiddleware:
                 q_ser = query_serializer(data=request.GET)
                 q_ser.is_valid(raise_exception=True)
                 request.param_data = q_ser.validated_data
-            if body_serializer and request.content_type == ContentTypeEnum.APPlICATION_JSON.value:
-                # 只校验json传输
-                data = ujson.loads((request.body or b"{}").decode("utf8"))
+            if body_serializer and body_serializer != no_body:
+                if request.content_type == ContentTypeEnum.APPlICATION_JSON.value:
+                    # json传输
+                    data = ujson.loads((request.body or b"{}").decode("utf8"))
+                else:
+                    data = request.POST.dict()
                 b_ser = body_serializer(data=data)
                 b_ser.is_valid(raise_exception=True)
                 request.json_data = b_ser.validated_data
