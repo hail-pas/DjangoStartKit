@@ -115,7 +115,7 @@ def classproperty(func):
 
 def custom_swagger_auto_schema(**kwargs):
     """
-    通过 query_serializer、request_body 校验 param、json 传参, validated_data 存入 request.param_data、 request.json_data
+    通过 query_serializer、request_body 校验 param、data、json 传参, validated_data 存入 request.param_data、 request.body_data
     """
     from core.restful import HideInspector, NoPagingAutoSchema
     from apis.responses import _Resp  # noqa

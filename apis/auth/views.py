@@ -47,7 +47,7 @@ class LoginView(ObtainJSONWebToken):
         request_body=schemas.LoginSerializer, responses={"200": serializers.LoginResponse}, security=[]
     )
     def post(self, request, *args, **kwargs):
-        profile = request.json_data["user"]
+        profile = request.body_data["user"]
         if not profile:
             return RestResponse.fail(message=messages.UserOrPasswordError)
 
@@ -61,7 +61,7 @@ class LoginView(ObtainJSONWebToken):
         profile.save(update_fields=["last_login"])
         return RestResponse.ok(
             data={
-                "token": request.json_data["token"],
+                "token": request.body_data["token"],
                 "user": ProfileSerializer(instance=profile).data,
                 "menu": get_profile_system_resource(
                     profile,
@@ -125,9 +125,9 @@ class ChangePasswordView(ObtainJSONWebToken):
         if not profile.is_active:
             return RestResponse.fail(message=messages.AccountDisabled)
 
-        old_password = request.json_data["old_password"]
-        new_password = request.json_data["new_password"]
-        confirm_password = request.json_data["confirm_password"]
+        old_password = request.body_data["old_password"]
+        new_password = request.body_data["new_password"]
+        confirm_password = request.body_data["confirm_password"]
 
         if not profile.check_password(old_password):
             return RestResponse.fail(message=messages.OldPasswordCheckFailed)

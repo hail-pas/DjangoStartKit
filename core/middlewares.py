@@ -53,7 +53,7 @@ class RequestProcessMiddleware:
         :return:
         """
         request.param_data = None
-        request.json_data = None
+        request.body_data = None
 
         if request.method.lower() in [
             RequestMethodEnum.OPTIONS.value,
@@ -93,9 +93,10 @@ class RequestProcessMiddleware:
                     data = ujson.loads((request.body or b"{}").decode("utf8"))
                 else:
                     data = request.POST.dict()
+                    data.update(request.FILES.dict())
                 b_ser = body_serializer(data=data)
                 b_ser.is_valid(raise_exception=True)
-                request.json_data = b_ser.validated_data
+                request.body_data = b_ser.validated_data
         except ValidationError as valid_error:
             # {'ids': {0: [ErrorDetail(string='请填写合法的整数值。', code='invalid')]}}
             # {'ids': [ErrorDetail(string='测试', code='invalid')]}

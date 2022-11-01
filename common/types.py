@@ -97,4 +97,4 @@ class RequestMethodEnum(enum.Enum):
 class ContentTypeEnum(enum.Enum):
     APPlICATION_JSON = "application/json"
     MULTIPART_FORM_DATA = "multipart/form-data"
-    APPlICATION_JSON_X_FORM_URLENCODE = "application/x-www-form-urlencoded"
+    APPlICATION_X_FORM_URLENCODE = "application/x-www-form-urlencoded"
