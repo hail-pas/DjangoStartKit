@@ -1,6 +1,5 @@
 import datetime
 
-from drf_yasg import openapi
 from drf_yasg.utils import no_body
 from rest_framework import status
 from django.db.transaction import atomic

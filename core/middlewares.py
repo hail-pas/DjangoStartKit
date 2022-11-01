@@ -3,6 +3,7 @@ from urllib.parse import parse_qs
 import jwt
 import ujson
 from django.http import HttpRequest, HttpResponse
+from drf_yasg.utils import no_body
 from rest_framework import status, exceptions
 from django.contrib.auth import get_user_model
 from rest_framework.request import Request
@@ -50,7 +51,7 @@ class RequestProcessMiddleware:
         :return:
         """
         request.param_data = None
-        request.json_data = None
+        request.body_data = None
 
         if request.method.lower() in [
             RequestMethodEnum.OPTIONS.value,
@@ -84,12 +85,16 @@ class RequestProcessMiddleware:
                 q_ser = query_serializer(data=request.GET)
                 q_ser.is_valid(raise_exception=True)
                 request.param_data = q_ser.validated_data
-            if body_serializer and request.content_type == ContentTypeEnum.APPlICATION_JSON.value:
-                # 只校验json传输
-                data = ujson.loads((request.body or b"{}").decode("utf8"))
+            if body_serializer and body_serializer != no_body:
+                if request.content_type == ContentTypeEnum.APPlICATION_JSON.value:
+                    # json传输
+                    data = ujson.loads((request.body or b"{}").decode("utf8"))
+                else:
+                    data = request.POST.dict()
+                    data.update(request.FILES.dict())
                 b_ser = body_serializer(data=data)
                 b_ser.is_valid(raise_exception=True)
-                request.json_data = b_ser.validated_data
+                request.body_data = b_ser.
         except ValidationError as valid_error:
             # {'ids': {0: [ErrorDetail(string='请填写合法的整数值。', code='invalid')]}}
             # {'ids': [ErrorDetail(string='测试', code='invalid')]}
