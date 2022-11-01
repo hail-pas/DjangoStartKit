@@ -94,7 +94,7 @@ class RequestProcessMiddleware:
                     data.update(request.FILES.dict())
                 b_ser = body_serializer(data=data)
                 b_ser.is_valid(raise_exception=True)
-                request.body_data = b_ser.
+                request.body_data = b_ser.validated_data
         except ValidationError as valid_error:
             # {'ids': {0: [ErrorDetail(string='请填写合法的整数值。', code='invalid')]}}
             # {'ids': [ErrorDetail(string='测试', code='invalid')]}

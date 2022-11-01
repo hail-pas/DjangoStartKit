@@ -425,8 +425,8 @@ class Profile(PolyBaseModel, AbstractUser, PolymorphicModel):
     @classmethod
     def filter_by_permission_code(cls, permission_code, *args, **kwargs):
         return cls.objects.filter(
-            models.Q(user_permissions__codename=permission_code) | models.Q(
-                roles__system_resources__permissions__codename=permission_code)
+            models.Q(user_permissions__codename=permission_code)
+            | models.Q(roles__system_resources__permissions__codename=permission_code)
         ).filter(*args, **kwargs)
 
     class Meta(AbstractUser.Meta):
