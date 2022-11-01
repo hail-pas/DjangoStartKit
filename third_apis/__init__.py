@@ -263,42 +263,57 @@ class Third(APIBaseConfig):
             response_cls = self.response_cls
             if api.response_cls:
                 response_cls = api.response_cls
+        request_kwargs = {
+            "method": api.method,
+            "url": prefix + api.uri,
+            "params": request_params,
+            "data": request_data,
+            "json": request_json,
+            "headers": request_headers,
+            "cookies": request_cookies,
+            "timeout": timeout,
+            **kwargs,
+        }
+        if self.api_key:
+            request_kwargs["api_key"] = (self.api_key,)
+        if self.sign_key:
+            request_kwargs["sign_key"] = (self.sign_key,)
+
+        request_context = {
+            "method": api.method,
+            "url": prefix + api.uri,
+            "headers": request_headers,
+            "params": request_params,
+            "data": request_data,
+            "json": request_json,
+            "cookies": request_cookies,
+            "kwargs": kwargs,
+        }
         try:
-            raw_response = self._request(
-                method=api.method,
-                url=prefix + api.uri,
-                api_key=self.api_key,
-                sign_key=self.sign_key,
-                params=request_params,
-                data=request_data,
-                json=request_json,
-                headers=request_headers,
-                cookies=request_cookies,
-                timeout=timeout,
-                **kwargs,
-            )
+            raw_response = self._request(**request_kwargs)
         except Exception as e:
             logger.error(f"request failed: {e}")
-            return response_cls(success=False, status_code=None, data=None)
+            logger.warning({"Trigger": f"Third-{self.name}", "request_context": request_context, "raw_response": None})
+            return response_cls(success=False, status_code=None, data=None, request_context=request_context)
         else:
-            request_context = {
-                    "method": api.method,
-                    "url": prefix + api.uri,
-                    "headers": request_headers,
-                    "params": request_params,
-                    "data": request_data,
-                    "json": request_json,
-                    "cookies": request_cookies,
-                    "kwargs": kwargs,
-            }
-            logger.debug({"request_context": request_context})
-            logger.debug({"raw_response": raw_response.text})
-            return self.parse_response(
-                api,
-                request_context,
-                raw_response,
-                response_cls,
-            )
+            try:
+                logger.debug(
+                    {
+                        "Trigger": f"Third-{self.name}",
+                        "request_context": request_context,
+                        "response": raw_response.json(),
+                    }
+                )
+            except Exception:
+                logger.debug(
+                    {
+                        "Trigger": f"Third-{self.name}",
+                        "request_context": request_context,
+                        "response": raw_response.text,
+                    }
+                )
+
+            return self.parse_response(api, request_context, raw_response, response_cls,)
 
     def parse_response(self, api: API, request_context: dict, raw_response, response_cls=None):
         if not response_cls:
