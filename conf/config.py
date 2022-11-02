@@ -57,6 +57,7 @@ class Server(HostAndPort):
 class Project(BaseModel):
     NAME: str = "DjangoStartKit"
     DEBUG: bool = False
+    LOG_COLOR: bool = False
     ENVIRONMENT: str = Environment.production.value
     DESCRIPTION: str = "Django-start-kit"
     LANGUAGE_CODE: str = "zh-hans"
@@ -164,7 +165,7 @@ class LocalConfig(BaseSettings):
     def DATABASES(self) -> dict:
         return {
             "default": {
-                "ENGINE": "django.db.backends.postgresql",
+                "ENGINE": "django.db.backends.mysql",
                 "NAME": self.RELATIONAL.DB,
                 "USER": self.RELATIONAL.USERNAME,
                 "PASSWORD": self.RELATIONAL.PASSWORD,

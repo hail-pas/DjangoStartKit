@@ -19,7 +19,7 @@ from conf.enums import Environment
 from conf.config import local_configs
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-from core.restful import JSONFormatter
+from core.restful import JSONFormatter, CustomLogRecord
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -224,10 +224,11 @@ if not os.path.exists(BASE_DIR.as_posix() + "/logs/error.log"):
         os.makedirs(BASE_DIR.as_posix() + "/logs/")
     os.system(f'touch {BASE_DIR.as_posix() + "/logs/error.log"}')
 
+logging.setLogRecordFactory(CustomLogRecord)
 # Logging
 LOGGING = {
     "version": 1,
-    "disable_existing_loggers": False,
+    "disable_existing_loggers": True,
     "filters": {"require_debug_false": {"()": "django.utils.log.RequireDebugFalse"}},
     "formatters": {"verbose": {"()": JSONFormatter}},
     "handlers": {

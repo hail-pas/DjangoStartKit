@@ -1,4 +1,5 @@
 import logging
+from functools import lru_cache
 
 import ujson
 from drf_yasg import openapi
@@ -72,10 +73,31 @@ class CustomPagination(PageNumberPagination):
         )
 
 
+class CustomLogRecord(logging.LogRecord):
+    def getMessage(self) -> str:
+        msg = self.msg
+        if isinstance(msg, (set, tuple)):
+            msg = list(msg)
+        try:
+            msg = ujson.dumps(msg)
+        except (TypeError, OverflowError):
+            msg = str(msg)
+        if self.args:
+            msg = msg % self.args
+        return msg
+
+
 class JSONFormatter(logging.Formatter):
     """
     Logging Formatter to add colors and count warning / errors
     """
+
+    green = "\x1b[32;20m"
+    blue = "\x1b[38;5;39m"
+    yellow = "\x1b[38;5;226m"
+    red = "\x1b[38;5;196m"
+    bold_red = "\x1b[31;1m"
+    reset = "\x1b[0m"
 
     #  "exec": "%(pathname)s", "func": "%(funcName)s"
     simple_format = (
@@ -88,6 +110,14 @@ class JSONFormatter(logging.Formatter):
         '"filename": "%(pathname)s", "name": "%(funcName)s", "lineno": %(lineno)d, "message": %(message)s}'
     )
 
+    COLORED_FORMATS = {
+        logging.DEBUG: blue + simple_format + reset,
+        logging.INFO: green + simple_format + reset,
+        logging.WARNING: yellow + simple_format + reset,
+        logging.ERROR: red + simple_format + reset,
+        logging.CRITICAL: bold_red + simple_format + reset,
+    }
+
     FORMATS = {
         logging.DEBUG: simple_format,
         logging.INFO: simple_format,
@@ -96,15 +126,20 @@ class JSONFormatter(logging.Formatter):
         logging.CRITICAL: simple_format,
     }
 
+    @lru_cache
+    def get_style(self, log_level):
+        from conf.config import local_configs
+
+        if local_configs.PROJECT.LOG_COLOR:
+            log_fmt = self.COLORED_FORMATS.get(log_level)
+        else:
+            log_fmt = self.FORMATS.get(log_level)
+        return logging._STYLES["%"][0](log_fmt)
+
     def format(self, record):
         log_level = record.levelno
         record.message = record.getMessage()
-        try:
-            record.message = ujson.loads(record.message)
-        except ValueError:
-            record.message = ujson.dumps(record.message)
-        log_fmt = self.FORMATS.get(log_level)
-        self._style = logging._STYLES["%"][0](log_fmt)
+        self._style = self.get_style(log_level)
         self._style.validate()
 
         self._fmt = self._style._fmt
