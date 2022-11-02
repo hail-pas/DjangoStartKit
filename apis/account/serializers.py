@@ -38,13 +38,15 @@ class ProfileSimpleSerializer(CustomModelSerializer):
 class ProfileListSerializer(CustomModelSerializer):
     class Meta:
         model = models.Profile
-        fields = {"is_active", "last_login", "username", "phone", "roles", "gender", "nickname", "avatar"}
+        fields = {"id", "is_active", "last_login", "username", "phone", "roles", "gender", "nickname", "avatar"}
 
 
 class ProfileSerializer(CustomModelSerializer):
+    roles = RoleSerializer(many=True)
+    operator = ProfileSimpleSerializer()
     class Meta:
         model = models.Profile
-        exclude = ["roles", "operator"]
+        exclude = ["password", "polymorphic_ctype"]
 
 
 class ProfileCreateUpdateSerializer(CustomModelSerializer):
