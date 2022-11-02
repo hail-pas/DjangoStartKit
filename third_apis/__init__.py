@@ -275,9 +275,9 @@ class Third(APIBaseConfig):
             **kwargs,
         }
         if self.api_key:
-            request_kwargs["api_key"] = (self.api_key,)
+            request_kwargs["api_key"] = self.api_key
         if self.sign_key:
-            request_kwargs["sign_key"] = (self.sign_key,)
+            request_kwargs["sign_key"] = self.sign_key
 
         request_context = {
             "method": api.method,
