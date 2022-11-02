@@ -1,5 +1,6 @@
 import logging
 
+import ujson
 from drf_yasg import openapi
 from django.db import models
 from rest_framework import status
@@ -79,25 +80,52 @@ class JSONFormatter(logging.Formatter):
     #  "exec": "%(pathname)s", "func": "%(funcName)s"
     simple_format = (
         '{"asctime": "%(asctime)s", "levelname": "%(levelname)s", '  # "process": %(process)d,
-        '"message": "%(message)s"}'  # "filename": "%(pathname)s", "name": "%(funcName)s", "lineno": %(lineno)d,
+        '"message": %(message)s}'  # "filename": "%(pathname)s", "name": "%(funcName)s", "lineno": %(lineno)d,
     )
 
     format = (
         '{"asctime": "%(asctime)s", "process": %(process)d, "levelname": "%(levelname)s", '
-        '"filename": "%(pathname)s", "name": "%(funcName)s", "lineno": %(lineno)d, "message": "%(message)s"}'
+        '"filename": "%(pathname)s", "name": "%(funcName)s", "lineno": %(lineno)d, "message": %(message)s}'
     )
+
     FORMATS = {
         logging.DEBUG: simple_format,
         logging.INFO: simple_format,
         logging.WARNING: simple_format,
-        # logging.ERROR: format,
-        # logging.CRITICAL: format,
+        logging.ERROR: simple_format,
+        logging.CRITICAL: simple_format,
     }
 
     def format(self, record):
-        log_fmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt)
-        return formatter.format(record)
+        log_level = record.levelno
+        record.message = record.getMessage()
+        try:
+            record.message = ujson.loads(record.message)
+        except ValueError:
+            record.message = ujson.dumps(record.message)
+        log_fmt = self.FORMATS.get(log_level)
+        self._style = logging._STYLES["%"][0](log_fmt)
+        self._style.validate()
+
+        self._fmt = self._style._fmt
+
+        if self.usesTime():
+            record.asctime = self.formatTime(record, self.datefmt)
+        s = self.formatMessage(record)
+        if record.exc_info:
+            # Cache the traceback text to avoid converting it multiple times
+            # (it's constant anyway)
+            if not record.exc_text:
+                record.exc_text = self.formatException(record.exc_info)
+        if record.exc_text:
+            if s[-1:] != "\n":
+                s = s + "\n"
+            s = s + record.exc_text
+        if record.stack_info:
+            if s[-1:] != "\n":
+                s = s + "\n"
+            s = s + self.formatStack(record.stack_info)
+        return s
 
 
 class CustomAutoSchema(AutoSchema):
