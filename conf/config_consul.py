@@ -110,6 +110,7 @@ class Server:
 class Project:
     NAME = get_consul_value("Project", "NAME") or "DjangoStartKit"
     DEBUG = get_consul_value("Project", "DEBUG") or False
+    LOG_COLOR = get_consul_value("Project", "LOG_COLOR") or False
     ENVIRONMENT = get_consul_value("Project", "ENVIRONMENT") or Environment.production.value
     DESCRIPTION = get_consul_value("Project", "DESCRIPTION") or "Django-start-kit"
     LANGUAGE_CODE = get_consul_value("Project", "LANGUAGE_CODE") or "zh-hans"

@@ -57,6 +57,7 @@ class Server(HostAndPort):
 class Project(BaseModel):
     NAME: str = "DjangoStartKit"
     DEBUG: bool = False
+    LOG_COLOR: bool = False
     ENVIRONMENT: str = Environment.production.value
     DESCRIPTION: str = "Django-start-kit"
     LANGUAGE_CODE: str = "zh-hans"
