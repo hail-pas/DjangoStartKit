@@ -230,7 +230,7 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": True,
     "filters": {"require_debug_false": {"()": "django.utils.log.RequireDebugFalse"}},
-    "formatters": {"verbose": {"()": JSONFormatter}},
+    "formatters": {"verbose": {"()": JSONFormatter, "datefmt": "%Y-%m-%d %H:%M:%S"}},
     "handlers": {
         "console": {
             "level": logging.getLevelName(logging.INFO) if not DEBUG else logging.getLevelName(logging.DEBUG),

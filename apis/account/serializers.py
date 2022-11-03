@@ -44,6 +44,7 @@ class ProfileListSerializer(CustomModelSerializer):
 class ProfileSerializer(CustomModelSerializer):
     roles = RoleSerializer(many=True)
     operator = ProfileSimpleSerializer()
+
     class Meta:
         model = models.Profile
         exclude = ["password", "polymorphic_ctype"]
