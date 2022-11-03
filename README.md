@@ -274,6 +274,7 @@ python manage.py tasks
 
 ### 接口权限
 > 权限控制粒度：API，可以自定义实现到更细的 API+参数 粒度
+> 装饰器 method_allowed_roles、viewset_allowed_roles
 
 ### 数据库ER
 
