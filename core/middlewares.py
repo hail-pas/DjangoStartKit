@@ -257,7 +257,6 @@ class AuthenticationMiddlewareJWT:
                 request.user = user
                 request.scene = payload.get("scene")
                 request.system = payload.get("system")
-                # TODO: 校验用户请求系统的合法性
                 if (user.is_staff or user.is_superuser) and not (
                     request.path.startswith("/admin") or request.path.startswith("/static/admin")
                 ):  # disable admin user
@@ -270,6 +269,7 @@ class AuthenticationMiddlewareJWT:
                     # and request.scene not in enums.SceneRole.anonymous.value
                     request.scene
                     not in user.role_names + enums.SceneRole.values()  # 预置角色和自定义角色
+                    # TODO: 校验用户请求系统的合法性
                 ):
                     return middleware_response(
                         status=status.HTTP_401_UNAUTHORIZED, data={"message": messages.UserSceneCheckFailed}

@@ -2,7 +2,7 @@ import sys
 import enum
 import inspect
 import threading
-from typing import Union
+from typing import List, Union
 from functools import wraps
 from functools import partial as raw_partial
 
@@ -11,6 +11,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, serializers
 from django.forms.utils import pretty_name
 from rest_framework.decorators import MethodMapper
+from rest_framework.exceptions import PermissionDenied
 
 from common.types import PlainSchema
 from common.utils import underscore_to_camelcase
@@ -206,3 +207,41 @@ def extend_enum(*inherited_enums):
         return enum.Enum(added_enum.__name__, joined)
 
     return wrapper
+
+
+def method_allowed_roles(role_names: List):
+    """
+    @method_allowed_roles(viewset_allowed_roles(["user"]))
+    def perm_required(self, request, *args, **kwargs):
+        pass
+    """
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(self, request, *args, **kwargs):
+            if request.user and ((set(request.user.role_names) & set(role_names)) or request.scene in role_names):
+                return func(self, request, *args, **kwargs)
+            raise PermissionDenied("当前角色不支持该功能")
+
+        return wrapper
+
+    return decorator
+
+
+def viewset_allowed_roles(role_names: List):
+    """
+    @method_decorator(viewset_allowed_roles(["user"]), name="list")
+    class xxxViewset:
+        pass
+    """
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(request, *args, **kwargs):
+            if request.user and ((set(request.user.role_names) & set(role_names)) or request.scene in role_names):
+                return func(request, *args, **kwargs)
+            raise PermissionDenied("当前角色不支持该功能")
+
+        return wrapper
+
+    return decorator
