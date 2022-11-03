@@ -410,6 +410,10 @@ class Profile(PolyBaseModel, AbstractUser, PolymorphicModel):
         "self", on_delete=models.SET_NULL, blank=True, null=True, default=None, help_text="操作人"
     )
 
+    @property
+    def role_names(self):
+        return list(self.roles.values_list("name", flat=True))
+
     def has_api_perm(self, request, view):
         if self.is_active and self.is_superuser:
             return True

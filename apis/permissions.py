@@ -9,8 +9,6 @@ from storages.relational.models.third_service import ThirdService
 
 logger = logging.getLogger(__name__)
 
-_PERMISSION_APP_LABEL = "account"
-
 
 class URIBasedPermission(BasePermission):
     def has_permission(self, request, view):
