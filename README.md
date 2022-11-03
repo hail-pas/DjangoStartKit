@@ -9,7 +9,7 @@
 
 > 项目创建、开发参考文档，目的在于快速上手、敏捷开发，尽可能减少后续沟通、维护和运维成本
 > DJango + djangorestframework
-> base 分支：不带websocket，websocket 分支：整合websocket
+> base 分支：不带websocket，main 分支：整合websocket
 
 ## 快速启动
 ```shell
@@ -116,6 +116,7 @@ class LocalConfig(BaseSettings):
 class Project(BaseModel):
     NAME: str = "DjangoStartKit"
     DEBUG: bool = False
+    LOG_COLOR: bool = False
     ENVIRONMENT: str = Environment.production.value
     DESCRIPTION: str = "Django-start-kit"
     LANGUAGE_CODE: str = "zh-hans"
@@ -184,11 +185,11 @@ poetry cache clear . --all
 
 ## 响应体
 
-http状态码只使用 200、400、401、403，错误全部捕获
+http状态码只使用 200、401、403、500
 - 200 表示成功的请求，响应体包含 code 业务状态码，唯一成功业务状态为0，其余场景自定义
-- 400 表示请求参数错误
-- 401 表示用户授权信息错误
+- 401 表示用户授权信息错误或未登录
 - 403 表示用户无权限
+- 500 服务器内部错误
 
 ### 无分页信息响应结构
 ```python
@@ -542,6 +543,15 @@ from third_apis import Third, API
 class GoogleAPI(Third):
     @abc.abstractmethod
     def search(self, *args, **kwargs)  -> DefaultResponse:
+        """
+        :params: {
+            "q": str
+        }\n
+        :raw_response: {
+            "code": 200,
+            "message": ""
+        }
+        """
         pass
 
 google_apis = [
