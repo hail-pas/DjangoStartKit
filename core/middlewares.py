@@ -143,6 +143,9 @@ class ResponseProcessMiddleware:
         if response.status_code >= status.HTTP_400_BAD_REQUEST:
             # 直接返回的状态码
             if response.status_code in self.ESCAPE_HTTP_STATUS_CODE:
+                if response.status_code == status.HTTP_403_FORBIDDEN and not request.META.get("HTTP_AUTHORIZATION"):
+                    # 未携带授权头时报403返回 401 状态码
+                    response.status_code = status.HTTP_401_UNAUTHORIZED
                 return response
             data = response.data
             if isinstance(data, dict):
@@ -152,7 +155,7 @@ class ResponseProcessMiddleware:
                         code=data["detail"].code, message=data["detail"], data=data, success=False
                     ).dict()
                 else:
-                    error_field, error_value = list(data.items())[0]
+                    _, error_value = list(data.items())[0]
                     if error_value and isinstance(error_value, list):
                         error_value = error_value[0]
                     msg = error_value
