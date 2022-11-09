@@ -2,7 +2,7 @@ import sys
 import enum
 import inspect
 import threading
-from typing import Union
+from typing import List, Union
 from functools import wraps
 from functools import partial as raw_partial
 
@@ -209,7 +209,7 @@ def extend_enum(*inherited_enums):
     return wrapper
 
 
-def method_allowed_roles(role_names: List):
+def method_allowed_roles(role_names: List[str]):
     """
     @method_allowed_roles(viewset_allowed_roles(["user"]))
     def perm_required(self, request, *args, **kwargs):
