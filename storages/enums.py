@@ -132,11 +132,11 @@ def get_enum_content(enum_name: str = None, is_reversed: bool = False):
 
     for name, cls in enum_list:
         # if format_ == EnumInfoResponseFormats.list_.value:
-        #     enum_content[name] = cls.choices()
+        #     enum_content[name] = cls.choices
         # else:
         if is_reversed:
-            enum_content[name] = {v: k for k, v in cls.dict()}
+            enum_content[name] = {v: k for k, v in cls.dict}
         else:
-            enum_content[name] = cls.dict()
+            enum_content[name] = cls.dict
 
     return enum_content

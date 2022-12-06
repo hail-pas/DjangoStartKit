@@ -10,7 +10,7 @@ class ThirdService(BaseModel):
     identifier = models.CharField(max_length=64, verbose_name="唯一标识", help_text="唯一标识", unique=True)
     api_key = models.CharField(max_length=64, verbose_name="api key", help_text="api key")
     sign_key = models.CharField(max_length=64, verbose_name="sign key", help_text="签名key")
-    protocol = models.CharField(choices=enums.Protocol.choices(), default=enums.Protocol.http.value, max_length=16)
+    protocol = models.CharField(choices=enums.Protocol.choices, default=enums.Protocol.http.value, max_length=16)
     host = models.CharField(max_length=255, verbose_name="Host", help_text="Host不带端口")
     port = models.IntegerField(null=True, blank=True, verbose_name="端口", help_text="端口")
 

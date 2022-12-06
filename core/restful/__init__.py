@@ -52,12 +52,12 @@ class CustomPagination(PageNumberPagination):
     """
 
     page_query_param = PageParam.Enum.page_num.value
-    page_query_description = PageParam.Enum.dict().get(PageParam.Enum.page_num.value)
+    page_query_description = PageParam.Enum.dict.get(PageParam.Enum.page_num.value)
 
     # Client can control the page size using this query parameter.
     # Default is 'None'. Set to eg 'page_size' to enable usage.
     page_size_query_param = PageParam.Enum.page_size.value
-    page_size_query_description = PageParam.Enum.dict().get(PageParam.Enum.page_size.value)
+    page_size_query_description = PageParam.Enum.dict.get(PageParam.Enum.page_size.value)
 
     page_size = 10
 
@@ -130,7 +130,7 @@ class JSONFormatter(logging.Formatter):
     def get_style(self, log_level):
         from conf.config import local_configs
 
-        if local_configs.PROJECT.LOG_COLOR:
+        if local_configs.PROJECT.LOG_COLOR and local_configs.PROJECT.DEBUG:
             log_fmt = self.COLORED_FORMATS.get(log_level)
         else:
             log_fmt = self.FORMATS.get(log_level)

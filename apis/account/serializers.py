@@ -59,7 +59,7 @@ class ProfileCreateUpdateSerializer(CustomModelSerializer):
             UniqueValidator(queryset=models.Profile._base_manager.all(), message=messages.AccountWithPhoneExisted)
         ],
     )
-    gender = serializers.ChoiceField(required=True, help_text="性别", choices=enums.GenderEnum.choices())
+    gender = serializers.ChoiceField(required=True, help_text="性别", choices=enums.GenderEnum.choices)
     roles = serializers.PrimaryKeyRelatedField(
         required=True,
         allow_empty=True,

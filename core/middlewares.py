@@ -266,7 +266,7 @@ class AuthenticationMiddlewareJWT:
                 if (
                     # and request.scene not in enums.SceneRole.anonymous.value
                     request.scene
-                    not in user.role_names + enums.SceneRole.values()  # 预置角色和自定义角色
+                    not in user.role_names + enums.SceneRole.values  # 预置角色和自定义角色
                     # TODO: 校验用户请求系统的合法性
                 ):
                     return middleware_response(

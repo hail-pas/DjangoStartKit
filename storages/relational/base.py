@@ -95,7 +95,7 @@ class OrderWeightFieldMixin(models.Model):
 
 class StatusFieldMixin(models.Model):
     status = models.CharField(
-        "状态", max_length=16, choices=enums.Status.choices(), default=enums.Status.enable.value, help_text="状态"
+        "状态", max_length=16, choices=enums.Status.choices, default=enums.Status.enable.value, help_text="状态"
     )
 
     class Meta:

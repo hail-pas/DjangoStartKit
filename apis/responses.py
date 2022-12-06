@@ -82,8 +82,8 @@ class _Resp(BaseModel):
             attrs = {
                 "code": serializers.ChoiceField(
                     default=ResponseCodeEnum.success.value,
-                    choices=ResponseCodeEnum.choices(),
-                    help_text=f"响应状态码: {ResponseCodeEnum.choices()}",
+                    choices=ResponseCodeEnum.choices,
+                    help_text=f"响应状态码: {ResponseCodeEnum.choices}",
                 ),
                 "success": serializers.BooleanField(default=True, help_text="是否成功"),
                 "message": serializers.CharField(default="", help_text="响应信息"),

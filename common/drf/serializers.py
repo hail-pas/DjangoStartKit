@@ -212,7 +212,7 @@ class CustomJSONWebTokenSerializer(JSONWebTokenSerializer):
 
                 payload = jwt_payload_handler(user)
                 scene = attrs.get("scene")
-                if scene not in enums.SceneRole.values() + user.role_names:
+                if scene not in enums.SceneRole.values + user.role_names:
                     raise serializers.ValidationError(messages.UserSceneCheckFailed)
                 system = attrs.get("system")
                 # TODO: 校验用户登录系统合法性

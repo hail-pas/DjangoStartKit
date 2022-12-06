@@ -3,22 +3,61 @@ import enum
 from rest_framework.serializers import Serializer
 
 
+class ClassPropertyDescriptor(object):
+    def __init__(self, fget, fset=None):  # noqa
+        self.fget = fget  # noqa
+        self.fset = fset  # noqa
+
+    def __get__(self, obj, klass=None):
+        if klass is None:
+            klass = type(obj)
+        return self.fget.__get__(obj, klass)()
+
+    def __set__(self, obj, value):
+        if not self.fset:
+            raise AttributeError("can't set attribute")
+        type_ = type(obj)
+        return self.fset.__get__(obj, type_)(value)
+
+    def setter(self, func):
+        if not isinstance(func, (classmethod, staticmethod)):
+            func = classmethod(func)
+        self.fset = func  # noqa
+        return self
+
+
+def _classproperty(func):
+    """
+    类属性
+    """
+    if not isinstance(func, (classmethod, staticmethod)):
+        func = classmethod(func)
+
+    return ClassPropertyDescriptor(func)
+
 class MyEnum(enum.Enum):
-    @classmethod
+    @_classproperty
     def dict(cls):
         return {item.value: item.label for item in cls}
 
-    @classmethod
+    @_classproperty
     def labels(cls):
         return [item.label for item in cls]
 
-    @classmethod
+    @_classproperty
     def values(cls):
         return [item.value for item in cls]
 
-    @classmethod
+    @_classproperty
     def choices(cls):
         return [(item.value, item.label) for item in cls]
+
+    @_classproperty
+    def help_text(cls):
+        description = ""
+        for k, v in cls.dict.items():
+            description = f"{description}、{k}-{v}"
+        return f"choices: {description}"
 
 
 class IntEnumMore(int, MyEnum):

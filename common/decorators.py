@@ -13,9 +13,10 @@ from django.forms.utils import pretty_name
 from rest_framework.decorators import MethodMapper
 from rest_framework.exceptions import PermissionDenied
 
-from common.types import PlainSchema
+from common.types import PlainSchema, _classproperty
 from common.utils import underscore_to_camelcase
 
+classproperty = _classproperty
 
 def partial(func, *args):
     """
@@ -79,39 +80,6 @@ def timelimit(timeout: Union[int, float, str]):
         return _2
 
     return _1
-
-
-class ClassPropertyDescriptor(object):
-    def __init__(self, fget, fset=None):  # noqa
-        self.fget = fget  # noqa
-        self.fset = fset  # noqa
-
-    def __get__(self, obj, klass=None):
-        if klass is None:
-            klass = type(obj)
-        return self.fget.__get__(obj, klass)()
-
-    def __set__(self, obj, value):
-        if not self.fset:
-            raise AttributeError("can't set attribute")
-        type_ = type(obj)
-        return self.fset.__get__(obj, type_)(value)
-
-    def setter(self, func):
-        if not isinstance(func, (classmethod, staticmethod)):
-            func = classmethod(func)
-        self.fset = func  # noqa
-        return self
-
-
-def classproperty(func):
-    """
-    类属性
-    """
-    if not isinstance(func, (classmethod, staticmethod)):
-        func = classmethod(func)
-
-    return ClassPropertyDescriptor(func)
 
 
 def custom_swagger_auto_schema(**kwargs):
