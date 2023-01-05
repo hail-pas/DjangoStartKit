@@ -7,4 +7,7 @@ router = routers.SimpleRouter()
 
 urlpatterns = router.urls
 
-urlpatterns += [path("enums/", views.EnumsView.as_view())]
+urlpatterns += [
+    path("enums/", views.EnumsView.as_view()),
+    path(r'download_template', views.DownloadTemplateView.as_view()),
+]
