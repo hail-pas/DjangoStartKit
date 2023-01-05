@@ -270,6 +270,11 @@ class CustomOpenAPISchemaGenerator(OpenAPISchemaGenerator):
             str_list = str_list[:-1]
         return str_list
 
+    def get_schema(self, request=None, public=False):
+        schema = super().get_schema(request, public)
+        schema.schemes = ["http", "https"]
+        return schema
+
 
 class NoPagingAutoSchema(CustomSwaggerAutoSchema):
     """No page and page_size parameters in swagger
