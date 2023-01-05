@@ -103,7 +103,9 @@ class Oss:
 class Server:
     HOST = get_consul_value("Server", "HOST")
     PORT = get_consul_value("Server", "PORT")
-    WHITELIST = get_consul_value("Server", "WHITELIST")
+    CORS_ALLOW_ALL = get_consul_value("Server", "CORS_ALLOW_ALL")
+    CORS_ALLOW_CREDENTIAL = get_consul_value("Server", "CORS_ALLOW_CREDENTIAL")
+    CORS_WHITELIST = get_consul_value("Server", "CORS_WHITELIST")
     REQUEST_SCHEME = get_consul_value("Server", "REQUEST_SCHEME") or "https"
 
 
