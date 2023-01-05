@@ -100,9 +100,9 @@ class Aes(BaseModel):
 
 
 class K8s(HostAndPort):
-    NAMESPACE: str
-    IMAGE: str
-    PVC_NAME: str
+    NAMESPACE: str = ""
+    IMAGE: str = ""
+    PVC_NAME: str = ""
     CONFIG_FILE: Optional[str] = ""
     CONFIG_MAP_NAME: Optional[str] = ""
 
