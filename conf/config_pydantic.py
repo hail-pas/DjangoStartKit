@@ -50,7 +50,9 @@ class Oss(BaseModel):
 
 class Server(HostAndPort):
     WORKERS_NUM: int = multiprocessing.cpu_count() * int(os.getenv("WORKERS_PER_CORE", "2")) + 1
-    WHITELIST: list = []
+    CORS_ALLOW_ALL: bool = True
+    CORS_ALLOW_CREDENTIAL: bool = True
+    CORS_WHITELIST: list = []
     REQUEST_SCHEME: str = "https"
 
 
