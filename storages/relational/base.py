@@ -23,6 +23,41 @@ def lock_table(model):
             cursor.close()
 
 
+@contextmanager
+def suppress_auto_now(model, field_names=None):
+    """
+    Temp disable auto_now and auto_now_add for django fields
+    @model - model class or instance
+    @field_names - list of field names to suppress or all model's
+                   fields that support auto_now_add, auto_now"""
+
+    def get_auto_now_fields(user_selected_fields):
+        for field in model._meta.get_fields():
+            field_name = field.name
+            if user_selected_fields and field_name not in user_selected_fields:
+                continue
+            if hasattr(field, 'auto_now') or hasattr(field, 'auto_now_add'):
+                yield field
+
+    fields_state = {}
+
+    for field in get_auto_now_fields(user_selected_fields=field_names):
+        fields_state[field] = {
+            'auto_now': field.auto_now,
+            'auto_now_add': field.auto_now_add
+        }
+
+    for field in fields_state:
+        field.auto_now = False
+        field.auto_now_add = False
+    try:
+        yield
+    finally:
+        for field, state in fields_state.items():
+            field.auto_now = state['auto_now']
+            field.auto_now_add = state['auto_now_add']
+
+
 class SoftDeletedManager(Manager):
     """
     deleted 软删除
