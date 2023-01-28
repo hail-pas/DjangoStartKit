@@ -285,11 +285,13 @@ def gen_uuid():
     return str(uuid.uuid1())
 
 
-def file_upload_to(instance, filename):
-    name = instance.__class__.__name__
-    fields = [name, gen_uuid(), filename]
-    if instance.__str__():
-        fields = [fields[0], instance.__str__()[:16], *fields[1:]]
+def file_upload_to(instance, filename, sub_dirname: str = None):
+    from conf.config import local_configs
+    if not sub_dirname:
+        sub_dirname = instance.__class__.__name__
+    fields = [local_configs.PROJECT.ENVIRONMENT, sub_dirname, instance.pk, filename]
+    # if instance.__str__():
+    #     fields = [fields[0], instance.__str__()[:16], *fields[1:]]
     return "/".join(filter(None, fields))
 
 
