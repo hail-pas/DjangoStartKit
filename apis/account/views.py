@@ -3,6 +3,7 @@ import datetime
 from drf_yasg.utils import no_body
 from rest_framework import status
 from django.db.transaction import atomic
+from django.utils import timezone
 from rest_framework.parsers import JSONParser
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -21,7 +22,7 @@ class ProfileViewSet(RestModelViewSet,):
     """
 
     serializer_class = serializers.ProfileSerializer
-    queryset = models.Profile.objects.filter(is_superuser=False)
+    queryset = models.Profile.objects.filter_deleted_false(is_superuser=False)
     search_fields = ("phone", "username")
     filter_fields = (
         "roles",
@@ -64,7 +65,7 @@ class ProfileViewSet(RestModelViewSet,):
     @atomic
     def perform_destroy(self, instance):
         instance.is_active = False
-        instance.delete_time = datetime.datetime.now()
+        instance.delete_time = timezone.now()
         instance.operator = self.request.user
         instance.save(update_fields=["is_active", "delete_time", "operator"])
 
