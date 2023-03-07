@@ -35,6 +35,7 @@ def _classproperty(func):
 
     return ClassPropertyDescriptor(func)
 
+
 class MyEnum(enum.Enum):
     @_classproperty
     def dict(cls):

@@ -241,6 +241,13 @@ LOGGING = {
         "handlers": ["console", "error_file"],
         "level": logging.getLevelName(logging.INFO) if not DEBUG else logging.getLevelName(logging.DEBUG),
     },
+    "loggers": {
+        "django.db.backends": {
+            "handlers": ["console"],
+            "level": logging.getLevelName(logging.INFO) if not DEBUG else logging.getLevelName(logging.DEBUG),
+            "propagate": False,
+        },
+    },
 }
 
 # Swagger Auth

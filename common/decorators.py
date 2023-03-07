@@ -18,6 +18,7 @@ from common.utils import underscore_to_camelcase
 
 classproperty = _classproperty
 
+
 def partial(func, *args):
     """
     保留函数签名的partial装饰器

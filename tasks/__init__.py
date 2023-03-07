@@ -62,6 +62,7 @@ class TaskManager:
         **k8s_kwargs,
     ):
         def _1(func):
+            # TODO 使用数据库保存
             global _task_map
             nonlocal name
             if not name:

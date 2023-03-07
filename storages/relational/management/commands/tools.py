@@ -17,7 +17,7 @@ logger = logging.getLogger("manage.tools")
 
 class Command(BaseCommand):
     help = """
-    工具类  
+    工具类
         copy-project: 复制项目框架
     """
     available_actions = [

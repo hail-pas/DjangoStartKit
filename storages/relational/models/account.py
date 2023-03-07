@@ -267,6 +267,9 @@ class SystemResource(LabelFieldMixin, RemarkFieldMixin, BaseModel):
     enabled = models.BooleanField("启用状态", default=True, help_text="当前分组是否可用")
     assignable = models.BooleanField("是否可配置", default=True, help_text="配置时是否可分配")
     permissions = models.ManyToManyField(Permission, verbose_name="权限", help_text="权限", blank=True)
+    #  = models.ManyToManyField(
+    #     to="System", related_name="system_resources", help_text="系统", verbose_name="系统", blank=True,
+    # )
 
     @classmethod
     def root_menus(cls, profile):

@@ -276,7 +276,8 @@ def millseconds_to_format_str(millseconds, format_str: str = "%Y-%m-%d %H:%M:%S"
 
 def format_str_to_millseconds(value):
     """格式化时间转换为时间戳"""
-    value = datetime.strftime(value, "%Y-%m-%d %H:%M:%S")
+    if isinstance(value, datetime.datetime):
+        value = datetime.strftime(value, "%Y-%m-%d %H:%M:%S")
     value = time.strptime(value, "%Y-%m-%d %H:%M:%S")
     return int(time.mktime(value) * 1000)
 
@@ -287,6 +288,7 @@ def gen_uuid():
 
 def file_upload_to(instance, filename, sub_dirname: str = None):
     from conf.config import local_configs
+
     if not sub_dirname:
         sub_dirname = instance.__class__.__name__
     fields = [local_configs.PROJECT.ENVIRONMENT, sub_dirname, instance.pk, filename]

@@ -40,15 +40,17 @@ class DownloadTemplateView(APIView):
 
     @custom_swagger_auto_schema(
         query_serializer=schemas.DownloadTemplateSerializer,
-        responses={status.HTTP_200_OK: openapi.Response(  # noqa
+        responses={
+            status.HTTP_200_OK: openapi.Response(  # noqa
                 description="返回Json或数组格式的Enum码表",
                 examples={
                     "application/json": RestResponse.ok(data={"ResponseCodeEnum": {"0": "成功", "200001": "失败"}}).dict()
                 },
-            )},
+            )
+        },
     )
     def get(self, request):
-        template_name = self.request.GET.get('template_name')
-        url = staticfiles_storage.url('%s.xlsx' % template_name)
+        template_name = self.request.GET.get("template_name")
+        url = staticfiles_storage.url("%s.xlsx" % template_name)
         url = self.request.build_absolute_uri(url)
-        return RestResponse.ok(data={"template_name": template_name, 'path': url})
+        return RestResponse.ok(data={"template_name": template_name, "path": url})

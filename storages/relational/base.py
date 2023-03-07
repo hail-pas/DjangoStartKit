@@ -36,16 +36,13 @@ def suppress_auto_now(model, field_names=None):
             field_name = field.name
             if user_selected_fields and field_name not in user_selected_fields:
                 continue
-            if hasattr(field, 'auto_now') or hasattr(field, 'auto_now_add'):
+            if hasattr(field, "auto_now") or hasattr(field, "auto_now_add"):
                 yield field
 
     fields_state = {}
 
     for field in get_auto_now_fields(user_selected_fields=field_names):
-        fields_state[field] = {
-            'auto_now': field.auto_now,
-            'auto_now_add': field.auto_now_add
-        }
+        fields_state[field] = {"auto_now": field.auto_now, "auto_now_add": field.auto_now_add}
 
     for field in fields_state:
         field.auto_now = False
@@ -54,8 +51,8 @@ def suppress_auto_now(model, field_names=None):
         yield
     finally:
         for field, state in fields_state.items():
-            field.auto_now = state['auto_now']
-            field.auto_now_add = state['auto_now_add']
+            field.auto_now = state["auto_now"]
+            field.auto_now_add = state["auto_now_add"]
 
 
 class SoftDeletedManager(Manager):
