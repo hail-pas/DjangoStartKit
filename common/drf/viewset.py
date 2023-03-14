@@ -63,7 +63,7 @@ def get_dynamic_model_serializer_class(
         def validate(self, attrs):
             attrs = super().validate(attrs)
             if hasattr(model_cls, "create_update_validate"):
-                attrs = model_cls.create_update_validate(attrs, self.instance)
+                attrs = model_cls.create_update_validate(self, attrs, self.instance)
             return attrs
 
     if fields:
