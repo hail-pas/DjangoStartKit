@@ -2,7 +2,8 @@ import os
 import csv
 import inspect
 import logging
-from typing import Any, Dict, List, Tuple, Union, Callable, Iterable
+import datetime
+from typing import Any, Dict, List, Tuple, Union, Callable, Iterable, Optional
 
 from storages import enums
 
@@ -128,7 +129,9 @@ class ExportContextProxy(ExportMethodMixins):
         # default
         return value
 
-    def export(self, filename_generrator: Callable[["ExportContextProxy", str], str]):
+    def export(
+        self, filename_generrator: Callable[["ExportContextProxy", str], str],
+    ):
         filename = filename_generrator(self, "csv")
         self.get_writer_handler()(filename)
 

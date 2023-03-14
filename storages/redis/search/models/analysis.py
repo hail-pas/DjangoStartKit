@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Tuple, Iterable
+from typing import Any, Dict, List, Tuple, Union, Iterable
 
 from common.utils import format_str_to_millseconds
 from storages.redis.keys import RedisSearchIndex
@@ -23,26 +23,6 @@ class ExportMethodMixin:
     # def get_export_values(cls, export_proxy, o):
     #     values = []
     #     return values
-
-    @classmethod
-    def get_iterate_data(cls, export_proxy):
-        param = export_proxy.history.params
-        min_first_time = param.get("first_time__gte")
-        max_first_time = param.get("first_time__lte")
-        min_first_time = format_str_to_millseconds(min_first_time) if min_first_time else ""
-        max_first_time = format_str_to_millseconds(max_first_time) if max_first_time else ""
-        vin = param.get("vin")
-        first_alert_time_query = f"[{min_first_time if min_first_time else float('-inf')} {max_first_time if max_first_time else float('inf')}]"
-        query_string = f"@first_time:{first_alert_time_query}"
-        if vin:
-            query_string += f" & @vin:{vin}*"
-        # _filter_query_string = generate_on_going_query_string(
-        # request.user
-        # )
-        # if _filter_query_string:
-        # query_string += f" & {_filter_query_string}"
-        result = cls.objects.filter(query_string=query_string)
-        return cls.after_serialize(cls.serialize(result.docs))
 
     @classmethod
     def get_transform_config(self, export_contex: "ExportContextProxy", value_key: str, value):
@@ -76,9 +56,29 @@ class SWTemperatureAnalysis(BaseModel, ExportMethodMixin):
         prefix = RedisSearchIndex.SWTemperatureAnalysisIndex.value
 
     @classmethod
-    def after_serialize(cls, data: List[Dict]):
+    def after_serialize(cls, data: Union[List[Dict], Dict], single: bool = False):
+        if single:
+            data = [data]
         for d in data:
-            # 额外字段处理
+            # 结构号固定为：M3EV
             d["hirhierarchy_num"] = "M3EV"
+            # 车辆状态展示
+            cls.truck_status_set_display_handle(d)
 
+        if single:
+            return data[0]
         return data
+
+    @classmethod
+    def truck_status_set_display_handle(cls, d):
+        converter = {
+            1: "启动状态",
+            2: "熄火状态",
+            3: "其他状态",
+        }
+        display = []
+        for i in d.get("truck_status_set") or []:
+            if i in converter.keys():
+                display.append(converter.get(i))
+        d["truck_status_set_display"] = ", ".join(display)
+        return d

@@ -11,6 +11,10 @@ from django.db.models.fields.files import FieldFile
 from storages import enums
 
 
+def get_min_datetime():
+    return timezone.datetime.min
+
+
 @contextmanager
 def lock_table(model):
     with transaction.atomic():
@@ -71,7 +75,9 @@ class BaseModel(models.Model):
 
     create_time = models.DateTimeField("创建时间", auto_now_add=True, help_text="创建时间", editable=False)
     update_time = models.DateTimeField("更新时间", auto_now=True, help_text="更新时间", editable=False)
-    delete_time = models.DateTimeField("删除时间", default=lambda : timezone.datetime.min, editable=False, help_text="删除时间, 与其他字段联合唯一; 不能为null, 会导致唯一约束失效")
+    delete_time = models.DateTimeField(
+        "删除时间", default=get_min_datetime, editable=False, help_text="删除时间, 与其他字段联合唯一; 不能为null, 会导致唯一约束失效"
+    )
     # delete_status = models.BooleanField("是否已删除", default=False, help_text="是否已删除")
     # delete_id = models.BigIntegerField("删除ID", default=0, help_text="默认为0, 删除的情况下为记录主键; 与其他字段联合唯一; 用于更高并发的场景")
 

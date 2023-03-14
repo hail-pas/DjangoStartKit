@@ -14,6 +14,7 @@ from redisearch import (
     NumericField,
     NumericFilter,
     IndexDefinition,
+    AggregateRequest,
 )
 
 from common.utils import millseconds_to_format_str
@@ -30,8 +31,7 @@ class Serializeable:
 
 
 class RSTagField(Serializeable, TagField):
-    def __init__(self, name, separator=",", **kwargs):
-        super().__init__(name, separator, **kwargs)
+    pass
 
 
 class RSTextField(Serializeable, TextField):
@@ -173,6 +173,7 @@ class PlainNumericTimestampField(PlainField, Serializeable):
     offset: int = 1000
 
     def __init__(self, name, offset: int = 1000, **kwargs):
+        self.name = name
         self.type_ = int
         self.offset = offset
 
@@ -233,9 +234,12 @@ class RSManger:
             limit = self.client.search(query).total
         query.paging(start, limit)
         if sort_by:
-            query.sort_by(*sort_by)
+            query.sort_by(sort_by[0], asc=sort_by[1])
         result = self.client.search(query)
         return result
+
+    def get(self, id: str):
+        return self.client.load_document(id)
 
 
 class BaseModelMeta(type):
@@ -307,6 +311,8 @@ class BaseModelMeta(type):
 
 
 class BaseModel(metaclass=BaseModelMeta):
+    # serialize -> after_serialize
+
     class Meta:
         # prefix = RedisSearchIndex.SWTemperatureAnalysisIndex.value  # Use Case: IndexName -> PIndex; Hash Key -> P:xxxx
         abstract = True
@@ -329,21 +335,28 @@ class BaseModel(metaclass=BaseModelMeta):
         print(f"Dropped {cls._prefix}... \n")
 
     @classmethod
-    def serialize(cls, data: List[Document]):
-        result = []
+    def single_serialize(cls, d: Document):
         fields_map = dict(zip(cls._field_names, cls._field_values))
-        for d in data:
-            d = d.__dict__
-            temp = {"id": d["id"]}
-            for key, field in fields_map.items():
-                temp[key] = field.to_python_value(d.get(key))
-                if isinstance(field, ChoiceField):
-                    temp[f"get_{key}_display"] = field.display(d.get(key))
+        d = d.__dict__
+        temp = {"id": d["id"]}
+        for key, field in fields_map.items():
+            temp[key] = field.to_python_value(d.get(key))
+            if isinstance(field, ChoiceField):
+                temp[f"get_{key}_display"] = field.display(d.get(key))
 
-            result.append(temp)
+        return cls.after_serialize(temp, single=True)
+
+    @classmethod
+    def serialize(cls, data: Union[List[Document], Document]):
+        if isinstance(data, Document):
+            return cls.single_serialize(data)
+        result = []
+        for d in data:
+            result.append(cls.single_serialize(d))
 
         return cls.after_serialize(result)
 
     @classmethod
-    def after_serialize(cls, data: List[Dict]):
+    def after_serialize(cls, data: List[Dict], single: bool = False):
+        # 序列化后处理
         return data
