@@ -10,6 +10,9 @@ app = application
 def run():
     call_command("collectstatic", "--noinput")  # noqa
     call_command("migrate")
+    print("=" * 50)
+    print(local_configs.dict())
+    print("=" * 50)
     uvicorn.run(
         app="core.main:app",
         host=local_configs.SERVER.HOST,
