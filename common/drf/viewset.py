@@ -47,7 +47,7 @@ def get_dynamic_model_serializer_class(
     # else:
     #     fields = list(fields)
 
-    if extra_fields:
+    if extra_fields and fields:
         fields = list(fields)
         fields.extend(list(extra_fields))
 
